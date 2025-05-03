@@ -124,3 +124,11 @@ To learn more about  ad-hoc commands:
 
 - [Ad-hoc](https://docs.ansible.com/ansible/2.8/user_guide/intro_adhoc.html)
 
+
+- ## What If Ansible Becomes Outdated?
+
+If Ansible becomes outdated or no longer maintained, there are other modern tools you can use for infrastructure automation and server management: like 
+
+- [Terraform](https://developer.hashicorp.com/terraform)
+- [Chef](https://docs.chef.io/manage/)
+- [SaltStack](https://github.com/saltstack/salt)
