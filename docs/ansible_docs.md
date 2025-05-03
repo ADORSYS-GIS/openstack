@@ -4,7 +4,7 @@ Ansible is an open-source automation tool used for automating applications, serv
 
 ## Prerequisites
 
-Before diving into Ansible, its installation is greatly necessary. To do so, follow the tutorial on how to install Ansible here:
+Before getting started with Ansible, make sure it's installed on your machine. You can follow the installation instructions for your specific OS using the link below:
 
 - [Ansible Installation](/docs/tutorials/ansible_tuto.md)
 
@@ -13,11 +13,8 @@ Before diving into Ansible, its installation is greatly necessary. To do so, fol
 Ansible provides several tools to facilitate server management:
 
 - **OpenSSH**: Used for setting up SSH and generating keys for authenticating with servers.
-
-- **Ad-hoc Commands**: These are used as alternatives to playbooks, typically for quick and simple tasks.
-
-- **Playbooks**: These are YAML files containing specific tasks to manage servers, commonly used for more complex tasks.
-
+- **Ad-hoc Commands**: Used as alternatives to playbooks, typically for quick and simple tasks.
+- **Playbooks**: YAML files containing specific tasks to manage servers, commonly used for more complex tasks.
 - **Inventory File**: Contains the list of servers grouped by categories, allowing for organized management of your infrastructure.
 
 ## How It Works
@@ -28,11 +25,28 @@ Ansible relies on SSH to authenticate and configure servers. While you can use a
 
 #### Creation of SSH Keys
 
-SSH is a key aspect that Ansible uses to connect remotely to all the servers, eliminating the need for credential passwords each time a user logs in.
+To create SSH keys for both personal use and automation, follow these steps:
 
-To set up the SSH key, follow the tutorials in:
+- **Personal Key (for interactive SSH/logins):**
 
-- [SSH Configuration](/docs/tutorials/ansible_tuto.md)
+  ```sh
+  ssh-keygen -t ed25519 -f ~/.ssh/personal_key -C "your_email@domain.com"
+  ```
+
+- **Ansible Key (for automation tasks):**
+
+  ```sh
+  ssh-keygen -t ed25519 -f ~/.ssh/ansible_key -C "ansible@$(hostname)"
+  ```
+
+After creating the keys, copy them to the servers using the following commands:
+
+```sh
+ssh-copy-id -i ~/.ssh/ansible_key.pub user@server_ip
+ssh-copy-id -i ~/.ssh/personal_key.pub user@server_ip
+```
+
+Replace `user@server_ip` with the appropriate username and IP address or hostname of your target server.
 
 ### Launching a Playbook
 
@@ -46,7 +60,9 @@ For more details on playbooks:
 
 Ad-hoc commands are ideal for executing quick operations without creating a playbook. Examples include reboots, file transfers, and directory management.
 
-Ad-hoc commands also allow for fast and rapid management of servers. Follow [Ad-hoc Commands](/docs/tutorials/ansible_tuto.md) to learn more about ad-hoc commands.
+To learn more about ad-hoc commands, see:
+
+- [Ad-hoc Commands](/docs/tutorials/ansible_tuto.md)
 
 ## Server Management
 
