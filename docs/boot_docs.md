@@ -12,7 +12,7 @@ Ubuntu Server is built for server environments, which is a lightweight and minim
 
 **Why not other linus distros server**
  
-The reason why we are using ubuntu server rather than other linus distros, is because ubuntu server is the most scalable linus distribution.
+The reason why we are using ubuntu server rather than other linus distros, is because ubuntu server is the most scalable linus distribution, it bring economic and technical scalability to your datacenter, public or private. Whether you want to deploy an Openstack cloud or Hadoop cluster or a 50,000-node render farm, ubuntu server deliver the best value scale-out performance available.
 
 
 ## PREREQUISTICS 
