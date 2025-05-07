@@ -15,5 +15,10 @@ jobs:
         uses: pozil/auto-assign-issue@v2
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+<<<<<<< HEAD
           assignees: stephane-segning, Marcjazz, Hermann-Core, USHER-PB, onelrian, Donemmanuelo, Jagoum
           numOfAssignee: 1
+=======
+          assignees: USHER-PB
+          numOfAssignee: 1
+>>>>>>> 8a3c6fb (feat: auto-doc)
