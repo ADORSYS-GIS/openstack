@@ -1,2 +1,6 @@
+<<<<<<< HEAD
 ansible
 openstack
+=======
+ansible
+>>>>>>> 735b4f3 (fix(markdownlint): added Vocab)
