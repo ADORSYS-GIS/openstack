@@ -42,6 +42,7 @@ jobs:
         uses: sobolevn/misspell-fixer-action@master
         with:
 <<<<<<< HEAD
+<<<<<<< HEAD
           options: '-rsvn docs/'
 
       - name: Alex for inclusive language
@@ -53,3 +54,9 @@ jobs:
 =======
           options: '-rsvn docs/'      
 >>>>>>> 5392e6d (feat(ci): added commit-lint)
+=======
+          options: '-rsvn docs/'
+
+      - name: Alex for inclusive language
+        uses: theashraf/alex-action@master
+>>>>>>> b778cad (feat: doc self check)
