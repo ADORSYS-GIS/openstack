@@ -72,19 +72,26 @@ echo -e "- Disk size: $vmdisk"
 echo -e "- Memory size: $vmmem"
 echo -e "- CPUs: $vmcpu\n"
 
-# Create VMs
+# Create VMs with NAT only first
 for ((i = 1; i <= vmnumber; i++)); do
     echo -e "Creating VM $vmname$i...\n"
-    multipass launch --name "$vmname$i" --disk "$vmdisk" --memory "$vmmem" --cpus "$vmcpu" 24.04
-
+    multipass launch --name "$vmname$i" --disk "$vmdisk" --memory "$vmmem" --cpus "$vmcpu" --network virbr0 24.04
+    if [[ $? -ne 0 ]]; then
+        echo -e "Failed to create VM $vmname$i\n"
+        exit 1
+    fi
     # Stop VM and attach to OVS bridge
     multipass stop "$vmname$i"
-    sudo ovs-vsctl add-port "$vmbridge" "${vmname}${i}-eth0"
-    multipass start "$vmname$i"
+    # MODIFIED: Get actual interface name dynamically
+    interface_name=$(multipass exec "$vmname$i" -- ip -o link show | awk -F': ' '!/lo/ {print $2; exit}')
+    if [[ -z "$interface_name" ]]; then
+        echo -e "Error: Could not determine interface for $vmname$i\n"
+        exit 1
+    fi
+    sudo ovs-vsctl add-port "$vmbridge" "$interface_name"
 done
 
-## Configuring VLAN tagging
-## Configuring VLAN tagging - Updated Version
+## MODIFIED: VLAN tagging with name input instead of count
 echo -e "\nConfiguring VLAN tagging...\n"
 
 for ((i = 0; i < vlannum; i++)); do
@@ -92,27 +99,59 @@ for ((i = 0; i < vlannum; i++)); do
     echo -e "Configuring VLAN $i for VMs: ${vm_names[*]}...\n"
 
     for vm in "${vm_names[@]}"; do
-        if multipass list | grep -q "$vm"; then
-            interface_name=$(multipass info "$vm" | grep -A 1 "Network" | grep -o "eth[0-9]")
-            echo -e "Setting VLAN $i for $vm (interface: $interface_name)...\n"
-            sudo ovs-vsctl set port "$interface_name" tag=$i
-        else
-            echo -e "VM $vm not found! Skipping...\n"
+        if ! multipass list | grep -q "$vm"; then
+            echo -e "Error: VM $vm not found! Skipping...\n"
+            continue
         fi
+        
+        # Get the actual interface name
+        interface_name=$(multipass exec "$vm" -- ip -o link show | awk -F': ' '!/lo/ {print $2; exit}')
+        
+        if [[ -z "$interface_name" ]]; then
+            echo -e "Error: Could not determine interface for $vm\n"
+            continue
+        fi
+        
+        echo -e "Setting VLAN $i for $vm (interface: $interface_name)...\n"
+        multipass stop "$vm"
+        sudo ovs-vsctl set port "$interface_name" tag=$i
+        multipass start "$vm"
     done
 done
 
-## Configuring Network Interfaces In VMs
+## MODIFIED: Network interface configuration with VLAN-aware IP assignment
 echo -e "\nConfiguring Network Interfaces In VMs...\n"
 
 for ((i = 1; i <= vmnumber; i++)); do
-    echo -e "Configuring network for $vmname$i...\n"
-    multipass exec "$vmname$i" -- sudo ip link set eth0 up
-    multipass exec "$vmname$i" -- sudo ip addr add "192.168.$i.10/24" dev eth0
-    if [[ $? -eq 0 ]]; then
-        echo -e "Network configured successfully for $vmname$i\n"
+    vm="$vmname$i"
+    echo -e "Configuring network for $vm...\n"
+    
+    interface_name=$(multipass exec "$vm" -- ip -o link show | awk -F': ' '!/lo/ {print $2; exit}')
+    
+    if [[ -z "$interface_name" ]]; then
+        echo -e "Error: Could not determine interface for $vm\n"
+        continue
+    fi
+    
+    # Get VLAN tag
+    vlan_tag=$(sudo ovs-vsctl get port "$interface_name" tag 2>/dev/null || echo "0")
+    
+    if [[ "$vlan_tag" =~ ^[0-9]+$ ]]; then
+        ip_address="192.168.$vlan_tag.$((10+i))"
+        
+        multipass exec "$vm" -- sudo bash -c "
+            ip link set $interface_name up
+            ip addr flush dev $interface_name
+            ip addr add $ip_address/24 dev $interface_name
+        "
+        
+        if [[ $? -eq 0 ]]; then
+            echo -e "Success: $vm ($interface_name) -> $ip_address/24 (VLAN $vlan_tag)\n"
+        else
+            echo -e "Error: Failed to configure $vm network\n"
+        fi
     else
-        echo -e "Failed to configure network for $vmname$i\n"
+        echo -e "Error: Invalid VLAN tag for $vm\n"
     fi
 done
 
@@ -126,11 +165,11 @@ echo -e "\nTesting connectivity between VMs in the same VLAN...\n"
 for ((i = 0; i < vlannum; i++)); do
     echo -e "Testing connectivity in VLAN $i...\n"
     vms_in_vlan=($(sudo ovs-vsctl list port | awk -v tag="$i" '/tag:/ && $2 == tag {print $1}'))
-
+    
     if [[ ${#vms_in_vlan[@]} -ge 2 ]]; then
         first_vm=$(multipass list | awk -v iface="${vms_in_vlan[0]}" '$6 == iface {print $1}')
         second_vm=$(multipass list | awk -v iface="${vms_in_vlan[1]}" '$6 == iface {print $1}')
-
+        
         if [[ -n "$first_vm" && -n "$second_vm" ]]; then
             target_ip="192.168.$i.$((10 + $(echo $second_vm | sed 's/[^0-9]//g')))"
             echo -e "Testing ping from $first_vm to $second_vm ($target_ip)...\n"
