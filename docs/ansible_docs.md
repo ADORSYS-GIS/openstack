@@ -4,7 +4,7 @@ Ansible is an open-source automation tool used for automating applications, serv
 
 ## Prerequisites
 
-Before getting started with Ansible, make sure it's installed on your machine. You can follow the installation instructions for your specific OS using the link below:
+Before diving into Ansible, its installation is greatly necessary. To do so, follow the tutorial on how to install Ansible here:
 
 - [Ansible Installation](/docs/tutorials/ansible_tuto.md)
 
@@ -24,6 +24,8 @@ Ansible provides several tools to facilitate server management:
 Ansible relies on SSH to authenticate and configure servers. While you can use a single SSH key for managing all servers, it is often recommended to use two separate keys for different tasks: one for personal SSH logins and another specifically for automation with Ansible.
 
 #### Creation of SSH Keys
+
+SSH is a key aspect that Ansible uses to connect remotely to all the servers, eliminating the need for credential passwords each time a user logs in.
 
 To create SSH keys for both personal use and automation, follow these steps:
 
@@ -47,6 +49,10 @@ ssh-copy-id -i ~/.ssh/personal_key.pub user@server_ip
 ```
 
 Replace `user@server_ip` with the appropriate username and IP address or hostname of your target server.
+
+For more details, see:
+
+- [SSH Configuration](/docs/tutorials/ansible_tuto.md)
 
 ### Launching a Playbook
 
