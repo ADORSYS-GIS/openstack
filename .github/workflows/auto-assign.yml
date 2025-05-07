@@ -17,6 +17,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
           assignees: stephane-segning, Marcjazz, Hermann-Core, USHER-PB, onelrian, Donemmanuelo, Jagoum
           numOfAssignee: 1
 =======
@@ -25,5 +26,8 @@ jobs:
 >>>>>>> 8a3c6fb (feat: auto-doc)
 =======
           assignees: stephane-segning:7, Marcjazz:3, Hermann-Core:1, USHER-PB:10, onelrian:10, Donemmanuelo:10, Jagoum:10 
+=======
+          assignees: stephane-segning, Marcjazz, Hermann-Core, USHER-PB, onelrian, Donemmanuelo, Jagoum
+>>>>>>> 9b15705 (feat: auto-doc)
           numOfAssignee: 1
 >>>>>>> 9f0c44c (feat(ci): auto-config)
