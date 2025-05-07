@@ -4,25 +4,21 @@ Ansible is an open-source automation tool used for automating applications, serv
 
 ## Prerequisites
 
-Before getting started with Ansible, make sure it's installed on your machine. You can follow the installation instructions for your specific OS using the link below:
+Before diving into Ansible, its installation is greatly necessary. To do so, follow the tutorial on how to install Ansible here:
 
-- #### [Install Ansible](https://spacelift.io/blog/how-to-install-ansible)
+- [Ansible Installation](/docs/tutorials/ansible_tuto.md)
 
 ## Features
 
 Ansible provides several tools to facilitate server management:
 
- - #### OpenSSH:
-  Used for setting up SSH and generating keys for authenticating with servers.
+- **OpenSSH**: Used for setting up SSH and generating keys for authenticating with servers.
 
-  - ###  Ad-hoc Commands: 
-  These are used as alternatives to playbooks, typically for quick and simple tasks.
+- **Ad-hoc Commands**: These are used as alternatives to playbooks, typically for quick and simple tasks.
 
-- ### Playbooks:
- These are YAML files containing specific tasks to manage servers, commonly used for more complex tasks.
+- **Playbooks**: These are YAML files containing specific tasks to manage servers, commonly used for more complex tasks.
 
- - ###   Inventory File:
-  Contains the list of servers grouped by categories, allowing for organized management of your infrastructure.
+- **Inventory File**: Contains the list of servers grouped by categories, allowing for organized management of your infrastructure.
 
 ## How It Works
 
@@ -32,103 +28,49 @@ Ansible relies on SSH to authenticate and configure servers. While you can use a
 
 #### Creation of SSH Keys
 
-To create SSH keys for both personal use and automation, follow these steps:
+SSH is a key aspect that Ansible uses to connect remotely to all the servers, eliminating the need for credential passwords each time a user logs in.
 
- - ##### Personal Key (for interactive SSH/logins):
-```
-ssh-keygen -t ed25519 -f ~/.ssh/personal_key -C "your_email@domain.com"
-```
-Ansible Key (for automation tasks):
+To set up the SSH key, follow the tutorials in:
 
-    ssh-keygen -t ed25519 -f ~/.ssh/ansible_key -C "ansible@$(hostname)"
-
-These commands generate two SSH keys: one for personal use and one for Ansible automation. After creating the keys, copy them to the servers using the following command:
-
-``` 
-  ssh-copy-id -i ~/.ssh/ansible_key.pub lc@188.0.0.1
-
-```
-AND 
-```
-    ssh-copy-id -i ~/.ssh/personal.pub  lc@188.0.0.1
-  ```
-
-Replace 188.0.0.1 with the IP address or hostname of your target server.
+- [SSH Configuration](/docs/tutorials/ansible_tuto.md)
 
 ### Launching a Playbook
 
 Playbooks define the automation logic in a structured way. When you run a playbook, Ansible loads temporary modules to the remote server to execute the tasks (e.g., install packages, start services). After execution, these modules are removed.
 
-
-an example of a playbook structure is: 
-
-```
- ---
-- name: Install and configure Nginx
-  hosts: webservers
-  become: true  # Enable sudo
-  tasks:
-    - name: Update apt cache
-      apt:
-        update_cache: yes
-
-    - name: Install Nginx
-      apt:
-        name: nginx
-        state: present
-
-    - name: Start Nginx service
-      service:
-        name: nginx
-        state: started
-        enabled: yes
-```
 For more details on playbooks:
 
-[Ansible playbbook guide](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html)
+- [Ansible Playbook Guide](/docs/tutorials/ansible_tuto.md)
 
-### Ad-hoc commands 
+### Ad-hoc Commands
 
 Ad-hoc commands are ideal for executing quick operations without creating a playbook. Examples include reboots, file transfers, and directory management.
 
+Ad-hoc commands also allow for fast and rapid management of servers. Follow [Ad-hoc Commands](/docs/tutorials/ansible_tuto.md) to learn more about ad-hoc commands.
 
-Examples:
+## Server Management
 
-- #### Reboot servers in groups of 12:
+Ansible is very good for server management due to the fact that it provides:
 
-```
-ansible abc -a "/sbin/reboot" -f 12 -u username
-```
-- #### Copy a file to target servers:
+- **Playbooks**: If the group managing the servers is shifted and another one is placed, as the tasks that are to be run are in the playbook, this will be easy for the new group to understand what is to be done.
 
-```
-ansible abc -m copy -a "src=/etc/yum.conf dest=/tmp/yum.conf"
-```
+- **Inventory Files**: Placing all the servers' IP addresses in a file makes it easy to recall and know for which tasks are for which server. Just like in an inventory file, there is a group of servers for databases and more.
 
-- #### Create a directory with specific permissions:
+- **SSH Key**: The fact that Ansible uses SSH keys to handle authentication makes it ideal for movement as the login is already an automated action.
 
-```
-ansible abc -m file -a "dest=/path/user1/new mode=0777 owner=user1 group=user1 state=directory"
-```
+## What If Ansible Becomes Outdated?
 
-- #### Delete a directory:
+If Ansible becomes outdated or no longer maintained, there are other modern tools that can be used for infrastructure automation and server management:
 
-```  
-ansible abc -m file -a "dest=/path/user1/new state=absent"
-```
-
-The abc here refers a group of servers in your inventory file.
-
-
-To learn more about  ad-hoc commands:
-
-- [Ad-hoc](https://docs.ansible.com/ansible/2.8/user_guide/intro_adhoc.html)
-
-
-- ## What If Ansible Becomes Outdated?
-
-If Ansible becomes outdated or no longer maintained, there are other modern tools you can use for infrastructure automation and server management: like 
-
-- [Terraform](https://developer.hashicorp.com/terraform)
 - [Chef](https://docs.chef.io/manage/)
 - [SaltStack](https://github.com/saltstack/salt)
+- [Pulumi](https://www.pulumi.com/)
+- [Puppet](https://www.puppet.com/)
+
+Each of them is based on specific aspects:
+   Tools     | Language               | Best Used For                     |
+ |:----------|:----------------------:|----------------------------------:|
+ | Chef      | Ruby                   | Complex enterprise environments   |
+ | SaltStack | YAML                   | Large-scale deployments           |
+ | Pulumi    | Mainly programming language | Infrastructure provision and manage cloud resources |
+ | Puppet    | Puppet DSL             | Large-scale environments          |
