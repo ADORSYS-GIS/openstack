@@ -14,6 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check commit message
+        uses: ahmadnassri/action-commit-lint@v2
+
       - name: Vale linting
         uses: errata-ai/vale-action@v2
         with:
