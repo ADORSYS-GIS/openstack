@@ -17,6 +17,7 @@ jobs:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       - name: Check commit message
         uses: ahmadnassri/action-commit-lint@v2
 
@@ -29,6 +30,11 @@ jobs:
 >>>>>>> 5392e6d (feat(ci): added commit-lint)
 =======
 >>>>>>> d93dfbd (fix(merge conflict): resolved merge conflicts)
+=======
+      - name: Check commit message
+        uses: ahmadnassri/action-commit-lint@v2
+
+>>>>>>> 58e706a (feat(ci): added commit-lint)
       - name: Vale linting
         uses: errata-ai/vale-action@v2
         with:
