@@ -14,10 +14,33 @@ If we launch a vm instance without precising the network on which we want it to 
 Now lets launch different instances on the same network.
 
 ```sh
-    multipass launch --network eth0 --network name=bridge0,mode=manual
+    multipass launch --name test-vm0 --network name=bridge0,mode=manual
+    multipass launch --name test-vm1 --network name=bridge0,mode=manual
 ```
 
-Notice here that the eth0 is just like a physical ethernet cable that connect a vm to the virtual switch.
+If you get an error with the above command, check if the bridge you are trying to connect to actually exist and is up or active. Or you create it yourself using one of the commands below
+
+```sh
+    sudo ip link add name bridge0 type bridge && ip link set bridge0 up # or
+    sudo brctl addbr bridge0 && sudo ip link set bridge0 up # or
+    sudo ovs-vsctl add-br bridge0 && ip link set bridge0 up 
+```
+
+Now lets see if our vms are connected on the same network. Because if they are connected, they should be able to ping each other.
+We will configure a static ip for both machines and then ping them from the different virtual machines
+
+```sh
+
+multipass shell test-vm1  # to enter the test-vm1
+sudo ip addr add 192.168.2.100 dev enp0s3 # use `ip a` to check if you are using the correct interface enp0s3 
+```
+
+```sh
+    brctl show # to list all bridges and their status OR
+    ovs-vsctl list-br # if working with openvswitch
+
+```
+
 Now lets inspect the ip of the network:
 
 ```sh
