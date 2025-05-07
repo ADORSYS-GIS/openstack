@@ -1,17 +1,15 @@
----
-- name: Install QEMU, KVM, and Libvirt
+- name: Install QEMU, KVM, and Libvirt on Ubuntu Server
   hosts: kvm_hosts
-  become: true
+  become: yes
   tasks:
-    - name: Install required packages
+    - name: Install required packages for KVM/Libvirt (Server edition)
       apt:
         name:
           - qemu-kvm
           - libvirt-daemon-system
           - libvirt-clients
           - bridge-utils
-          - virtinst
-          - virt-manager
+          - virtinst 
         state: present
         update_cache: true
 
