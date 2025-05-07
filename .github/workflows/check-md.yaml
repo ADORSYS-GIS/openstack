@@ -14,9 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+<<<<<<< HEAD
       - name: Check commit message
         uses: ahmadnassri/action-commit-lint@v2
 
+=======
+>>>>>>> ee7ef50 (feat: doc-self check)
       - name: Vale linting
         uses: errata-ai/vale-action@v2
         with:
@@ -33,4 +36,8 @@ jobs:
           options: '-rsvn docs/'
 
       - name: Alex for inclusive language
+<<<<<<< HEAD
         uses: theashraf/alex-action@master
+=======
+        uses: theashraf/alex-action@master
+>>>>>>> ee7ef50 (feat: doc-self check)

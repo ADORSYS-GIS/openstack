@@ -32,45 +32,19 @@ mono_crash.*
 [Rr]eleases/
 x64/
 x86/
-[Ww][Ii][Nn]32/
-[Aa][Rr][Mm]*/
-bld/
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
-.vs/
-.history/
-.localhistory/
-.vshistory/
-healthchecksdb
-MigrationBackup/
-.ionide/
-FodyWeavers.xsd
-*.cab
-*.msi
-*.msix
-*.msm
-*.msp
-*.sln.iml
-
 # Project-specific ignores
 scripts/run.sh
 scripts/data.txt
 scripts/setup_vswitch.sh
 scripts/setup_vswitch.yml
 scripts/config_vlan.sh
-
 # Node.js
 node_modules/
-
 # Python
 __pycache__/
 *.pyc
-
 # CMake
 cmake-build-*/
-
 # .NET/Visual Studio
 *.VisualState.xml
 TestResult.xml
@@ -237,5 +211,4 @@ OpenCover/
 ASALocalRun/
 *.binlog
 .mfractor/
-
 # End of .gitignore
