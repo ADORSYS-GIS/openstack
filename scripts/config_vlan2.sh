@@ -14,11 +14,12 @@ if [[ "$option" == "create" ]]; then
         exit 1
     fi
     echo -e "Creating bridge $brname...\n"
-    sudo ovs-vsctl add-br "$brname" # creatgit rebase -i HEAD~10ing ovs
+    sudo ovs-vsctl add-br "$brname" # creating ovs
     if [[ $? -eq 0 ]]; then
         echo -e "$brname created successfully!!\n"
         vmbridge=$brname
-        multipass set local.bridged-network=$brnamegit rebase -i HEAD~10
+        multipass set local.bridged-network=$brname
+    else
         echo -e "Failed to create bridge $brname\n"
         exit 1
     fi
@@ -47,7 +48,7 @@ fi
 echo -e "Setting VLAN mode to native-untagged...\n"
 if ! sudo ovs-vsctl set port "$brname" vlan_mode=native-untagged; then
     echo -e "Failed to set VLAN mode\n"
-    exitgit rebase -i HEAD~10 1
+    exit 1
 fi
 
 echo -e "Configuring VLAN trunks...\n"
@@ -71,29 +72,19 @@ echo -e "- Disk size: $vmdisk"
 echo -e "- Memory size: $vmmem"
 echo -e "- CPUs: $vmcpu\n"
 
-# Create VMs with NAT only first
+# Create VMs
 for ((i = 1; i <= vmnumber; i++)); do
     echo -e "Creating VM $vmname$i...\n"
     multipass launch --name "$vmname$i" --disk "$vmdisk" --memory "$vmmem" --cpus "$vmcpu" 24.04
 
-    if [[ $? -ne 0 ]]; then
-        echo -e "Failed to create VM $vmname$i\n"
-        exit 1
-    fi
-
     # Stop VM and attach to OVS bridge
     multipass stop "$vmname$i"
-    # MODIFIED: Get actual interface name dynamically
-    interface_name=$(multipass exec "$vmname$i" -- ip -o link show | awk -F': ' '!/lo/ {print $2; exit}')
-    if [[ -z "$interface_name" ]]; then
-        echo -e "Error: Could not determine interface for $vmname$i\n"
-        exit 1
-    fi
-    sudo ovs-vsctl add-port "$vmbridge" "$interface_name"
+    sudo ovs-vsctl add-port "$vmbridge" "${vmname}${i}-eth0"
     multipass start "$vmname$i"
 done
 
-## MODIFIED: VLAN tagging with name input instead of count
+## Configuring VLAN tagging
+## Configuring VLAN tagging - Updated Version
 echo -e "\nConfiguring VLAN tagging...\n"
 
 for ((i = 0; i < vlannum; i++)); do
@@ -101,55 +92,27 @@ for ((i = 0; i < vlannum; i++)); do
     echo -e "Configuring VLAN $i for VMs: ${vm_names[*]}...\n"
 
     for vm in "${vm_names[@]}"; do
-        if ! multipass list | grep -q "$vm"; then
-            echo -e "Error: VM $vm not found! Skipping...\n"
-            continue
+        if multipass list | grep -q "$vm"; then
+            interface_name=$(multipass info "$vm" | grep -A 1 "Network" | grep -o "eth[0-9]")
+            echo -e "Setting VLAN $i for $vm (interface: $interface_name)...\n"
+            sudo ovs-vsctl set port "$interface_name" tag=$i
+        else
+            echo -e "VM $vm not found! Skipping...\n"
         fi
-
-        # Get the actual interface name
-        interface_name=$(multipass exec "$vm" -- ip -o link show | awk -F': ' '!/lo/ {print $2; exit}')
-
-        if [[ -z "$interface_name" ]]; then
-            echo -e "Error: Could not determine interface for $vm\n"
-            continue
-        fi
-
-        echo -e "Setting VLAN $i for $vm (interface: $interface_name)...\n"
-        multipass stop "$vm"
-        sudo ovs-vsctl set port "${vm}-${interface_name}" tag=$i
-        multipass start "$vm"
     done
 done
 
-## Optimized Network Configuration
+## Configuring Network Interfaces In VMs
 echo -e "\nConfiguring Network Interfaces In VMs...\n"
 
 for ((i = 1; i <= vmnumber; i++)); do
-    vm="$vmname$i"
-    echo -e "Configuring network for $vm...\n"
-
-    # Fast interface detection (limited to common virtual NIC patterns)
-    interface_name=$(multipass exec "$vm" -- ls /sys/class/net/ | grep -E '^e(n|th)[a-z0-9]+$' | head -1)
-
-    # Fallback to ens3 if detection fails
-    [[ -z "$interface_name" ]] && interface_name="ens3"
-
-    # Get VLAN tag (with caching)
-    vlan_tag=$(sudo ovs-vsctl get port "$interface_name" tag 2>/dev/null || echo "1")
-
-    # Atomic configuration
-    if multipass exec "$vm" -- sudo bash -c "
-        ip link set $interface_name up
-        ip addr flush dev $interface_name 2>/dev/null
-        ip addr add 192.168.$vlan_tag.$((10 + i))/24 dev $interface_name
-        ip route add default via 192.168.$vlan_tag.1
-    " >/dev/null 2>&1; then
-        echo -e "Success: $vm ($interface_name) → 192.168.$vlan_tag.$((10 + i))/24\n"
+    echo -e "Configuring network for $vmname$i...\n"
+    multipass exec "$vmname$i" -- sudo ip link set eth0 up
+    multipass exec "$vmname$i" -- sudo ip addr add "192.168.$i.10/24" dev eth0
+    if [[ $? -eq 0 ]]; then
+        echo -e "Network configured successfully for $vmname$i\n"
     else
-        echo -e "Error: Failed to configure $vm\n"
-        echo -e "Debug Info:"
-        multipass exec "$vm" -- ip addr show 2>/dev/null || echo "Cannot connect to VM"
-        continue
+        echo -e "Failed to configure network for $vmname$i\n"
     fi
 done
 
