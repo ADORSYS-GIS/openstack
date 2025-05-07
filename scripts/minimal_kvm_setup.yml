@@ -1,9 +1,13 @@
 ---
+<<<<<<< HEAD
 - name: Install QEMU, KVM, and Libvirt on Ubuntu Server
+=======
+- name: Install QEMU, KVM, and Libvirt
+>>>>>>> 889bfa9 (feat: add Ansible playbook to install KVM/Libvirt for VM host setup)
   hosts: kvm_hosts
   become: true
   tasks:
-    - name: Install required packages for KVM/Libvirt (Server edition)
+    - name: Install required packages
       apt:
         name:
           - qemu-kvm
