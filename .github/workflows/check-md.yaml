@@ -32,4 +32,7 @@ jobs:
       - name: Check for typos
         uses: sobolevn/misspell-fixer-action@master
         with:
-          options: '-rsvn docs/'      
+          options: '-rsvn docs/'
+
+      - name: Alex for inclusive language
+        uses: theashraf/alex-action@master
