@@ -1,37 +1,71 @@
-# OVERVIEW OF HOW TO INSTALL A UBUNTU SERVER IN A MINI-PC
+# HOW TO INSTALL A UBUNTU SERVER IN A MINI-PC
+
+## 1.Overwiew
 
 **What is ubuntu**
 
 Ubuntu is one of the most widely used and popular Linux distributions, that comes in multiple editions including Ubuntu Desktop, Ubuntu Server, and Ubuntu Core to mention a few.
 
 **Why ubuntu servers**
-
 Ubuntu Desktop is a perfect choice for novices or users who are getting started out with Linux owing to its neat and intuitive user interface and default apps to help users get started.
 
 Ubuntu Server is built for server environments, which is a lightweight and minimalistic version that is stripped off of any GUI applications and elements to enhance the speed and performance of running production-grade applications. It can serve as a web server, file server, development server, and DNS server to mention a few use cases.
 
 **Why not other linus distros server**
  
-The reason why we are using ubuntu server rather than other linus distros, is because ubuntu server is the most scalable linus distribution, it bring economic and technical scalability to your datacenter, public or private. Whether you want to deploy an Openstack cloud or Hadoop cluster or a 50,000-node render farm, ubuntu server deliver the best value scale-out performance available.
+The reason why we are using ubuntu server rather than other linus distros, is because ubuntu server is the most scalable linus distribution, it bring economic and technical scalability to your datacenter, public or private. Whether you want to deploy an Openstack cloud or Hadoop cluster or a 50,000-node render farm, ubuntu server deliver the best value scale-out performance available. What i mean by economic and technical scalability is that ubuntu can easily accomodate increased demand and usage.
+
+Ubuntu works seamlessly across x86 and ARM. And it comes with all the leading open source and commercial workloads built in, including Apache Hadoop, Inktank Ceph, 10gen MongoDB and many others.
 
 
-## PREREQUISTICS 
+**What you'll need**
 
-- A ubuntu server image: The server install image allow you to install ubuntu permanently on your computer for use as server.
-- A good flash or usb drive of atleat 4GB: This will help you make the bootable flash which will be use to install the server image in the computer.
-- Install the software called **balenaEtcher**: BalenaEtcher is an open-source utility used for writting iamge files such .iso and .img files, as well as zipped folder onto storage media to create live CD card and USB flash drive.
+- ubuntu server image: [Downloading ubuntu server](https://ubuntu.com/download/server)
+
+- Having a good flash or usb drive of atleat 4GB.
+ 
+- Having the software called **balenaEtcher**: [Downloading balenaEtcher](https://etcher-docs.balena.io/).
+
+**What you'll learn**
+
+How you will make a ubuntu server bootable key and also how to install ubuntu server on a computer.
+
+## 2. Get started
+To make a bootable flash drive, you need an image and to do that you'll need a software like balenaEtcher: utility used for writing image to a storage device like USB drive, etc. We will use ubuntu server image, so click and the link above to download both **balenaEtcher** and **ubuntu server image**. Install balenaEtcher after download then:
+
+1. launch balenaEtcher
+
+click on the "balenaEtcher" icon to start balenaEtcher
+![image0](./images/image.png)
+
+2. locating the image file
+
+click on "flash from file" to select your image file
+![image1](./images/image1.png)
+
+3. choosing the storage device
+
+click on "select target" to select your storage device
+![image2](./images/image2.png)
+
+4. flash the USB drive
+
+click on "flash" to make the bootable flash
+![image3](./images/image3.png)
 
 
-## HOW TO GET THE IMAGE AND MAKE A BOOTABLE FLASH
+**How to boot the machine**
 
-- To get the ubuntu server iso image you can simply [click here](https://ubuntu.com/download/server) to dowload the image.
-- Use **balenaEtcher** to make a bootable flash drive, [click here](https://etcher-docs.balena.io/) for more guide.
-- After dowloading this software, run it and follow the promt option to make the bootable flash drive.
+TO trigger the installation process, perform the following:
 
-## HOW TO BOOT THE MACHINE
+1. plug the storage device to your computer
+2. restart your computer
 
-- Plug the flash to your machine and follow the prompt option given to you, to get more insight on how to configure it detaily [click here](https://discourse.ubuntu.com/t/install-ubuntu-server/13949)
+A few minutes later, you will see a message like this displayed on the screen...
 
-## about server
+![text](./images/image4.png)
 
-To know more about ubuntu server you can [click here](https://documentation.ubuntu.com/server/#system-requirements) to view it documentation.
+
+If'd need assist to install the ubuntu server, follow the [installation guide](https://ubuntu.com/tutorials/install-ubuntu-server#3-boot-from-install-media).
+
+If you are new to ubuntu server, we'd recommend reading the [server guide](https://documentation.ubuntu.com/server/)
