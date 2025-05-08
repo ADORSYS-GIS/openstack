@@ -12,7 +12,7 @@ This guide documents how to use Ansible to install and configure QEMU, KVM, and 
 
 - [`scripts/minimal_kvm_setup.yml`](../scripts/minimal_kvm_setup.yml): Ansible playbook to automate installation
 - [`inventory.ini`](../inventory.ini): Inventory file listing target Ubuntu hosts
-- [`docs/minimal_kvm_setup.md`](minimal_kvm_setup.md): This documentation
+- [`docs/tutorials/minimal_kvm_setup.md`](minimal_kvm_setup.md): This documentation
 
 ## Requirements
 
