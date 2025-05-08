@@ -1,31 +1,41 @@
-# Setting Up a Vswitch to connect Multipass instances
+# How set up a vswitch(Virtaul Switch) with Multipass ?
 
 Hello guys in this tutorial we will configure a vswitch for multipass instances. And we are going to make our multipass instances to be accessible over the network.
 
+## Prerequisites
+To follow along in this course, you will need to:
+- Have ubuntu 22.04 LTS or ubuntu 24.04 LTS 
+- Have multipass installed  
+```sh
+multipass --version # if you get an error or you don't see anything , you  should install it with the command below
+sudo snap intall multipass
+```
+- Have root permision or use sudo if the user is in the sudoers group.
+- Install `ovs-vsctl` for creating bridges and adding ports. One importance of ovs is that it supports virtual LAN technology that help us to split our virtual network in to smaller logical partition so that we can enforce security and restrict acees
+ 
 ## Launching a VM directly on a Vnetwork
     
 Let's begin with the very basic step, launching a VM instance. But first make you have multipass installed. You can check it [here](https://canonical.com/multipass/install)
 If we launch a vm instance without precising the network on which we want it to be connected, it will be connect on the default local network.
 
 ```sh
-    multipass launch --name my-vm 24.04
+multipass launch --name my-vm 24.04
 ```
 
 Now lets launch different instances on the same network.
 
 ```sh
-    multipass launch --name test-vm0 --network name=bridge0,mode=manual
-    multipass launch --name test-vm1 --network name=bridge0,mode=manual
+multipass launch --name test-vm0 --network name=bridge0,mode=manual
+multipass launch --name test-vm1 --network name=bridge0,mode=manual
 ```
 
 If you get an error with the above command, check if the bridge you are trying to connect to actually exist and is up or active. Or you create it yourself using one of the commands below
 
 ```sh
-    sudo ip link add name bridge0 type bridge && ip link set bridge0 up # or
-    sudo brctl addbr bridge0 && sudo ip link set bridge0 up # or
-    sudo ovs-vsctl add-br bridge0 && ip link set bridge0 up 
+sudo ip link add name bridge0 type bridge && ip link set bridge0 up # or
+sudo brctl addbr bridge0 && sudo ip link set bridge0 up # or
+sudo ovs-vsctl add-br bridge0 && ip link set bridge0 up 
 ```
-
 Now lets see if our vms are connected on the same network. Because if they are connected, they should be able to ping each other.
 We will configure a static ip for both machines and then ping them from the different virtual machines
 
