@@ -75,7 +75,7 @@ echo -e "- CPUs: $vmcpu\n"
 # Create VMs with NAT only first
 for ((i = 1; i <= vmnumber; i++)); do
     echo -e "Creating VM $vmname$i...\n"
-    multipass launch --name "$vmname$i" --disk "$vmdisk" --memory "$vmmem" --cpus "$vmcpu" --network virbr0 24.04
+    multipass launch --name "$vmname$i" --disk "$vmdisk" --memory "$vmmem" --cpus "$vmcpu"  24.04
     
     if [[ $? -ne 0 ]]; then
         echo -e "Failed to create VM $vmname$i\n"
@@ -119,7 +119,7 @@ for ((i = 0; i < vlannum; i++)); do
         
         echo -e "Setting VLAN $i for $vm (interface: $interface_name)...\n"
         multipass stop "$vm"
-        sudo ovs-vsctl set port "$interface_name" tag=$i
+        sudo ovs-vsctl set port "${vm}-${interface_name}" tag=$i
         multipass start "$vm"
     done
 done
