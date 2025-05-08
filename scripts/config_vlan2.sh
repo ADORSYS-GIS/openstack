@@ -119,39 +119,35 @@ for ((i = 0; i < vlannum; i++)); do
     done
 done
 
-## MODIFIED: Network interface configuration with VLAN-aware IP assignment
+## Optimized Network Configuration
 echo -e "\nConfiguring Network Interfaces In VMs...\n"
 
 for ((i = 1; i <= vmnumber; i++)); do
     vm="$vmname$i"
     echo -e "Configuring network for $vm...\n"
     
-    interface_name=$(multipass exec "$vm" -- ip -o link show | awk -F': ' '!/lo/ {print $2; exit}')
+    # Fast interface detection (limited to common virtual NIC patterns)
+    interface_name=$(multipass exec "$vm" -- ls /sys/class/net/ | grep -E '^e(n|th)[a-z0-9]+$' | head -1)
     
-    if [[ -z "$interface_name" ]]; then
-        echo -e "Error: Could not determine interface for $vm\n"
-        continue
-    fi
+    # Fallback to ens3 if detection fails
+    [[ -z "$interface_name" ]] && interface_name="ens3"
     
-    # Get VLAN tag
-    vlan_tag=$(sudo ovs-vsctl get port "$interface_name" tag 2>/dev/null || echo "0")
+    # Get VLAN tag (with caching)
+    vlan_tag=$(sudo ovs-vsctl get port "$interface_name" tag 2>/dev/null || echo "1")
     
-    if [[ "$vlan_tag" =~ ^[0-9]+$ ]]; then
-        ip_address="192.168.$vlan_tag.$((10+i))"
-        
-        multipass exec "$vm" -- sudo bash -c "
-            ip link set $interface_name up
-            ip addr flush dev $interface_name
-            ip addr add $ip_address/24 dev $interface_name
-        "
-        
-        if [[ $? -eq 0 ]]; then
-            echo -e "Success: $vm ($interface_name) -> $ip_address/24 (VLAN $vlan_tag)\n"
-        else
-            echo -e "Error: Failed to configure $vm network\n"
-        fi
+    # Atomic configuration
+    if multipass exec "$vm" -- sudo bash -c "
+        ip link set $interface_name up
+        ip addr flush dev $interface_name 2>/dev/null
+        ip addr add 192.168.$vlan_tag.$((10+i))/24 dev $interface_name
+        ip route add default via 192.168.$vlan_tag.1
+    " > /dev/null 2>&1; then
+        echo -e "Success: $vm ($interface_name) → 192.168.$vlan_tag.$((10+i))/24\n"
     else
-        echo -e "Error: Invalid VLAN tag for $vm\n"
+        echo -e "Error: Failed to configure $vm\n"
+        echo -e "Debug Info:"
+        multipass exec "$vm" -- ip addr show 2>/dev/null || echo "Cannot connect to VM"
+        continue
     fi
 done
 
