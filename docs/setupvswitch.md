@@ -42,51 +42,46 @@ graph TD
 To follow along in this course, you will need to:
 
 - Have ubuntu 22.04 LTS or ubuntu 24.04 LTS 
-- Have [multipass](https://canonical.com/multipass/install) installed 
-
-```sh
-multipass --version # if you get an error or you don't see anything , you  should install it with the command below
-sudo snap intall multipass
-```
+- Have [multipass](https://canonical.com/multipass/install) installed `
 
 - Have root permision or use sudo if the user is in the sudoers group.
 - Have `ovs-vsctl` installed, for creating bridges and adding ports. One importance of ovs is that it supports virtual LAN technology that help us to split our virtual network in to smaller logical partition so that we can enforce security.
 
-```sh
-sudo apt install -y openvswitch-switch
-```
+    ```sh
+    sudo apt install -y openvswitch-switch
+    ```
 
 ## 3. Creating A Virtual Network
 
-After having put in place all those requirements, let's dive in !!!
+After putting in place all those requirements, let's dive in !!!
 
 - **First we will create a Virtual Switch with VLAN support.**
 
-```sh
-# Let's Create Open Virtual Switch (OVS)
-sudo ovs-vsctl add-br virt-bridge 
-ip link set virt-bridge up # to make it known to you system
+    ```sh
+    # Let's Create Open Virtual Switch (OVS)
+    sudo ovs-vsctl add-br virt-bridge 
+    ip link set virt-bridge up # to make it known to you system
 
-# Listing available bridges
-sudo ovs-vsctl list-br
+    # Listing available bridges
+    sudo ovs-vsctl list-br
 
-# Let's Configure VLANs on the OVS
-sudo ovs-vsctl set port virt-bridge vlan_mode=native-untagged
-sudo ovs-vsctl set port virt-bridge trunks=0,1 # to allow VLAN0 and VLAN1
-```
+    # Let's Configure VLANs on the OVS
+    sudo ovs-vsctl set port virt-bridge vlan_mode=native-untagged
+    sudo ovs-vsctl set port virt-bridge trunks=0,1 # to allow VLAN0 and VLAN1
+    ```
 
 - **Now Let's do a small trick, we are going to create 4 VMs and we will call them test-vmX where X is a variable.**
 
-```sh
-# Creating VMs with a simple Script
-for i in {1..4}; do
-    multipass launch --name test-vm$i --network name=virt-bridge --network name=default 24.04
-done
-```
+    ```sh
+    # Creating VMs with a simple Script
+    for i in {1..4}; do
+        multipass launch --name test-vm$i --network name=virt-bridge --network name=default 24.04
+    done
+    ```
 
-This will create 4 VMs with labels test-vm1, test-vm2 and so on running ubuntu 24.04.
+This will create 4 VMs with labels test-vm1, test-vm2 and so on, running ubuntu 24.04.
 
-- **Now let's configure the vlan tag, which  is a technology that uses the 803.1Q standard with a 12 bit added to the L2 packet before it is transimitted. And it can only be decrypted by a machine connected on thesame vlan as it.**
+- **Now let's configure the vlan tag, which  is a technology that uses the 802.1Q standard with a 12 bit added to the L2 packet before it is transimitted. And it can only be decrypted by a machine connected on thesame vlan as it.**
 
    - To check which interface is available in your vm
 
@@ -130,7 +125,7 @@ But we can automate all this bulky stuffs right ??. But that will be your assign
         sudo ip addr add 192.168.100.10X dev ens3
         ```
 
-    - For VLAN, VMs are test-vm3 and test-vm4. run this for each of them
+    - For VLAN1, VMs are test-vm3 and test-vm4. run this for each of them
 
         ```sh
         multipass exec test-vmX -- sudo ip link set ens3 up \
