@@ -20,21 +20,20 @@ Bridge allows the VMs to talk to each other as if they where on the same network
 ## 1. Network Topology Overview
 
 ```mermaid
+
 graph TD
     subgraph Host
-        OVS[OVS Bridge: br0]
-        OVS_VLAN10[OVS VLAN 0]
-        OVS_VLAN20[OVS VLAN 1]
+        OVS[OVS Bridge: virt-bridge]
+        OVS_VLAN0[OVS VLAN0]
+        OVS_VLAN1[OVS VLAN1]
     end
 
-    VM1 -->|ens3| OVS_VLAN0
-    VM2 -->|ens3| OVS_VLAN0
-    VM3 -->|ens3| OVS_VLAN1
-    VM4 -->|ens3| OVS_VLAN1
+    VM1 -->|eth0| OVS_VLAN0
+    VM2 -->|eth0| OVS_VLAN0
+    VM3 -->|eth0| OVS_VLAN1
 
     OVS_VLAN0 --> OVS
     OVS_VLAN1 --> OVS
-
 ```
 
 ## 2. Prerequisites
@@ -142,5 +141,12 @@ But we can automate all this bulky stuffs right ??. But that will be your assign
 
 Now let's talk about why we used a bridge and why it is advisable to configure a VLAN to split network into logical smaller networks.
 
-THE END.
+## Summary
+
+In this tutorial we have seen: 
+
+- how to create a bridge, 
+- how to add VM to a network or bridge. Note that we always stop the instance before attaching it to a network 
+- how to create VLAN and how to add VMs to a VLAN.
+- How to set static IPv4 for our VM instances on the network.
 
