@@ -28,9 +28,10 @@ graph TD
         OVS_VLAN1[OVS VLAN1]
     end
 
-    VM1 -->|eth0| OVS_VLAN0
-    VM2 -->|eth0| OVS_VLAN0
-    VM3 -->|eth0| OVS_VLAN1
+    VM1 -->|ens3| OVS_VLAN0
+    VM2 -->|ens3| OVS_VLAN0
+    VM3 -->|ens3| OVS_VLAN1
+    VM4 -->|ens3| OVS_VLAN1
 
     OVS_VLAN0 --> OVS
     OVS_VLAN1 --> OVS
