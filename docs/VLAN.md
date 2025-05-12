@@ -1,6 +1,6 @@
 # What is a VLAN and how does it works
 
-The VLAN is an overlay layer 2 network that helps us to  a set devices in different groups connected to a virtual network on the physical network.
+The VLAN is an overlay layer 2 network that helps us to a set devices in different groups connected to a virtual network on the physical network.
 
 The VLAN helps us to partition a LAN into smaller vnetworks for security purposes.
 This allows us to have different physically distinct virtual networks rather having many physical small LANs.
@@ -21,7 +21,6 @@ This is the type of VLAN where a VLAN is assign to a particular port and any mac
 ## Diagram
 
 ```mermaid
-
 flowchart TD
     subgraph "Physical Network Infrastructure"
         SW["Switch"] 

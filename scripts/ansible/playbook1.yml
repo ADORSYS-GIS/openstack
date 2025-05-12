@@ -1,14 +1,39 @@
----
-- name: Setup OVS and Multipass VMs
-  hosts: control
+# Configuring vswitch with ansible modules
+
+- name: Configure OVS with Multipass VMs in VLANs
+  hosts: localhost
+  connection: local
   become: true
-  vars_files:
-    - vars.yml
+  vars:
+    ovs_bridge: ansible-ovs-br0
+    vlan_config:
+      vlan100:
+        id: 100
+        vms:
+          - name: vm1
+            cpus: 1
+            mem: 1G
+            disk: 5G
+          - name: vm2
+            cpus: 1
+            mem: 1G
+            disk: 5G
+      vlan200:
+        id: 200
+        vms:
+          - name: vm3
+            cpus: 1
+            mem: 1G
+            disk: 5G
+          - name: vm4
+            cpus: 1
+            mem: 1G
+            disk: 5G
 
   tasks:
-    # This will install the packages wer needed
-    - name: Install required packages
-      apt:
+    # Install required packages
+    - name: Install OVS and Multipass
+      ansible.builtin.apt:
         name:
           - openvswitch-switch
           - openvswitch-common
@@ -16,9 +41,6 @@
           - bridge-utils
         state: present
         update_cache: yes
-        failed_when: false
-        register: pkg_status
-        changed_when: pkg_status.changed
 
     # Creating OVS bridge to act as vswitch
     - name: Create OVS bridge
@@ -39,13 +61,13 @@
         --cpus {{ item.cpus }} \
         --mem {{ item.mem }} \
         --disk {{ item.disk }}
-      loop: "{{ multipass_vms }}"
+      loop: "{{ vlan_config.vlan100.vms + vlan_config.vlan200.vms }}"
       register: multipass_launch
       changed_when: multipass_launch.rc == 0
 
     - name: Get Multipass instance network info
       command: multipass info {{ item.name }}
-      loop: "{{ multipass_vms }}"
+      loop: "{{ vlan_config.vlan100.vms + vlan_config.vlan200.vms }}"
       register: multipass_info
 
     - name: Extract MAC addresses
