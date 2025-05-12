@@ -70,3 +70,6 @@ FodyWeavers.xsd
 # Project-specific ignores
 ./scripts/run.sh
 ./scripts/data.txt
+./scripts/setup_vswitch.sh
+./scripts/setup_vswitch.yml
+./scripts/config_vlan.sh

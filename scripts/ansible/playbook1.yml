@@ -1,0 +1,93 @@
+# Configuring vswitch with ansible modules
+
+- name: Configure OVS with Multipass VMs in VLANs
+  hosts: localhost
+  connection: local
+  become: true
+  vars:
+    ovs_bridge: ansible-ovs-br0
+    vlan_config:
+      vlan100:
+        id: 100
+        vms:
+          - name: vm1
+            cpus: 1
+            mem: 1G
+            disk: 5G
+          - name: vm2
+            cpus: 1
+            mem: 1G
+            disk: 5G
+      vlan200:
+        id: 200
+        vms:
+          - name: vm3
+            cpus: 1
+            mem: 1G
+            disk: 5G
+          - name: vm4
+            cpus: 1
+            mem: 1G
+            disk: 5G
+
+  tasks:
+    # Install required packages
+    - name: Install OVS and Multipass
+      ansible.builtin.apt:
+        name:
+          - openvswitch-switch
+          - openvswitch-common
+          - multipass
+          - bridge-utils
+        state: present
+        update_cache: yes
+
+    # Create OVS bridge
+    - name: Ensure OVS bridge exists
+      community.network.ovs_bridge:
+        name: "{{ ovs_bridge }}"
+        state: present
+
+    # Create Multipass instances
+    - name: Launch Multipass VMs
+      community.general.multipass:
+        name: "{{ item.name }}"
+        cpus: "{{ item.cpus }}"
+        memory: "{{ item.mem }}"
+        disk: "{{ item.disk }}"
+        state: present
+      loop: "{{ vlan_config.vlan100.vms + vlan_config.vlan200.vms }}"
+
+    # Configure VLAN ports
+    - name: Create VLAN ports on OVS bridge
+      community.network.ovs_port:
+        bridge: "{{ ovs_bridge }}"
+        port: "{{ item.0.name }}-port"
+        tag: "{{ item.1.id }}"
+        state: present
+      loop: "{{ vlan_config | dict2items | subelements('value.vms') }}"
+      when: item.1 is mapping
+
+    # Get VM network interfaces
+    - name: Get VM network info
+      community.general.multipass_info:
+        name: "{{ item.name }}"
+      register: vm_info
+      loop: "{{ vlan_config.vlan100.vms + vlan_config.vlan200.vms }}"
+
+    # Configure networking on VMs
+    - name: Configure VM network interfaces
+      ansible.builtin.command: >-
+        multipass exec {{ item.item.name }} -- sudo ip link set eth0 down &&
+        multipass exec {{ item.item.name }} -- sudo ip link set eth0 name net0 &&
+        multipass exec {{ item.item.name }} -- sudo ip link set net0 up
+      loop: "{{ vm_info.results }}"
+
+    # Verify configuration
+    - name: Show OVS configuration
+      ansible.builtin.command: ovs-vsctl show
+      register: ovs_show
+
+    - name: Display OVS status
+      ansible.builtin.debug:
+        var: ovs_show.stdout_lines
