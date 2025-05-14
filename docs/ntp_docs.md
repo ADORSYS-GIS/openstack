@@ -14,7 +14,7 @@ Time synchronization plays a critical role in distributed systems, especially in
     
     In large cloud infrastructures like OpenStack, time synchronization is critical because authentication tokens are time-sensitive. If a server's system clock is not synchronized, it may reject valid tokens with errors such as "not yet valid" or "expired."*
 
-    *NTP (Network Time Protocol) ensures consistent and accurate time across all nodes in the infrastructure, helping to prevent such authentication failures.
+    NTP (Network Time Protocol) ensures consistent and accurate time across all nodes in the infrastructure, helping to prevent such authentication failures.
 
 -  **Logs Consistency issues**
    
