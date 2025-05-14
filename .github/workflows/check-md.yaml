@@ -1,0 +1,35 @@
+name: Documentation Review
+
+on:
+  push:
+    paths:
+      - '**/*.md'
+  pull_request:
+    paths:
+      - '**/*.md'
+
+jobs:
+  lint-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check commit message
+        uses: ahmadnassri/action-commit-lint@v2
+
+      - name: Vale linting
+        uses: errata-ai/vale-action@v2
+        with:
+          files: '**/*.md'
+
+      - name: markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          globs: |
+            docs/*.md
+            *.md
+
+      - name: Check for typos
+        uses: sobolevn/misspell-fixer-action@master
+        with:
+          options: '-rsvn docs/'      
