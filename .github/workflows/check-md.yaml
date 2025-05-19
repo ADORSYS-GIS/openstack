@@ -23,7 +23,7 @@ jobs:
           files: '**/*.md'
 
       - name: markdownlint
-        uses: DavidAnson/markdownlint-cli2-action@v19
+        uses: DavidAnson/markdownlint-cli2-action@v20
         with:
           globs: |
             docs/*.md
