@@ -14,27 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
       - name: Check commit message
         uses: ahmadnassri/action-commit-lint@v2
 
-=======
->>>>>>> ee7ef50 (feat: doc-self check)
-=======
-      - name: Check commit message
-        uses: ahmadnassri/action-commit-lint@v2
-
->>>>>>> 5392e6d (feat(ci): added commit-lint)
-=======
->>>>>>> d93dfbd (fix(merge conflict): resolved merge conflicts)
-=======
-      - name: Check commit message
-        uses: ahmadnassri/action-commit-lint@v2
-
->>>>>>> 58e706a (feat(ci): added commit-lint)
       - name: Vale linting
         uses: errata-ai/vale-action@v2
         with:
@@ -48,22 +30,7 @@ jobs:
       - name: Check for typos
         uses: sobolevn/misspell-fixer-action@master
         with:
-<<<<<<< HEAD
-<<<<<<< HEAD
-          options: '-rsvn docs/'
-
-      - name: Alex for inclusive language
-<<<<<<< HEAD
-        uses: theashraf/alex-action@master
-=======
-        uses: theashraf/alex-action@master
->>>>>>> ee7ef50 (feat: doc-self check)
-=======
-          options: '-rsvn docs/'      
->>>>>>> 5392e6d (feat(ci): added commit-lint)
-=======
           options: '-rsvn docs/'
 
       - name: Alex for inclusive language
         uses: theashraf/alex-action@master
->>>>>>> b778cad (feat: doc self check)
