@@ -8,4 +8,4 @@
         apt:
           name: ntp
           state: present
-          update_cahe: yes  
+          update_cache: yes  
