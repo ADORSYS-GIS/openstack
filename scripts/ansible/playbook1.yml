@@ -1,39 +1,14 @@
-# Configuring vswitch with ansible modules
-
-- name: Configure OVS with Multipass VMs in VLANs
-  hosts: localhost
-  connection: local
+---
+- name: Setup OVS and Multipass VMs
+  hosts: control
   become: true
-  vars:
-    ovs_bridge: ansible-ovs-br0
-    vlan_config:
-      vlan100:
-        id: 100
-        vms:
-          - name: vm1
-            cpus: 1
-            mem: 1G
-            disk: 5G
-          - name: vm2
-            cpus: 1
-            mem: 1G
-            disk: 5G
-      vlan200:
-        id: 200
-        vms:
-          - name: vm3
-            cpus: 1
-            mem: 1G
-            disk: 5G
-          - name: vm4
-            cpus: 1
-            mem: 1G
-            disk: 5G
+  vars_files:
+    - vars.yml
 
   tasks:
-    # Install required packages
-    - name: Install OVS and Multipass
-      ansible.builtin.apt:
+    # This will install the packages wer needed
+    - name: Install required packages
+      apt:
         name:
           - openvswitch-switch
           - openvswitch-common
@@ -41,6 +16,9 @@
           - bridge-utils
         state: present
         update_cache: yes
+        failed_when: false
+        register: pkg_status
+        changed_when: pkg_status.changed
 
     # Creating OVS bridge to act as vswitch
     - name: Create OVS bridge
@@ -90,13 +68,13 @@
         tag={{ item.vlan }} \
         -- set interface {{ item.name }}-port \
         type=internal
-      loop: "{{ multipass_vms }}"
+      loop: "{{ vlan_config.vlan100.vms + vlan_config.vlan200.vms }}"
 
     - name: Configure VLAN interfaces
       command: |
         ip link set {{ item.name }}-port up && \
         dhclient {{ item.name }}-port
-      loop: "{{ multipass_vms }}"
+      loop: "{{ vlan_config.vlan100.vms + vlan_config.vlan200.vms }}"
 
     - name: Show final OVS configuration
       command: ovs-vsctl show
