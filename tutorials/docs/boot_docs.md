@@ -201,3 +201,101 @@ If you are new to ubuntu server, we'd recommend reading the [server guide](https
  4. securing SSH service.
  5. Lastly, it is recommended to install security tools like Fail2ban to monitor and block malicious login attempts and to use security-enhancing features like AppArmor to restrict application permissions.
 
+## Troubleshooting partition issues
+
+If by the end while terminating the installation you get any error, then it means that you have a partition issue, and this is how you can resolve it:
+
+1- Download the Ubuntu 24.04 ISO image from the official Ubuntu website.
+
+2- Write the ISO image to a USB stick using a tool like balenaEtcher or the Startup Disk Creator.
+
+3- Boot your machine from the USB stick. You may need to enter the boot menu (commonly accessed with F12, Escape, F2, or F10) to select the USB device as the boot device.
+
+4- Once the USB boots, select the "Try Ubuntu" option from the GRUB bootloader.
+
+5- Choose your language and follow the installation wizard's instructions. If you encounter issues with graphics, select "safe graphics" mode.
+
+After your desktop environment has been setup, press "Ctrl + alt + t" to open a new terminal session.
+
+1- Identify the target disk
+
+Run:
+
+```sh
+lsblk
+```
+
+Example output:
+
+```
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda      8:0    0  500G  0 disk
+├─sda1   8:1    0  100G  0 part /
+├─sda2   8:2    0  400G  0 part /home
+sdb      8:16   0  250G  0 disk
+```
+
+Suppose `sdb` is the disk you want to wipe and repartition.
+
+---
+
+###  Using `fdisk` (for MBR/GPT)
+
+#### 2. Launch `fdisk`
+
+```bash
+sudo fdisk /dev/sdb
+```
+
+---
+
+#### 3. Inside `fdisk` (interactive mode)
+
+Press keys as prompted:
+
+1. **Type `g`** to create a new GPT partition table (or `o` for MBR).
+2. **Type `d`** to delete partitions (repeat until they're all gone).
+3. **Type `n`** to create a new partition.
+4. **Type `w`** to write changes and exit.
+
+Sample flow:
+
+```
+Command (m for help): g
+Created a new GPT disklabel.
+
+Command (m for help): d
+(No partition is currently defined, skip if none)
+
+Command (m for help): n
+Partition number (1-128, default 1): <Enter>
+First sector (2048-...), default 2048: <Enter>
+Last sector, +sectors or +size{K,M,G,T,P}: <Enter>
+
+Command (m for help): w
+```
+
+---
+
+#### 4. Format the new partition
+
+Assuming it created `/dev/sdb1`, format it:
+
+```bash
+sudo mkfs.ext4 /dev/sdb1
+```
+
+(Use `mkfs.xfs` or `mkfs.ntfs` if you prefer other filesystems.)
+
+---
+
+#### 5. Mount it (optional)
+
+```bash
+sudo mkdir /mnt/newdisk
+sudo mount /dev/sdb1 /mnt/newdisk
+```
+
+To mount it automatically at boot, you'd edit `/etc/fstab`.
+
+
