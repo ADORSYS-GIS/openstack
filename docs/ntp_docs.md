@@ -1,4 +1,4 @@
-# NTP 
+# NTP
 
 NTP (Network Time Protocol) is a protocol used to synchronize the system time across multiple servers over a network. Accurate time synchronization is essential for coordination, security, and consistency in distributed systems and cloud infrastructures.
 
