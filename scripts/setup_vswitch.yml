@@ -1,0 +1,42 @@
+---
+- name: Create a vswitch and connect Multipass VMs
+  hosts: localhost
+  connection: local
+  vars:
+    bridge_name: "multipass_br0"
+    vm1: "test-vm1"
+    vm2: "test-vm2"
+    subnet: "192.168.100.0/24"
+    vm1_ip: "192.168.100.2"
+    vm2_ip: "192.168.100.3"
+
+  tasks:
+    - name: Create a virtual bridge (vswitch)
+      ansible.builtin.command: "brctl addbr {{ bridge_name }}"
+      changed_when: false
+      ignore_errors: true  # In case bridge already exists
+
+    - name: Bring up the bridge
+      ansible.builtin.command: "ip link set {{ bridge_name }} up"
+
+    - name: Assign IP to bridge (optional)
+      ansible.builtin.command: "ip addr add {{ subnet | replace('0/24', '1/24') }} dev {{ bridge_name }}"
+
+    - name: Stop VMs to modify network settings
+      ansible.builtin.command: "multipass stop {{ item }}"
+      loop: "{{ [vm1, vm2] }}"
+
+    - name: Attach VMs to the bridge
+      ansible.builtin.command: "multipass set local.{{ item }}.network.bridge={{ bridge_name }}"
+      loop: "{{ [vm1, vm2] }}"
+
+    - name: Start VMs
+      ansible.builtin.command: "multipass start {{ item }}"
+      loop: "{{ [vm1, vm2] }}"
+
+    - name: Configure static IPs inside VMs (optional)
+      ansible.builtin.command: |
+        multipass exec {{ item.vm }} -- sudo ip addr add {{ item.ip }}/24 dev eth0
+      loop:
+        - { vm: "{{ vm1 }}", ip: "{{ vm1_ip }}" }
+        - { vm: "{{ vm2 }}", ip: "{{ vm2_ip }}" }
