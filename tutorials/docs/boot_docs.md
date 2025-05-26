@@ -1,14 +1,14 @@
 # HOW TO INSTALL A UBUNTU SERVER 24.04 STEP-BY STEP
 
-## Overwiew
+## Overview
 
-**What is ubuntu**
+**What is Ubuntu**
 
 Ubuntu is one of the most widely used and popular Linux distributions, that comes in multiple editions including Ubuntu Desktop, Ubuntu Server, and Ubuntu Core to mention a few.
 
-**Why ubuntu servers**
+**Why Ubuntu servers**
 
-Ubuntu Server is built for server environments, which is a lightweight and minimalistic version that is stripped off of any GUI applications and elements to enhance the speed and performance of running production-grade applications. It can serve as a web server, file server, development server, and DNS server to mention a few use cases.
+Ubuntu Server is built for server environments, which is a lightweight and minimal version that is stripped off of any GUI applications and elements to enhance the speed and performance of running production-grade applications. It can serve as a web server, file server, development server, and DNS server to mention a few use cases.
 
 # Ubuntu Server vs Other Server OS/Distros
 
@@ -26,7 +26,7 @@ Ubuntu Server is built for server environments, which is a lightweight and minim
 - 2 GHz dual-core processor
 - 25 GB disk space
 - Internet Connectivity (Optional)
-- Installation Media (Bootable USB or DVD).
+- Installation Media (bootable USB or DVD).
 
 **What you'll learn**
 
@@ -111,7 +111,7 @@ On the pop-up CLI that appears, select the `Manual` option and hit ENTER.
 
 ![text](./images/img8.png)
 
-Be sure to fill in the IP details, i.e. subnet, IP address, gateway, Nameservers, and Search domains, if any.  Then select `Save` and hit ENTER.
+Be sure to fill in the IP details, i.e. Subnet, IP address, gateway, Nameservers, and Search domains, if any.  Then select `Save` and hit ENTER.
 
 ![text](./images/img9.png)
 
@@ -189,7 +189,7 @@ Once the system has rebooted, provide your user account’s password and hit ENT
 
 ![text](./images/img22.png)
 
-From now you can enjoy your ubuntu server 24.04 LTS installation.
+From now you can enjoy your Ubuntu server 24.04 LTS installation.
 If you are new to ubuntu server, we'd recommend reading the [server guide](https://documentation.ubuntu.com/server/)
 
 ## Security measures
