@@ -125,6 +125,7 @@ echo -e "\nConfiguring Network Interfaces In VMs...\n"
 for ((i = 1; i <= vmnumber; i++)); do
     vm="$vmname$i"
     echo -e "Configuring network for $vm...\n"
+<<<<<<< HEAD
 
     # Fast interface detection (limited to common virtual NIC patterns)
     interface_name=$(multipass exec "$vm" -- ls /sys/class/net/ | grep -E '^e(n|th)[a-z0-9]+$' | head -1)
@@ -135,14 +136,33 @@ for ((i = 1; i <= vmnumber; i++)); do
     # Get VLAN tag (with caching)
     vlan_tag=$(sudo ovs-vsctl get port "$interface_name" tag 2>/dev/null || echo "1")
 
+=======
+    
+    # Fast interface detection (limited to common virtual NIC patterns)
+    interface_name=$(multipass exec "$vm" -- ls /sys/class/net/ | grep -E '^e(n|th)[a-z0-9]+$' | head -1)
+    
+    # Fallback to ens3 if detection fails
+    [[ -z "$interface_name" ]] && interface_name="ens3"
+    
+    # Get VLAN tag (with caching)
+    vlan_tag=$(sudo ovs-vsctl get port "$interface_name" tag 2>/dev/null || echo "1")
+    
+>>>>>>> 81f3301 (Added a script to automate the configuration of a VLAN)
     # Atomic configuration
     if multipass exec "$vm" -- sudo bash -c "
         ip link set $interface_name up
         ip addr flush dev $interface_name 2>/dev/null
+<<<<<<< HEAD
         ip addr add 192.168.$vlan_tag.$((10 + i))/24 dev $interface_name
         ip route add default via 192.168.$vlan_tag.1
     " >/dev/null 2>&1; then
         echo -e "Success: $vm ($interface_name) → 192.168.$vlan_tag.$((10 + i))/24\n"
+=======
+        ip addr add 192.168.$vlan_tag.$((10+i))/24 dev $interface_name
+        ip route add default via 192.168.$vlan_tag.1
+    " > /dev/null 2>&1; then
+        echo -e "Success: $vm ($interface_name) → 192.168.$vlan_tag.$((10+i))/24\n"
+>>>>>>> 81f3301 (Added a script to automate the configuration of a VLAN)
     else
         echo -e "Error: Failed to configure $vm\n"
         echo -e "Debug Info:"
