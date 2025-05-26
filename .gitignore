@@ -230,12 +230,14 @@ FodyWeavers.xsd
 
 # Project-specific ignores
 ./scripts/run.sh
-<<<<<<< HEAD
+.idea
 ./scripts/data.txt
 ./scripts/setup_vswitch.sh
 ./scripts/setup_vswitch.yml
 ./scripts/config_vlan.sh
-=======
 ./scripts/data.txt
+<<<<<<< HEAD
 >>>>>>> 81f8a97 (feat: added a script to set up a multipass network in an ubuntu environment and updated setupvswitch.md)
 >>>>>>> 0f98778 (fix(merge conflict): resolved merge conflict)
+=======
+>>>>>>> d8c0660 (fix(merge conflict): resolved merge conflict)
