@@ -33,7 +33,6 @@ else
     exit 1
 fi
 sudo ip link set $brname up
-
 ## Configuring VLANs
 echo -e "\nConfiguring VLAN ...\n"
 
