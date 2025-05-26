@@ -68,6 +68,7 @@ If Ansible becomes outdated or no longer maintained, there are other modern tool
 - [Puppet](https://www.puppet.com/)
 
 Each of them is based on specific aspects:
+
    Tools     | Language               | Best Used For                     |
  |:----------|:----------------------:|----------------------------------:|
  | Chef      | Ruby                   | Complex enterprise environments   |
