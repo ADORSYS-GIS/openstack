@@ -33,6 +33,7 @@ else
     exit 1
 fi
 sudo ip link set $brname up
+
 ## Configuring VLANs
 echo -e "\nConfiguring VLAN ...\n"
 
@@ -47,7 +48,7 @@ fi
 echo -e "Setting VLAN mode to native-untagged...\n"
 if ! sudo ovs-vsctl set port "$brname" vlan_mode=native-untagged; then
     echo -e "Failed to set VLAN mode\n"
-    exit 1
+    exitgit rebase -i HEAD~10 1
 fi
 
 echo -e "Configuring VLAN trunks...\n"
@@ -83,14 +84,12 @@ for ((i = 1; i <= vmnumber; i++)); do
 
     # Stop VM and attach to OVS bridge
     multipass stop "$vmname$i"
-
     # MODIFIED: Get actual interface name dynamically
     interface_name=$(multipass exec "$vmname$i" -- ip -o link show | awk -F': ' '!/lo/ {print $2; exit}')
     if [[ -z "$interface_name" ]]; then
         echo -e "Error: Could not determine interface for $vmname$i\n"
         exit 1
     fi
-
     sudo ovs-vsctl add-port "$vmbridge" "$interface_name"
     multipass start "$vmname$i"
 done
