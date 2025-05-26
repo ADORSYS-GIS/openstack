@@ -18,7 +18,7 @@ This is the type of VLAN where a VLAN is assign to a particular port and any mac
 
 - ***User Based or Dynamic VLAN***
 
-## Diagram 
+## Diagram
 
 ```mermaid
 

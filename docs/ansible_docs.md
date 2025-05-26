@@ -68,9 +68,10 @@ If Ansible becomes outdated or no longer maintained, there are other modern tool
 - [Puppet](https://www.puppet.com/)
 
 Each of them is based on specific aspects:
-   Tools     | Language               | Best Used For                     |
- |:----------|:----------------------:|----------------------------------:|
- | Chef      | Ruby                   | Complex enterprise environments   |
- | SaltStack | YAML                   | Large-scale deployments           |
- | Pulumi    | Mainly programming language | Infrastructure provision and manage cloud resources |
- | Puppet    | Puppet DSL             | Large-scale environments          |
+
+Tools     | Language               | Best Used For
+----------|------------------------|----------------------------------------------
+Chef      | Ruby                   | Complex enterprise environments
+SaltStack | YAML                   | Large-scale deployments
+Pulumi    | Mainly programming language | Infrastructure provision and manage cloud resources
+Puppet    | Puppet DSL             | Large-scale environments
