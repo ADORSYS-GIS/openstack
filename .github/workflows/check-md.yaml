@@ -16,6 +16,7 @@ jobs:
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       - name: Check commit message
         uses: ahmadnassri/action-commit-lint@v2
 
@@ -26,17 +27,17 @@ jobs:
         uses: ahmadnassri/action-commit-lint@v2
 
 >>>>>>> 5392e6d (feat(ci): added commit-lint)
+=======
+>>>>>>> d93dfbd (fix(merge conflict): resolved merge conflicts)
       - name: Vale linting
         uses: errata-ai/vale-action@v2
         with:
           files: '**/*.md'
 
       - name: markdownlint
-        uses: DavidAnson/markdownlint-cli2-action@v20
+        uses: DavidAnson/markdownlint-cli2-action@v19
         with:
-          globs: |
-            docs/*.md
-            *.md
+          globs: '**/*.md'
 
       - name: Check for typos
         uses: sobolevn/misspell-fixer-action@master
