@@ -33,6 +33,7 @@ else
     exit 1
 fi
 sudo ip link set $brname up
+
 ## Configuring VLANs
 echo -e "\nConfiguring VLAN ...\n"
 
@@ -47,7 +48,7 @@ fi
 echo -e "Setting VLAN mode to native-untagged...\n"
 if ! sudo ovs-vsctl set port "$brname" vlan_mode=native-untagged; then
     echo -e "Failed to set VLAN mode\n"
-    exit 1
+    exitgit rebase -i HEAD~10 1
 fi
 
 echo -e "Configuring VLAN trunks...\n"
