@@ -1,2 +1,12 @@
 ansible
 openstack
+balenaEtcher
+UNetbootin
+SELinux
+bootable
+bootloader
+Ctrl
+Subnet
+Nameservers
+ufw
+Ubuntu
