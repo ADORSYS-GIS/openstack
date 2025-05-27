@@ -21,7 +21,6 @@ Ubuntu Server is built for server environments, which is a lightweight and minim
 | **Security**    | AppArmor, UFW firewall, automatic security updates available                      | Manual setup required for many security features                                    | SELinux is powerful but complex; good enterprise controls                          | Proprietary model limits transparency; patching is slower                            |
 | **Scalability** | Well-suited for cloud environments, containers, and large-scale deployments       | Scalable, but lacks vendor-optimized tools for automation                           | Highly scalable; used in many large enterprise networks                            | Scales in enterprise settings but with higher resource and license costs             |                                                                                                                                               
 **Prerequisites**
-
 - Minimal 4 GB of RAM
 - 2 GHz dual-core processor
 - 25 GB disk space
@@ -30,14 +29,12 @@ Ubuntu Server is built for server environments, which is a lightweight and minim
 
 **What you'll learn**
 
-How you will make a ubuntu server bootable key and also how to install ubuntu server 24.04 on a computer.
+How you will make a Ubuntu server bootable key and also how to install Ubuntu server 24.04 on a computer.
 
 ##  Get started
 
 1. **Download the Ubuntu Server ISO Image**
-
 The first step is to download the Ubuntu server 24.04 ISO image. So, head over to the official Ubuntu download page (https://ubuntu.com/download/server) and download the ISO file.
-
 With the ISO file at hand, prepare the installation media by burning the ISO file into USB. You can use a software utility such as Rufus if you are running Windows or UNetbootin or balenaEtcher for Linux, macOS, and Windows. In this tutor we'll use balenaEtcher, get to the balenaEtcher page (https://etcher-docs.balena.io/) to download balenaEtcher, here are the steps to burn the ISO image:
 
 
@@ -190,13 +187,13 @@ Once the system has rebooted, provide your user account’s password and hit ENT
 ![text](./images/img22.png)
 
 From now you can enjoy your Ubuntu server 24.04 LTS installation.
-If you are new to ubuntu server, we'd recommend reading the [server guide](https://documentation.ubuntu.com/server/)
+If you are new to Ubuntu server, we'd recommend reading the [server guide](https://documentation.ubuntu.com/server/)
 
 ## Security measures
  When installing an Ubuntu Server, several security considerations are important to ensure the system's safety. some steps are as follows:
 
  1. Ensuring that the system is updated regularly to apply the latest security patches and bug fixes.
- 2. Using a firewall, such as ufw (Uncomplicated Firewall), to only allow necessary ports is also essential.
+ 2. Using a firewall, such as Uncomplicated Firewall(ufw), to only allow necessary ports is also essential.
  3. securing shared memory by adding specific configurations to /etc/fstab can improve security.
  4. securing SSH service.
  5. Lastly, it is recommended to install security tools like Fail2ban to monitor and block malicious login attempts and to use security-enhancing features like AppArmor to restrict application permissions.
