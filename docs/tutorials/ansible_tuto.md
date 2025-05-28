@@ -12,7 +12,7 @@ So now we will dive into managing our server using ansible.
 
 ### Installation 
 
-Firslt make sure you are having ansible install in you machine , Follow this to install it depending on the os you are on 
+First make sure you are having ansible install in you machine , Follow this to install it depending on the os you are on 
 
 -  linux 
 ```
@@ -37,7 +37,7 @@ brew install ansible
 
 #### SSH Setup 
 
--  Firslt you will need to create Ssh keys for authentification and for ansible 
+-  First you will need to create Ssh keys for authentification and for ansible 
    So you will run this command 
 
    
