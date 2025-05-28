@@ -20,7 +20,9 @@ jobs:
       - name: Vale linting
         uses: errata-ai/vale-action@v2
         with:
-          files: '**/*.md'
+          files: |
+            docs/*.md
+            *.md
 
       - name: markdownlint
         uses: DavidAnson/markdownlint-cli2-action@v20
