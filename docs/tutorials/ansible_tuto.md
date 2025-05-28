@@ -12,7 +12,7 @@ So now we will dive into managing our server using ansible.
 
 ### Installation 
 
-Firslt make sure you are having ansible install in you machine , Follow this to install it depending on the os you are on 
+First make sure you are having ansible install in you machine , Follow this to install it depending on the os you are on 
 
 -  linux 
 ```
@@ -37,7 +37,7 @@ brew install ansible
 
 #### SSH Setup 
 
--  Firslt you will need to create Ssh keys for authentification and for ansible 
+-  First you will need to create Ssh keys for authentification and for ansible 
    So you will run this command 
 
    
@@ -118,7 +118,7 @@ tasks:
 
 Here as you can see the name can be optional ..not always obligated gives a name to the playbook we are about to run. The next field are important and mostly obligated.
 
-The hosts indicate under which group of server found in the inventory file should the operation execute , become gives the user running it a high acess . Then  tasks is used to define which operation we want to execute in the webservers ,given the name and the package manager that will be used to run the task .
+The hosts indicate under which group of server found in the inventory file should the operation execute , become gives the user running it a high access . Then  tasks is used to define which operation we want to execute in the webservers ,given the name and the package manager that will be used to run the task .
 
 Now we will look at the inventory file 
 
@@ -134,7 +134,7 @@ This is a file that defines all the servers and place them in groups depending o
 192.168.1.12 ansible_user=root
 
 
-So here you can find different ip in different group ..The groups define what the server is used for.This means that the 1st Servers are use for web purpose while the other one is used for database.
+So here you can find different ip in different group. The groups define what the server is used for.This means that the 1st Servers are use for web purpose while the other one is used for database.
 
 #### Using Ad-hoc Commands
 
@@ -157,6 +157,6 @@ ansible web -i hosts.ini -a "reboot" -b
 ansible web -i hosts.ini -b -m apt -a "name=vlc state=present"
 ```
 
-So there are many other things that ansible can do like creating directories, files or deleting them in servers ..
+So there are many other things that ansible can do like creating directories, files or deleting them in servers.
 
 We are at the end of our tutorial on ansible  hope that this have help you to manage your first servers using ansible .
