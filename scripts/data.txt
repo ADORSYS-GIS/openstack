@@ -1,0 +1,10 @@
+use
+virt-bridge
+2 
+test-vm 
+4 
+4G 
+1G  
+1 
+2 
+2 

@@ -1,4 +1,4 @@
-# Openstack
+# OpenStack
 
 ## Project structure
 

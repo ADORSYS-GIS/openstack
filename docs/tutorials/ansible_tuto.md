@@ -1,87 +1,76 @@
- Welcome to this beginner's guide to Ansible, a powerful automation tool that helps you manage, configure, and deploy applications to servers. In this tutorial, we’ll guide you through the installation and basic usage of Ansible, so you can start automating tasks across your infrastructure.
+# Getting Started with Ansible
 
-### what is ansible ??
+Welcome to this beginner's guide to Ansible, a powerful automation tool that helps you manage, configure, and deploy applications to servers. In this tutorial, we'll guide you through the installation and basic usage of Ansible.
 
-Ansible is an open source platform that is used for management, configuration , application deployment and task automation of servers and cloud infrastructures.
+## What is Ansible?
 
-### Why is it used ??
+Ansible is an open-source platform used for server management, configuration, application deployment, and task automation across servers and cloud infrastructures.
 
-Ansible is use so as to easy the management of servers and their configuration .It is uses certain tools like  playbooks , ad-hoc commands and inventory file so to easy and makes the work more efficient.
+## Why Use Ansible?
 
-So now we will dive into managing our server using ansible.
+Ansible simplifies server management and configuration. It uses tools like playbooks, ad-hoc commands, and inventory files to make infrastructure management more efficient and automated.
 
-### Installation 
+## Installation
 
-Firslt make sure you are having ansible install in you machine , Follow this to install it depending on the os you are on 
+First, ensure you have Ansible installed on your machine. Follow these instructions based on your operating system:
 
--  linux 
-```
+### Linux
+
+```bash
 sudo apt install ansible
 ```
 
-- MacOs 
+### MacOS
 
-If you are macOs you will first need to install homebrew which is a package manager that will facilitate the installation of ansible 
+First, install Homebrew (a package manager) if you haven't already:
 
-```
+```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-  Then type the command to install ansible 
-  
-```
+Then install Ansible:
+
+```bash
 brew install ansible
 ```
 
-   ### Managing Our FirstGroup of  Servers
+## Managing Your First Servers
 
-#### SSH Setup 
+### SSH Setup
 
--  Firslt you will need to create Ssh keys for authentification and for ansible 
-   So you will run this command 
+1. Create SSH keys for authentication:
 
-   
-```
-ssh-keygen -t ed25519 -f ~/.ssh/personal_key -C "your_email@domain.com"
-```
+    ```bash
+    ssh-keygen -t ed25519 -f ~/.ssh/personal_key -C "your_email@domain.com"
+    ```
 
- -   This command will create a key that will be use for authentification so as to login into all the servers automatically.
-   
- Then 
+    This command creates a key that will be used for automatic authentication when logging into your servers.
 
- 
-```
-ssh-keygen -t ed25519 -f ~/.ssh/ansible_key -C "ansible@$(hostname)"
-```
+2. Create a new SSH key specifically for Ansible automation tasks:
 
+    ```bash
+    ssh-keygen -t ed25519 -f ~/.ssh/ansible_key -C "ansible@$(hostname)"
+    ```
 
-- This will create a new ssh key specifically for ansible automation tasks.
+3. Copy the SSH keys to your servers:
 
-- After creating the different keys for ansible and for authentification , you will need to copy them to all the other servers .So to achieve it you will use this command
+    ```bash
+    ssh-copy-id -i ~/.ssh/ansible_key.pub lc@188.0.0.1
+    ```
 
-```
-ssh-copy-id -i ~/.ssh/ansible_key.pub lc@188.0.0.1
-```
+    ```bash
+    ssh-copy-id -i ~/.ssh/personal.pub  lc@188.0.0.1
+    ```
 
+    These commands copy your authentication and Ansible SSH keys to the server, simplifying configuration and management.
 
-AND 
+### Using Playbooks
 
-```
-ssh-copy-id -i ~/.ssh/personal.pub  lc@188.0.0.1
-```
+After setting up your SSH keys, you can use Ansible playbooks to execute tasks on your servers. A playbook is a YAML file that contains a list of tasks to be executed on the managed servers.
 
+Here is an example of a playbook that installs and starts the Apache web server:
 
- So this command will copy both of your keys to the servers so as to easy the configurations and the management of the servers 
-
-#### USING PLAYBOOKS 
-
-After setting up your ssh keys and copy them to all the different servers , you will need now a way to execute the different task on the servers and to do so you will use an ansible tool known as Playbook .
-
-A PLaybook is a yaml file that contains all the tasks that are to run on server ..This means taht if i need to install vlc or any other apps on a group of server instead of going to each server and configuring them , i will descibe the task and give the action that should run  inorder to insatll the given app .
-
-So a global example of a playbook is 
-
-```
+```yaml
 - name: Install and start Apache web server
   hosts: webservers
   become: true  # Use sudo
@@ -104,59 +93,48 @@ So a global example of a playbook is
         state: started
         enabled: true
 ```
-So here as you can see the action we want to perform on the webservers is to update apt cache .So This will now use modules .
 
-Modules are small programs used to execute specific tasks on a playbook . That is when a playbook is launched the modules are loaded into the servers to execute the specific task described in the playbook .
+In this playbook, the `hosts` field specifies the group of servers (from the inventory file) on which the tasks will be executed. The `become` field allows the specified user to execute tasks with elevated privileges. The `tasks` field lists the actions to be performed on the servers, such as installing packages and starting services.
 
-As you can see a playbook is having a define syntax that is 
+### Inventory File
 
-name: Install and start apache web server
-hosts: webservers
-become: true  # Use sudo
-tasks:
+The inventory file defines the servers managed by Ansible and organizes them into groups based on their roles or purposes. Here is an example:
 
-
-Here as you can see the name can be optional ..not always obligated gives a name to the playbook we are about to run. The next field are important and mostly obligated.
-
-The hosts indicate under which group of server found in the inventory file should the operation execute , become gives the user running it a high acess . Then  tasks is used to define which operation we want to execute in the webservers ,given the name and the package manager that will be used to run the task .
-
-Now we will look at the inventory file 
-
-#### Inventory file 
-
-This is a file that defines all the servers and place them in groups depending on what the server is used for .That is 
-
+```ini
 [web]
 192.168.1.10 ansible_user=ubuntu
 192.168.1.11 ansible_user=ubuntu
 
 [db]
 192.168.1.12 ansible_user=root
-
-
-So here you can find different ip in different group ..The groups define what the server is used for.This means that the 1st Servers are use for web purpose while the other one is used for database.
-
-#### Using Ad-hoc Commands
-
-Ad-hoc commands are quick commands to run single tasks without a playbook.So this help you to carry some short task that are not too complex without writing a whole playbook.Some examples are 
-
-##### Example: Ping All Servers
-```
-ansible all -i hosts.ini -m ping
 ```
 
-##### Example: Reboot Web Servers
+In this example, the servers are grouped into `web` and `db` groups, indicating their respective roles as web servers and database servers.
 
-```
-ansible web -i hosts.ini -a "reboot" -b
-```
+### Using Ad-hoc Commands
 
-##### Example: Install VLC on Web Servers
+Ad-hoc commands are used to run single, simple tasks on your servers without the need to write a playbook. Here are some examples:
 
-```
-ansible web -i hosts.ini -b -m apt -a "name=vlc state=present"
-```
+- **Ping All Servers**
 
-So there are many other things that ansible can do like creating directories, files or deleting them in servers ..
+    ```bash
+    ansible all -i hosts.ini -m ping
+    ```
 
-We are at the end of our tutorial on ansible  hope that this have help you to manage your first servers using ansible .
+- **Reboot Web Servers**
+
+    ```bash
+    ansible web -i hosts.ini -a "reboot" -b
+    ```
+
+- **Install VLC on Web Servers**
+
+    ```bash
+    ansible web -i hosts.ini -b -m apt -a "name=vlc state=present"
+    ```
+
+Ad-hoc commands are useful for performing quick tasks, such as installing a package or rebooting a server.
+
+## Conclusion
+
+In this tutorial, we covered the basics of Ansible, including its installation, configuration, and usage of playbooks and ad-hoc commands. Ansible is a powerful tool that can greatly simplify the management and automation of tasks across your servers and infrastructure.

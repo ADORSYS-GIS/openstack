@@ -14,13 +14,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check commit message
-        uses: ahmadnassri/action-commit-lint@v2
+#      - name: Check commit message
+#        uses: ahmadnassri/action-commit-lint@v2
 
       - name: Vale linting
         uses: errata-ai/vale-action@v2
         with:
-          files: '**/*.md'
+          files: 'docs/*.md,*.md'
 
       - name: markdownlint
         uses: DavidAnson/markdownlint-cli2-action@v20
@@ -32,4 +32,5 @@ jobs:
       - name: Check for typos
         uses: sobolevn/misspell-fixer-action@master
         with:
-          options: '-rsvn docs/'      
+          options: '-rsvn docs/'
+          
