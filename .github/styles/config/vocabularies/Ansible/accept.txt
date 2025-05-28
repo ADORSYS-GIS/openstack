@@ -10,7 +10,22 @@ Subnet
 Nameservers
 ufw
 Ubuntu
+sudo
+ntp
+update_cache
+update_cache
+inventory_docs
+Pulumi
+VMs
+sudoers
+Firslt
+linux
+macOs
+homebrew
 
+Ansible
+hostname
+Libvirt
 OpenStack
 VLAN
 LANs
