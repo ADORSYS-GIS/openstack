@@ -10,3 +10,11 @@ Subnet
 Nameservers
 ufw
 Ubuntu
+
+OpenStack
+VLAN
+LANs
+vnetworks
+ethernet
+Multipass
+vswitch
