@@ -1,11 +1,12 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 ansible
 openstack
-=======
-ansible
->>>>>>> 735b4f3 (fix(markdownlint): added Vocab)
-=======
-ansible
-openstack
->>>>>>> 7b103a9 (chore: update accept.txt)
+balenaEtcher
+UNetbootin
+SELinux
+bootable
+bootloader
+Ctrl
+Subnet
+Nameservers
+ufw
+Ubuntu

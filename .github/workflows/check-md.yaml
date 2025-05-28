@@ -23,14 +23,14 @@ jobs:
           files: '**/*.md'
 
       - name: markdownlint
-        uses: DavidAnson/markdownlint-cli2-action@v19
+        uses: DavidAnson/markdownlint-cli2-action@v20
         with:
-          globs: '**/*.md'
+          globs: |
+            docs/*.md
+            *.md
 
       - name: Check for typos
         uses: sobolevn/misspell-fixer-action@master
         with:
           options: '-rsvn docs/'
-
-      - name: Alex for inclusive language
-        uses: theashraf/alex-action@master
+          

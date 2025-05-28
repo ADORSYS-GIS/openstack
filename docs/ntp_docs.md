@@ -23,3 +23,4 @@ Time synchronization plays a critical role in distributed systems, especially in
     Certain tasks or jobs may need to run simultaneously across multiple servers. If server clocks are not synchronized, these actions may execute at inconsistent times, leading to failures, data corruption, or unexpected behavior. NTP ensures that all servers maintain a consistent system time, enabling coordinated and predictable task execution.
 
 An NTP server is a fundamental component in any cloud or distributed infrastructure. It ensures reliable communication, secure authentication, synchronized logging, and proper task execution by keeping all systems aligned in time.
+

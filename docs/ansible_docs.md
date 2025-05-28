@@ -15,6 +15,7 @@ Ansible provides several tools to facilitate server management:
 - **OpenSSH**: Used for setting up SSH and generating keys for authenticating with servers.
 - **Ad-hoc Commands**: Used as alternatives to playbooks, typically for quick and simple tasks.
 - **Playbooks**: YAML files containing specific tasks to manage servers, commonly used for more complex tasks.
+
 - **Inventory File**: Contains the list of servers grouped by categories, allowing for organized management of your infrastructure.
 
 ## How It Works
@@ -52,6 +53,7 @@ Replace `user@server_ip` with the appropriate username and IP address or hostnam
 
 For more details, see:
 
+
 - [SSH Configuration](/docs/tutorials/ansible_tuto.md)
 
 ### Launching a Playbook
@@ -71,12 +73,14 @@ To learn more about ad-hoc commands, see:
 - [Ad-hoc Commands](/docs/tutorials/ansible_tuto.md)
 - [Ad-hoc (Ansible Docs)](https://docs.ansible.com/ansible/2.8/user_guide/intro_adhoc.html)
 
+
 ## Server Management
 
 Ansible is very good for server management due to the fact that it provides:
 
 - **Playbooks**: If the group managing the servers is shifted and another one is placed, as the tasks that are to be run are in the playbook, this will be easy for the new group to understand what is to be done.
 - **Inventory Files**: Placing all the servers' IP addresses in a file makes it easy to recall and know for which tasks are for which server. Just like in an inventory file, there is a group of servers for databases and more.
+
 - **SSH Key**: The fact that Ansible uses SSH keys to handle authentication makes it ideal for movement as the login is already an automated action.
 
 ## What If Ansible Becomes Outdated?
@@ -89,10 +93,10 @@ If Ansible becomes outdated or no longer maintained, there are other modern tool
 - [Puppet](https://www.puppet.com/)
 
 Each of them is based on specific aspects:
-
 | Tools     | Language                   | Best Used For                                   |
 |-----------|----------------------------|-------------------------------------------------|
 | Chef      | Ruby                       | Complex enterprise environments                 |
 | SaltStack | YAML                       | Large-scale deployments                         |
 | Pulumi    | Programming language (various) | Infrastructure provision and manage cloud resources |
 | Puppet    | Puppet DSL                 | Large-scale environments                        |
+
