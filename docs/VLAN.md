@@ -1,24 +1,19 @@
-# What is a VLAN and how does it works
+# Understanding VLANs and Their Operation
 
-The VLAN is an overlay layer 2 network that helps us to a set devices in different groups connected to a virtual network on the physical network.
+A VLAN (Virtual LAN) is an overlay layer 2 network that helps us organize devices into different groups connected to a virtual network on the physical network.
 
-The VLAN helps us to partition a LAN into smaller vnetworks for security purposes.
-This allows us to have different physically distinct virtual networks rather having many physical small LANs.
+VLANs help us partition a LAN into smaller virtual networks for security purposes. This allows us to have different logically distinct virtual networks rather than having many physical small LANs.
 
-Computers on the same network(LAN) either communicate through wireless access points (AP), or through ethernet cables.
+Computers on the same network (LAN) communicate either through wireless access points (AP) or through ethernet cables. All computers on a LAN are connected to the same network switch.
 
-All Computers on a LAN are connected to the same network switch.
+## Types of VLANs
 
-## How does VLAN works
+There are two types of VLANs:
 
-There are two types of VLAN :
+- **Port-Based VLAN**: A VLAN is assigned to a particular port, and any machine connected to that port automatically joins that VLAN
+- **User-Based or Dynamic VLAN**: VLANs are assigned based on user authentication or other dynamic criteria
 
-- ***Port Based VLAN***:
-This is the type of VLAN where a VLAN is assign to a particular port and any machine that connect to that port automatically gets connected to that VLAN.
-
-- ***User Based or Dynamic VLAN***
-
-## Diagram
+## Network Architecture
 
 ```mermaid
 flowchart TD
