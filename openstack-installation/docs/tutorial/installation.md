@@ -2,8 +2,8 @@
 
 ## Clone Repository
 ```bash
-git clone https://github.com/your-repo/openstack-installation.git
-cd openstack-installation
+git clone https://github.com/ADORSYS-GIS/openstack.git
+cd openstack && cd openstack-installation
 ```
 
 ## Configure Inventory
