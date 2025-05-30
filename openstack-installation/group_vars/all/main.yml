@@ -1,0 +1,27 @@
+---
+# Common variables for all hosts
+ansible_python_interpreter: /usr/bin/python3
+
+# OpenStack configuration
+openstack_release: "2023.2"  # Antelope
+openstack_region: "RegionOne"
+openstack_admin_password: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+openstack_demo_password: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+
+# Network configuration
+openstack_public_interface: "eth0"
+openstack_private_interface: "eth1"
+openstack_public_network: "10.0.0.0/24"
+openstack_private_network: "192.168.0.0/24"
+
+# System configuration
+system_timezone: "UTC"
+ntp_servers:
+  - "0.pool.ntp.org"
+  - "1.pool.ntp.org"
+  - "2.pool.ntp.org"
+
+# Logging configuration
+log_directory: "logs"
+log_level: "INFO"
+log_retention_days: 30 

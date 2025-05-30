@@ -1,0 +1,61 @@
+---
+- name: Ensure stack user owns /opt/stack
+  file:
+    path: /opt/stack
+    state: directory
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+    mode: '0755'
+  become: yes
+
+- name: Ensure stack user has correct shell environment in .bashrc
+  copy:
+    dest: /opt/stack/.bashrc
+    content: |
+      # .bashrc
+      export PATH=$PATH:/usr/local/bin
+      export PYTHONPATH=/opt/stack
+      export DEVSTACK_DIR=/opt/stack/devstack
+      export OS_AUTH_URL=http://{{ openstack_host_ip }}/identity
+      export OS_IDENTITY_API_VERSION=3
+      export OS_IMAGE_API_VERSION=2
+      export OS_PROJECT_DOMAIN_ID=default
+      export OS_PROJECT_NAME=admin
+      export OS_TENANT_NAME=admin
+      export OS_USERNAME=admin
+      export OS_USER_DOMAIN_ID=default
+      export OS_REGION_NAME=RegionOne
+      export OS_PASSWORD={{ admin_password }}
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+    mode: '0644'
+  become: yes
+  notify: reload bashrc
+
+- name: Ensure stack user has correct shell environment in .bash_profile
+  copy:
+    dest: /opt/stack/.bash_profile
+    content: |
+      # .bash_profile
+      if [ -f /opt/stack/.bashrc ]; then
+          . /opt/stack/.bashrc
+      fi
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+    mode: '0644'
+  become: yes
+  notify: reload bash_profile
+
+- name: Ensure stack user has correct shell environment in .profile
+  copy:
+    dest: /opt/stack/.profile
+    content: |
+      # .profile
+      if [ -f /opt/stack/.bashrc ]; then
+          . /opt/stack/.bashrc
+      fi
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+    mode: '0644'
+  become: yes
+  notify: reload profile

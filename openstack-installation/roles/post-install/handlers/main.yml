@@ -1,0 +1,4 @@
+---
+- name: log_service_status
+  debug:
+    msg: "Service status: {{ service_status }}"

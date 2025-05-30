@@ -1,0 +1,117 @@
+---
+# Install system prerequisites for OpenStack
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  become: yes
+
+- name: Enable universe repository
+  apt_repository:
+    repo: "deb http://archive.ubuntu.com/ubuntu {{ ansible_distribution_release }} universe"
+    state: present
+  become: yes
+
+- name: Install required packages
+  apt:
+    name:
+      - git
+      - python3-pip
+      - python3-dev
+      - python3-venv
+      - python3-setuptools
+      - python3-wheel
+      - libffi-dev
+      - libssl-dev
+      - libxml2-dev
+      - libxslt1-dev
+      - libjpeg8-dev
+      - zlib1g-dev
+      - libmysqlclient-dev
+      - libpq-dev
+      - libsqlite3-dev
+      - libvirt-dev
+      - libvirt-daemon-system
+      - qemu-kvm
+      - qemu-utils
+      - libguestfs-tools
+      - openvswitch-switch
+      - openvswitch-common
+      - bridge-utils
+      - ntp
+      - ntpdate
+    state: present
+  become: yes
+
+- name: Get Python version
+  command: python3 --version
+  register: python_version
+  changed_when: false
+
+- name: Create Python virtual environment
+  command: "python3 -m venv /opt/stack/venv"
+  args:
+    creates: /opt/stack/venv
+  become: yes
+
+- name: Install Python packages in virtual environment
+  pip:
+    name:
+      - virtualenv
+      - setuptools
+      - wheel
+    executable: /opt/stack/venv/bin/pip
+    state: present
+  become: yes
+
+- name: Configure NTP
+  template:
+    src: ntp.conf.j2
+    dest: /etc/ntp.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  notify: restart ntp
+
+- name: Enable and start NTP service
+  systemd:
+    name: ntp
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Configure timezone
+  timezone:
+    name: "{{ system_timezone }}"
+  become: yes
+
+- name: Enable and start libvirt service
+  systemd:
+    name: libvirtd
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Load Open vSwitch kernel module
+  modprobe:
+    name: openvswitch
+    state: present
+  become: yes
+
+- name: Enable and start Open vSwitch services
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+    - openvswitch-switch
+  become: yes
+
+- name: Add stack user to libvirt group
+  user:
+    name: "{{ stack_user }}"
+    groups: libvirt
+    append: yes
+  become: yes
