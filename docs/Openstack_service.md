@@ -1,9 +1,8 @@
 # OpenStack Services Overview
 
 OpenStack is not a single cloud infrastructure but a collection of interoperable components (services) that together form a cloud computing platform. Each component provides a distinct function, working together to manage compute, storage, networking, identity, and more.
-Core OpenStack Services.
 
-## Services
+## Core OpenStack Services
 
 ### 1. Nova — Compute Service
 
@@ -15,7 +14,7 @@ Nova is the compute component of OpenStack. It manages the lifecycle of virtual 
 
 - Interfacing with hypervisors like KVM, Xen, or VMware
 
-Nova is essentially the “brain” behind launching and managing virtual servers in OpenStack.
+Nova is essentially the "brain" behind launching and managing virtual servers in OpenStack.
 
 ### 2. Keystone — Identity Service
 
@@ -27,7 +26,7 @@ Its responsibilities include:
 
 - Authorization: Defines user roles and access scopes, determining what resources a user can access.
 
- All OpenStack services require Keystone tokens for security and access control, making Keystone a central service for identity management.
+All OpenStack services require Keystone tokens for security and access control, making Keystone a central service for identity management.
 
 ### 3. Neutron — Networking Service
 
@@ -35,11 +34,11 @@ Neutron provides network connectivity and IP address management for OpenStack se
 
 It handles tasks such as:
 
-- Managing  networks, subnets, routers, and floating IPs
+- Managing networks, subnets, routers, and floating IPs
 
-- Integrating  with Nova to connect virtual instances to networks
+- Integrating with Nova to connect virtual instances to networks
 
-- Supporting  advanced networking services like firewalls, load balancers, and VPNs
+- Supporting advanced networking services like firewalls, load balancers, and VPNs
 
 Neutron ensures that instances can communicate securely and flexibly within the cloud.
 
@@ -49,17 +48,17 @@ Glance manages virtual machine images.
 
 It is responsible for:
 
-- Storing  and cataloging VM images, snapshots, and metadata
+- Storing and cataloging VM images, snapshots, and metadata
 
-- Providing  APIs to upload, discover, and retrieve VM images
+- Providing APIs to upload, discover, and retrieve VM images
 
-- collaborating with Nova to deliver VM images when launching instances
+- Collaborating with Nova to deliver VM images when launching instances
 
 Glance is the repository of OS images and snapshots used to boot virtual machines.
 
 ### 5. Swift — Object Storage Service
 
-Swift is a scalable, distributed object storage system that :
+Swift is a scalable, distributed object storage system that:
 
 - Stores and retrieves unstructured data (objects) such as backups, VM images, and user files
 
@@ -80,7 +79,8 @@ It allows users to:
 - Maintain data persistence independently of a VM's lifecycle
 
 Cinder is key for storing databases, logs, and files requiring persistent storage.
-Additional Important OpenStack Components
+
+## Additional Important OpenStack Components
 
 ### 7. Horizon — Dashboard
 
@@ -107,7 +107,7 @@ Heat helps manage complex deployments as code.
 ### 9. Ceilometer — Telemetry
 
 Ceilometer collects usage and performance data for billing, monitoring, and alerting.
- It:
+It:
 
 - Gathers metrics on resource consumption (CPU, disk, network)
 
