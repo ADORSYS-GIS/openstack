@@ -228,51 +228,46 @@ python3 install ansible --user
 
 ```sh
 ---
+- name: Configure Ethernet with static IP using Netplan
+  hosts: localhost
+  become: yes
 
-  - name: Configure Ethernet with static IP using Netplan
-    hosts: localhost
-    become: yes
+  vars:
+    interface_name: "ens33"
+    static_ip: "10.42.0.10/24"
+    gateway4: "10.42.0.1"
+    nameservers:   
+      - "8.8.8.8"
+      - "8.8.4.4"
 
-    vars:
-      interface_name: "ens33"
-      static_ip: "10.42.0.10/24"
-      gateway4: "10.42.0.1"
-      nameservers:   
-        - "8.8.8.8"
-        - "8.8.4.4"
-
-    tasks:
-    
-      - name: Create Netplan configuration for Ethernet
-        copy:
-          dest: /etc/netplan/50-cloud-init.yaml
-          content: |
-            network:
-              version: 2
-              ethernets:
+  tasks:
+    - name: Create Netplan configuration for Ethernet
+      copy:
+        dest: /etc/netplan/50-cloud-init.yaml
+        content: |
+          network:
+            version: 2
+            ethernets:
               {{ interface_name }}:
                 dhcp4: no
                 addresses:
-                {{ static_ip }}
-                gateway4: 
-                {{ gateway }}
+                  - {{ static_ip }}
+                gateway4: {{ gateway4 }}
                 nameservers:
-                addresses: 
-                {{ nameservers }}
-        notify:
-          Apply Netplan
+                  addresses: {{ nameservers }}
+      notify: Apply Netplan
 
-    handlers:
-      - name: Apply Netplan
-        command: netplan apply
-  
-      - name: Check interface IP using ip a
-        command: ip -4 addr show {{ interface_name }}
-        register: ip_result
+  handlers:
+    - name: Apply Netplan
+      command: netplan apply
 
-      - name: Display interface IP info
-        debug:
-          var: ip_result.stdout_lines
+    - name: Check interface IP using ip a
+      command: ip -4 addr show {{ interface_name }}
+      register: ip_result
+
+    - name: Display interface IP info
+      debug:
+        var: ip_result.stdout_lines
 
 ```
 
@@ -295,45 +290,48 @@ if you want to instead a configure a wireless network interface with a static ip
 
 ```sh
 ---
+- name: Configure Wi-Fi with static IP using Netplan
+  hosts: localhost
+  become: yes
 
-  - name: Configure wi-fi with static IP using Netplan
-    hosts: localhost
-    become: yes
+  vars:
+    wifi_name: "your_wifi_ssid"
+    static_ip: "192.168.1.100/24"
+    interface_name: "wlan0"
 
-    vars:
-      static_ip: "192.168.1.100/24"  
-
-    tasks:
-    
-      - name: Create Netplan configuration for Ethernet
-        copy:
-          dest: /etc/netplan/50-cloud-init.yaml
-          content: |
-            network:
-              version: 2
-              wifi:
-                wlan0:
-                  access-point:
-                    {{ wifi_name }}:
-                  dhcp4: true
+  tasks:
+    - name: Create Netplan configuration for Wi-Fi
+      copy:
+        dest: /etc/netplan/50-cloud-init.yaml
+        content: |
+          network:
+            version: 2
+            wifis:
+              {{ interface_name }}:
+                dhcp4: no
+                addresses:
+                  - {{ static_ip }}
+                gateway4: 192.168.1.1
+                nameservers:
                   addresses:
-                  {{ static_ip }}
-                
-        notify:
-          Apply Netplan
+                    - 8.8.8.8
+                    - 8.8.4.4
+                access-points:
+                  "{{ wifi_name }}":
+                    password: "your_wifi_password"
+      notify: Apply Netplan
 
-    handlers:
-      - name: Apply Netplan
-        command: netplan apply
-  
-      - name: Check interface IP using ip a
-        command: ip -4 addr show {{ interface_name }}
-        register: ip_result
+    - name: Check interface IP using ip a
+      command: ip -4 addr show {{ interface_name }}
+      register: ip_result
 
-      - name: Display interface IP info
-        debug:
-          var: ip_result.stdout_lines
+    - name: Display interface IP info
+      debug:
+        var: ip_result.stdout_lines
 
+  handlers:
+    - name: Apply Netplan
+      command: netplan apply
 ```
 
 If your output looks like this:
