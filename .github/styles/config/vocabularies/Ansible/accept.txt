@@ -17,6 +17,11 @@
 (?i)sudo(ers?)?
 (?i)linux
 (?i)homebrew
+(?i)Kubuntu
+(?i)Lubuntu
+(?i)VPNs
+(?i)networkd
+(?i)virtualized
 
 (?i)Libvirts?
 (?i)v?lans?
