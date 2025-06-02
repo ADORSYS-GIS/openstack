@@ -2,7 +2,7 @@
 
 ## WHAT IS NETPLAN 
 
-Netplan is a modern network configuration tool, primarily used in Ubuntu-based Linux distributions. Its goal is to simplify the management of network interfaces through the use of YAML files. Before its introduction, network configuration in Linux was done through files like /etc/network/interfacesor other methods specific to the services used, like NetworkManageror systemd-networkd. With Netplan, these configurations are unified, providing a standard and accessible solution.
+Netplan is a modern network configuration tool, primarily used in Ubuntu-based Linux distributions. Its goal is to simplify the management of network interfaces through the use of YAML files. Before its introduction, network configuration in Linux was done through files like /etc/network/interfaces or other methods specific to the services used, like NetworkManager or systemd-networkd. With Netplan, these configurations are unified, providing a standard and accessible solution.
 
 This guide is designed to show you how to use Netplan with ansible to efficiently configure your network interfaces, whether you need to manage Ethernet connections, Wi-Fi, or even advanced configurations like VLANs and static routes, alongside with ansible to automate all this tedious processes.
 
@@ -10,9 +10,16 @@ This guide is designed to show you how to use Netplan with ansible to efficientl
 
 Netplan was first introduced to the Ubuntu universe in version 17.10 (Artful Aardvark). Prior to this release, Linux server and system administrators often used traditional file and ifup/down/etc/network/interfaces tools to manage their network interfaces. These methods, while widely used, were becoming increasingly limited in modern, complex network environments.
 
-With the emergence of new needs, particularly around dynamic network management, the need for a tool that unifies the different network services has become apparent. Netplan was designed to fill this gap. It acts as an overlay simplifying the management of systemd-networkd (systemd's network manager) and NetworkManager. This allows administrators to use a single, simplified syntax, regardless of the underlying service.
+With the emergence of new needs, particularly around dynamic network management, 
+the need for a tool that unifies the different network services has become 
+apparent. Netplan is designed to fill this gap. It acts as an overlay simplifying 
+the management of systemd-networkd (systemd is the network manager) and 
+NetworkManager. This allows administrators to use a single, simplified syntax, 
+regardless of the underlying service.
 
-Netplan's choice for Ubuntu distributions also enabled a smoother transition to cloud infrastructures and virtualized environments, where tools like cloud-init benefit from automated and more flexible network configuration.
+Netplan is the choice for Ubuntu distributions that enabled a smoother transition 
+to cloud infrastructures and virtualized environments, where tools like cloud-init 
+benefit from automated and more flexible network configuration.
 
 **What are NetworkManager and systemd-networkd?**
 
