@@ -16,7 +16,7 @@ Netplan's choice for Ubuntu distributions also enabled a smoother transition to 
 
 **What are NetworkManager and systemd-networkd?**
 
-As mentioned above, Netplan acts as a unified configuration interface for two main network managers: NetworkManagerand systemd-networkd. Both services play a key role in managing network interfaces on Ubuntu distributions and its derivatives, but they are not used in the same contexts.
+As mentioned above, Netplan acts as a unified configuration interface for two main network managers: NetworkManager and systemd-networkd. Both services play a key role in managing network interfaces on Ubuntu distributions and its derivatives, but they are not used in the same contexts.
 
 **Network Manager**
 
@@ -30,28 +30,37 @@ systemd-networkd, on the other hand, is more often used on server systems, such 
 
 **checking your manager**
 
-it is important to know whic network manager is active, as it determines how **Netplan** will apply your network configuration.
+It is important to know which network manager is active, as it determines how 
+**Netplan** will apply your network configuration.
 
-To check if NetworkManager is installed and active, you can run the following command:
+To check if NetworkManager is installed and active, you can run the following 
+command:
 
 ```sh
 sudo systemctl status NetworkManager
 ```
-if service is active, you will see a return indicating status as "running". Otherwise the service will be inactive or uninstalled.
+If the service is active, you will see a return indicating status as "running". 
+Otherwise, the service will be inactive or uninstalled.
 
-To check systemd-networkd is active, using the following commamd:
+To check if systemd-networkd is active, use the following command:
 
 ```sh
-sudo systemectl status systemd-networkd
+sudo systemctl status systemd-networkd
 ```
 
-similarly if this service is active, indicating that systemd-networkd is managing the network.
+Similarly, if this service is active, it indicates that systemd-networkd is 
+managing the network.
 
 **Netplan File Structure and Permissions**
 
-The configuration files used by Netplan are in YAML format, a simple and readable format that makes it easy to configure network interfaces. These files are located in the directory /etc/netplan/and it is from there that network configurations are applied.
+The configuration files used by Netplan are in YAML format, a simple and readable 
+format that makes it easy to configure network interfaces. These files are 
+located in the directory /etc/netplan/ and it is from there that network 
+configurations are applied.
 
-Each Netplan file follows a strict YAML syntax with well-defined indentations. Here is a simple example of a configuration where the Ethernet interface uses DHCP to obtain an IP address automatically:
+Each Netplan file follows a strict YAML syntax with well-defined indentations. 
+Here is a simple example of a configuration where the Ethernet interface uses 
+DHCP to obtain an IP address automatically:
 
 ```sh
 network:
@@ -62,12 +71,15 @@ network:
       dhcp4: true
 ```
 
-Explanation :
+Explanation:
 
 - network: Main block that contains all network configurations.
 - version: The version of the Netplan configuration file (currently it is version 2).
-- renderer: Defines which service manages network configuration. Here, networkdmeans that systemd-networkd is used. For a desktop environment, one can use NetworkManager .
-- ethernets: This block contains the Ethernet interfaces. In this example, eth0is the interface being configured.
+- renderer: Defines which service manages network configuration. Here, networkd 
+  means that systemd-networkd is used. For a desktop environment, one can use 
+  NetworkManager.
+- ethernets: This block contains the Ethernet interfaces. In this example, eth0 
+  is the interface being configured.
 - dhcp4: Enables DHCP for IPv4, which assigns an IP address automatically.
 
 
@@ -195,25 +207,31 @@ If you see zero packet loss, all the 5 packet were transmitted and 5 packet rece
 
 **Configuring network interfaces manually**
 
-If you want to configure wi-fi, static ipv4, static ipv6, ipv4 with DHCP and ipv6 with DHCP manually, do the following:
+If you want to configure Wi-Fi, static IPv4, static IPv6, IPv4 with DHCP, or 
+IPv6 with DHCP manually, do the following:
 
-1- You have to: 
+1. You need to:
 
 ```sh
 sudo nano /etc/netplan/50-cloud-init.yaml
 ```
-then replace the configuration in there with any configuration above dependending on your choice
+Then replace the configuration with any of the configurations above, depending 
+on your choice.
 
-2- To apply the changes, run the following command:
+2. To apply the changes, run the following command:
 ```sh
-netplan genate
+netplan generate
 netplan apply
 ```
-**configuring network interfaces manually using ansible script along with playbook**
 
-To configure any of this network interfaces manually using ansible script, do the following:
+**Configuring network interfaces manually using Ansible script along with 
+playbook**
 
-1- We need to install ansible in our machine to be able to run ansible script, so run the following command to install ansilble on you machine:
+To configure any of these network interfaces manually using Ansible script, do 
+the following:
+
+1. We need to install Ansible on our machine to be able to run Ansible scripts. 
+   Run the following command to install Ansible:
 
 ```sh
 sudo apt update && sudo apt upgrade -y
@@ -223,8 +241,7 @@ sudo apt install -y build-essential libssl-dev libffi-dev python3-dev python3-pi
 python3 install ansible --user
 ```
 
-
-2- Create a playbook.yml file, copy and paste the following:
+2. Create a playbook.yml file, copy and paste the following:
 
 ```sh
 ---
@@ -268,10 +285,9 @@ python3 install ansible --user
     - name: Display interface IP info
       debug:
         var: ip_result.stdout_lines
-
 ```
 
-2- To execute the ansible code run this command:
+3. To execute the Ansible code, run this command:
 
 ```sh
 sudo ansible-playbook -i host playbook.yaml
@@ -283,10 +299,12 @@ If your output looks like this:
 inet 192.168.1.100/24 brd 192.168.1.255 scope global ens33
 ```
 
-Then, this indicate that your network interface "ens33" has been configured.
+Then this indicates that your network interface "ens33" has been configured.
 
-OR 
-if you want to instead a configure a wireless network interface with a static ip address i.e a network interface that uses wi-fi replace copy and paste instead the following ansible script in the /etc/netplan/50-cloud-init.yaml file.
+Alternatively, if you want to configure a wireless network interface with a 
+static IP address (i.e., a network interface that uses Wi-Fi), replace the 
+content in the /etc/netplan/50-cloud-init.yaml file with the following Ansible 
+script:
 
 ```sh
 ---
@@ -338,8 +356,6 @@ If your output looks like this:
 
 ```
 inet 192.168.1.100/24 brd 192.168.1.255 scope global wlan0
-``` 
+```
 
-Then, this indicate that your network interface "wlan0" has been configured.
-
-
+Then this indicates that your network interface "wlan0" has been configured.
