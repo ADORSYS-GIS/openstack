@@ -189,7 +189,7 @@ In this example:
 
 - wlan0 is the Wi-Fi interface .
 - access-pointsspecifies the Wi-Fi network name ( MonSSID) and its password.
-- dhcp4: trueindicates that the Wi-Fi interface 
+- dhcp4: true indicates that the Wi-Fi interface 
 
 **Checking network connectivity**
 
