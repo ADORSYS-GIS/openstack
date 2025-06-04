@@ -1,0 +1,4 @@
+---
+- name: log_stack_result
+  debug:
+    msg: "DevStack installer result: {{ stack_result }}"
