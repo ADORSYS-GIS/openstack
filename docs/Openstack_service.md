@@ -1,8 +1,8 @@
 # OpenStack Services Overview
 
-OpenStack is not a single cloud infrastructure but collection of interoperable  
-components (services) that together form a cloud computing platform. Each  
-component provides a distinct function, working together to manage compute,  
+OpenStack is not a single cloud infrastructure but collection of interoperable components (services) that together form a cloud computing platform.
+
+Each component provides a distinct function, working together to manage compute,  
 storage, networking, identity, and more.
 
 ## Core OpenStack Services
@@ -117,6 +117,6 @@ Barbican provides secure key and secret management for encryption. So it:
 - Stores encryption keys, certificates, and passwords  
 - Integrates with other OpenStack services for secure data handling  
 
-All these components work together to provide a well-structured, scalable, and  
-secure OpenStack cloud environment. Each service plays a distinct role but depends  
-on others to deliver a fully functional Infrastructure-as-a-Service (IaaS) platform.
+All these components work together to provide a well-structured, scalable, and secure OpenStack cloud environment.
+
+Each service plays a distinct role but depends on others to deliver a fully functional Infrastructure-as-a-Service (IaaS) platform.
