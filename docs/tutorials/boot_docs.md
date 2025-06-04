@@ -82,7 +82,10 @@ Once the system has finished booting, select your preferred installation languag
 4. **Select Keyboard Layout**
 
 Next, select your preferred layout. The default selection for the layout and variant is English (US). Feel free to select your preferred option, select `Done` with your arrow key, and hit ENTER to proceed to the next step.
-![text](./images/img4.png)
+
+[text](./images/image4.png)
+
+
 
 5. **Choose the Type of Installation**
 
