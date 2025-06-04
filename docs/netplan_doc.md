@@ -273,7 +273,7 @@ sudo nano /etc/netplan/50-cloud-init.yaml
 Then replace the configuration with any of the configurations above, depending
 on your choice.
 
-2. To apply the changes, run the following command:
+1. To apply the changes, run the following command:
 
 ```sh
 netplan generate
@@ -296,7 +296,7 @@ sudo apt install -y build-essential libssl-dev libffi-dev python3-dev python3-pi
 python3 install ansible --user
 ```
 
-2. Create a playbook.yml file, copy and paste the following:
+1. Create a playbook.yml file, copy and paste the following:
 
 ```yaml
 ---
