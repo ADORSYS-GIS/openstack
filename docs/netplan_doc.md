@@ -199,7 +199,7 @@ If you have followed the [ubuntu server installation]() documentation, then no n
 cat /etc/netplan/50-cloud-init.yaml
 ```
 
-Also, you can use the followimg commands to check whether you are connected to internet:
+Also, you can use the following commands to check whether you are connected to internet:
 
 ```sh
 ping -c 5 8.8.8.8
@@ -210,7 +210,7 @@ OR
 ping -c 5 google.com
 ```
 
-If you see zero packet loss, all the 5 packet were transmitted and 5 packet received, then it means that the DNS(doman name system) is able to resolve domain-name to ip address thus you are connected to the internet.
+If you see zero packet loss, all the 5 packet were transmitted and 5 packet received, then it means that the DNS(doman name system) is able to resolve domain-name to IP address thus you are connected to the internet.
 
 **Configuring network interfaces manually**
 
