@@ -1,4 +1,4 @@
-(?i)ansible
+//(?i)ansible
 (?i)openstack
 (?i)balenaEtcher
 (?i)UNetbootin
@@ -34,3 +34,11 @@
 (?i)vms?
 (?i)macoss?
 (?i)oss?
+
+// Newly added to suppress Vale.Spelling errors
+(?i)IPs
+(?i)Uninstallation
+(?i)hostname
+(?i)devstack
+(?i)Ryzen
+(?i)NVMe
