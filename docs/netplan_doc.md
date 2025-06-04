@@ -349,7 +349,7 @@ sudo ansible-playbook -i host playbook.yaml
 
 If your output looks like this:
 
-```
+```text
 inet 192.168.1.100/24 brd 192.168.1.255 scope global ens33
 ```
 
@@ -408,7 +408,7 @@ script:
 
 If your output looks like this:
 
-```
+```text
 inet 192.168.1.100/24 brd 192.168.1.255 scope global wlan0
 ```
 
