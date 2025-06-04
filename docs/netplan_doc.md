@@ -92,7 +92,7 @@ Explanation:
 
 ## Typical configurations with Netplan
 
-Netplan is a flexible tool that allows you to configure different types of networks: IPv4 and IPv6 addresses , DHCP or static configurations , as well as more complex scenarios like network bridges , link aggregation ( bonding ), and Wi-Fi connections . Here is a set of typical configurations that cover these different cases.
+Netplan is a flexible tool that allows you to configure different types of networks: IPv4 and IPv6 addresses , DHCP or static configurations , as well as more complex scenarios like network bridges , link aggregation (bonding), and Wi-Fi connections . Here is a set of typical configurations that cover these different cases.
 
 **IPv4 configuration with DHCP**
 
