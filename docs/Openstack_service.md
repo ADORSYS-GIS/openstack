@@ -12,7 +12,7 @@ storage, networking, identity, and more.
 Nova is the compute component of OpenStack. It manages the lifecycle of virtual  
 machine instances, including:
 
-- Creating, scheduling, and terminating VMs  
+- Creating, scheduling, and terminating VMs
 - Managing VM resources and networking (in collaboration with Neutron)  
 - Interfacing with hypervisors like KVM, Xen, or VMware  
 
