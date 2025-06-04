@@ -284,7 +284,7 @@ netplan apply
 To configure any of these network interfaces manually using Ansible script, do
 the following:
 
-1. We need to install Ansible on our machine to be able to run Ansible scripts.
+i. We need to install Ansible on our machine to be able to run Ansible scripts.
    Run the following command to install Ansible:
 
 ```sh
@@ -295,7 +295,7 @@ sudo apt install -y build-essential libssl-dev libffi-dev python3-dev python3-pi
 python3 install ansible --user
 ```
 
-2. Create a playbook.yml file, copy and paste the following:
+ii. Create a playbook.yml file, copy and paste the following:
 
 ```yaml
 ---
@@ -341,7 +341,7 @@ python3 install ansible --user
         var: ip_result.stdout_lines
 ```
 
-3. To execute the Ansible code, run this command:
+iii. To execute the Ansible code, run this command:
 
 ```sh
 sudo ansible-playbook -i host playbook.yaml
