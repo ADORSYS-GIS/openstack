@@ -109,7 +109,8 @@ network:
 Explanation:
 
 - network: Main block that contains all network configurations
-- version: The version of the Netplan configuration file (currently it is version 2)
+- version: The version of the Netplan configuration file 
+(currently it is version 2)
 - renderer: Defines which service manages network configuration. Here, networkd
   means that systemd-networkd is used. For a desktop environment, one can use
   NetworkManager
