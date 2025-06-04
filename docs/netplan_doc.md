@@ -232,10 +232,10 @@ In this example:
 
 ## Checking Network Connectivity
 
-If you have followed the Ubuntu server installation documentation, then there is no
-need to configure the network interface for Wi-Fi or ethernet manually, because it
-was surely configured during the installation of Ubuntu server. You may use the
-following command to ensure that network connection is well configured:
+If you have followed the Ubuntu server installation documentation, then there is
+no need to configure the network interface for Wi-Fi or ethernet manually,
+because it was surely configured during the installation of Ubuntu server. You may
+use the following command to ensure that network connection is well configured:
 
 ```sh
 cat /etc/netplan/50-cloud-init.yaml
@@ -263,7 +263,7 @@ domain names to IP addresses and you are connected to the internet.
 If you want to configure Wi-Fi, static IPv4, static IPv6, IPv4 with DHCP, or
 IPv6 with DHCP manually, do the following:
 
-1. You need to:
+1- You need to:
 
 ```sh
 sudo nano /etc/netplan/50-cloud-init.yaml
@@ -272,7 +272,7 @@ sudo nano /etc/netplan/50-cloud-init.yaml
 Then replace the configuration with any of the configurations above, depending
 on your choice.
 
-2. To apply the changes, run the following command:
+2- To apply the changes, run the following command:
 
 ```sh
 netplan generate
