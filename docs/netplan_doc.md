@@ -256,7 +256,7 @@ ping -c 5 google.com
 
 If you see zero packet loss, all the 5 packet were transmitted and 5 packet
 received, then it means that the DNS (domain name system) is able to resolve
-domain-name to IP address thus you are connected to the internet.
+domain-name to IP address and you are connected to the internet.
 
 ## Configuring Network Interfaces Manually
 
