@@ -22,7 +22,9 @@
 (?i)VPNs
 (?i)networkd
 (?i)virtualized
-
+(?i)systemd
+(?i)minimalistic
+(?i)netplan
 (?i)Libvirts?
 (?i)v?lans?
 (?i)v?networks?
