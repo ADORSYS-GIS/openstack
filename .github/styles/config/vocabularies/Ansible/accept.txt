@@ -16,7 +16,7 @@
 (?i)Pulumi
 (?i)sudo(ers?)?
 (?i)linux
-(?i)homebrew
+(?i)homebrew  
 (?i)Kubuntu
 (?i)Lubuntu
 (?i)VPNs
