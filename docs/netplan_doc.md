@@ -10,10 +10,10 @@ specific to the services used, like NetworkManager or systemd-networkd. With
 Netplan, these configurations are unified, providing a standard and accessible
 solution.
 
-This guide is designed to show you how to use Netplan with ansible to efficiently
+This guide is designed to show you how to use Netplan with Ansible to efficiently
 configure your network interfaces, whether you need to manage Ethernet
 connections, Wi-Fi, or even advanced configurations like VLANs and static routes,
-alongside with ansible to automate all this tedious processes.
+alongside with Ansible to automate all these tedious processes.
 
 ## WHY NETPLAN
 
@@ -38,7 +38,7 @@ benefit from automated and more flexible network configuration.
 
 As mentioned above, Netplan acts as a unified configuration interface for two
 main network managers: NetworkManager and systemd-networkd. Both services play a
-key role in managing network interfaces on Ubuntu distributions and its
+key role in managing network interfaces on Ubuntu distributions and their
 derivatives, but they are not used in the same contexts.
 
 ### Network Manager
@@ -108,15 +108,14 @@ network:
 
 Explanation:
 
-- network: Main block that contains all network configurations
-- version: The version of the Netplan configuration file 
-(currently it is version 2)
+- network: Main block that contains all network configurations.
+- version: The version of the Netplan configuration file (version 2).
 - renderer: Defines which service manages network configuration. Here, networkd
   means that systemd-networkd is used. For a desktop environment, one can use
-  NetworkManager
+  NetworkManager.
 - ethernets: This block contains the Ethernet interfaces. In this example, eth0
-  is the interface being configured
-- dhcp4: Enables DHCP for IPv4, which assigns an IP address automatically
+  is the interface being configured.
+- dhcp4: Enables DHCP for IPv4, which assigns an IP address automatically.
 
 ## Typical Configurations with Netplan
 
@@ -164,9 +163,9 @@ network:
           - 8.8.4.4
 ```
 
-- addresses: Sets the static IP address with the subnet mask (/24)
-- gateway4: specifies the default gateway
-- nameservers: defines the DNS servers (here, those of Google)
+- addresses: Sets the static IP address with the subnet mask (/24).
+- gateway4: Specifies the default gateway.
+- nameservers: Defines the DNS servers (here, those of Google).
 
 ### IPv6 Configuration with DHCP
 
@@ -204,9 +203,9 @@ network:
           - 2001:4860:4860::8844
 ```
 
-- addresses: specifies the static IPv6 address and its prefix (/64)
-- gateway6: Sets the default gateway for IPv6
-- nameservers: Sets the DNS servers for IPv6
+- addresses: Specifies the static IPv6 address and its prefix (/64).
+- gateway6: Sets the default gateway for IPv6.
+- nameservers: Sets the DNS servers for IPv6.
 
 ### Wi-Fi Configuration
 
@@ -227,15 +226,15 @@ network:
 
 In this example:
 
-- wlan0 is the Wi-Fi interface
-- access-points specifies the Wi-Fi network name (MonSSID) and its password
-- dhcp4: true indicates that the Wi-Fi interface uses DHCP
+- wlan0 is the Wi-Fi interface.
+- access-points specifies the Wi-Fi network name (MonSSID) and its password.
+- dhcp4: true indicates that the Wi-Fi interface uses DHCP.
 
 ## Checking Network Connectivity
 
-If you have followed the Ubuntu server installation documentation, then no need of
-configuring the network interface for Wi-Fi or ethernet manually, because it was
-surely configured during the installation of Ubuntu server. You may use the
+If you have followed the Ubuntu server installation documentation, then there is no
+need to configure the network interface for Wi-Fi or ethernet manually, because it
+was surely configured during the installation of Ubuntu server. You may use the
 following command to ensure that network connection is well configured:
 
 ```sh
@@ -243,7 +242,7 @@ cat /etc/netplan/50-cloud-init.yaml
 ```
 
 Also, you can use the following commands to check whether you are connected to
-internet:
+the internet:
 
 ```sh
 ping -c 5 8.8.8.8
@@ -255,9 +254,9 @@ OR
 ping -c 5 google.com
 ```
 
-If you see zero packet loss, all the 5 packet were transmitted and 5 packet
-received, then it means that the DNS (domain name system) is able to resolve
-domain-name to IP address and you are connected to the internet.
+If you see zero packet loss, all 5 packets were transmitted and 5 packets
+received, then it means that the DNS (Domain Name System) is able to resolve
+domain names to IP addresses and you are connected to the internet.
 
 ## Configuring Network Interfaces Manually
 
@@ -273,7 +272,7 @@ sudo nano /etc/netplan/50-cloud-init.yaml
 Then replace the configuration with any of the configurations above, depending
 on your choice.
 
-1. To apply the changes, run the following command:
+2. To apply the changes, run the following command:
 
 ```sh
 netplan generate
@@ -296,7 +295,7 @@ sudo apt install -y build-essential libssl-dev libffi-dev python3-dev python3-pi
 python3 install ansible --user
 ```
 
-1. Create a playbook.yml file, copy and paste the following:
+2. Create a playbook.yml file, copy and paste the following:
 
 ```yaml
 ---
