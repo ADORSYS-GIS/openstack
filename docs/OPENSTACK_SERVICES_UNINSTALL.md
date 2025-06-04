@@ -1,11 +1,11 @@
 # OpenStack Services Uninstallation Guide
 
-This document provides instructions for uninstalling OpenStack services that were 
+This document provides instructions for uninstalling OpenStack services that were
 implemented using Ansible in this repository.
 
 ## OpenStack Services Implemented
 
-Based on the repository structure, the following OpenStack components were 
+Based on the repository structure, the following OpenStack components were
 implemented:
 
 1. **DevStack Installation**
@@ -255,11 +255,11 @@ brctl show
 
 - Make sure to backup any important data before uninstalling
 - Some commands may require sudo privileges
-- The uninstallation process may vary depending on your specific setup and 
+- The uninstallation process may vary depending on your specific setup and
   customizations
-- If you encounter any errors during uninstallation, check the error messages and 
+- If you encounter any errors during uninstallation, check the error messages and
   ensure all dependencies are properly removed
-- After uninstallation, you may need to reboot your system to ensure all services 
+- After uninstallation, you may need to reboot your system to ensure all services
   are completely removed
-- This guide assumes a standard DevStack installation. If you have a custom 
-  installation, you may need to modify some steps 
+- This guide assumes a standard DevStack installation. If you have a custom
+  installation, you may need to modify some steps

@@ -3,6 +3,7 @@
 ## Quick Reference
 
 ### Service Status Commands
+
 ```bash
 # List all services
 openstack service list
@@ -18,6 +19,7 @@ sudo tail -f /var/log/<service-name>/<service-name>.log
 ```
 
 ### Common Log Locations
+
 ```bash
 /var/log/keystone/    # Identity service
 /var/log/nova/        # Compute service
@@ -31,6 +33,7 @@ sudo tail -f /var/log/<service-name>/<service-name>.log
 ### 1. Service Endpoint Issues
 
 #### Missing Service Endpoints
+
 ```bash
 # Register missing service
 openstack service create --name <service> --description "<description>" <service-type>
@@ -40,6 +43,7 @@ openstack endpoint create --region RegionOne <service-type> public http://<host-
 ```
 
 #### Service Not Responding
+
 ```bash
 # Restart service
 sudo systemctl restart <service-name>
@@ -51,6 +55,7 @@ sudo systemctl status <service-name>
 ### 2. Authentication Issues
 
 #### Token Validation Fails
+
 ```bash
 # Source credentials
 source /opt/stack/devstack/openrc
@@ -60,6 +65,7 @@ openstack token issue
 ```
 
 #### Connection Refused
+
 ```bash
 # Check service status
 sudo systemctl status <service-name>
@@ -74,6 +80,7 @@ sudo netstat -tulpn | grep <port>
 ### 3. Resource Issues
 
 #### High CPU/Memory Usage
+
 ```bash
 # Check resource usage
 top -b -n 1
@@ -85,6 +92,7 @@ ps aux | grep <service-name>
 ```
 
 #### Storage Issues
+
 ```bash
 # Check storage
 df -h /var/lib/<service-name>
@@ -96,6 +104,7 @@ openstack volume list
 ### 4. Network Issues
 
 #### Instance Network Problems
+
 ```bash
 # Check network configuration
 openstack network show <network-name>
@@ -107,6 +116,7 @@ openstack security group list
 ```
 
 #### DNS Resolution Issues
+
 ```bash
 # Check DNS
 cat /etc/resolv.conf
@@ -116,6 +126,7 @@ nslookup google.com
 ## Test Playbook Failures
 
 ### 1. Missing Service Endpoints
+
 ```bash
 # Error: public endpoint for <service> service in RegionOne region not found
 
@@ -125,6 +136,7 @@ openstack endpoint create --region RegionOne <service-type> public http://<host-
 ```
 
 ### 2. Service Not Available
+
 ```bash
 # Error: <service> service not available
 
@@ -136,6 +148,7 @@ sudo systemctl status <service-name>
 ## Recovery Procedures
 
 ### 1. Service Recovery
+
 ```bash
 # Restart all services
 sudo systemctl restart keystone nova-compute neutron-server glance-api
@@ -146,6 +159,7 @@ openstack endpoint list
 ```
 
 ### 2. Data Recovery
+
 ```bash
 # Database recovery
 mysql -u root -p < /var/backups/openstack/mysql-$(date +%Y%m%d).sql
@@ -155,6 +169,7 @@ sudo tar -xzf /var/backups/openstack/config-$(date +%Y%m%d).tar.gz -C /
 ```
 
 ## Next Steps
+
 1. [Verification Guide](04-verification.md)
 2. [Maintenance Guide](../reference/maintenance.md)
-3. [Security Guide](../reference/security.md) 
+3. [Security Guide](../reference/security.md)

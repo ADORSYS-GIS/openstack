@@ -1,17 +1,21 @@
 # OpenStack Configuration Guide
 
 ## Overview
+
 This guide covers the configuration of OpenStack services after installation. It includes initial setup, security hardening, and service optimization.
 
 ## Initial Configuration
 
 ### 1. Access the Dashboard
+
 - URL: `http://YOUR_IP/dashboard`
+
 - Default credentials:
   - Username: admin
   - Password: devstack
 
 ### 2. Change Default Passwords
+
 ```bash
 # Switch to stack user
 sudo su - stack
@@ -24,6 +28,7 @@ openstack user password set --password NEW_PASSWORD admin
 ```
 
 ### 3. Configure Project and User
+
 ```bash
 # Create new project
 openstack project create --description "My Project" myproject
@@ -38,6 +43,7 @@ openstack role add --project myproject --user myuser member
 ## Network Configuration
 
 ### 1. Provider Network Setup
+
 ```bash
 # Create provider network
 openstack network create --provider-network-type flat --provider-physical-network physnet1 --external provider
@@ -47,6 +53,7 @@ openstack subnet create --network provider --subnet-range 192.168.1.0/24 --gatew
 ```
 
 ### 2. Self-Service Network Setup
+
 ```bash
 # Create self-service network
 openstack network create selfservice
@@ -69,6 +76,7 @@ openstack router set --external-gateway provider router
 ## Compute Configuration
 
 ### 1. Configure Nova
+
 ```bash
 # Check compute service
 openstack compute service list
@@ -85,7 +93,8 @@ openstack compute service set --enable <compute-host> nova-compute
 openstack compute service list
 ```
 
-### 2. Configure Glance
+### 2. Configure
+
 ```bash
 # Download test image
 wget http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
@@ -100,6 +109,7 @@ openstack image create "cirros" \
 ## Security Configuration
 
 ### 1. Firewall Rules
+
 ```bash
 # Configure UFW
 sudo ufw default deny incoming
@@ -115,6 +125,7 @@ sudo ufw enable
 ```
 
 ### 2. SSL/TLS Configuration
+
 ```bash
 # Install certbot
 sudo apt install certbot python3-certbot-apache
@@ -124,6 +135,7 @@ sudo certbot --apache -d your-domain.com
 ```
 
 ### 3. Security Groups
+
 ```bash
 # Create security group
 openstack security group create --description "Basic security group" basic
@@ -136,6 +148,7 @@ openstack security group rule create --protocol tcp --dst-port 22 basic
 ## Storage Configuration
 
 ### 1. Configure Cinder
+
 ```bash
 # Check volume service
 openstack volume service list
@@ -145,6 +158,7 @@ openstack volume type create --description "SSD" ssd
 ```
 
 ### 2. Configure Swift (if enabled)
+
 ```bash
 # Create container
 openstack container create mycontainer
@@ -156,6 +170,7 @@ openstack object create mycontainer myfile.txt
 ## Monitoring Configuration
 
 ### 1. Enable Telemetry
+
 ```bash
 # Check telemetry service
 openstack metric list
@@ -175,6 +190,7 @@ openstack alarm create \
 ```
 
 ### 2. Configure Logging
+
 ```bash
 # Configure rsyslog
 sudo nano /etc/rsyslog.d/30-openstack.conf
@@ -188,6 +204,7 @@ local2.* /var/log/openstack/neutron.log
 ## Backup Configuration
 
 ### 1. Database Backup
+
 ```bash
 # Create backup script
 sudo nano /usr/local/bin/backup-openstack.sh
@@ -205,6 +222,7 @@ tar -czf $BACKUP_DIR/config-$DATE.tar.gz /etc/openstack/
 ```
 
 ### 2. Automate Backups
+
 ```bash
 # Add to crontab
 sudo crontab -e
@@ -216,6 +234,7 @@ sudo crontab -e
 ## Performance Tuning
 
 ### 1. Nova Configuration
+
 ```bash
 # Edit nova.conf
 sudo nano /etc/nova/nova.conf
@@ -228,6 +247,7 @@ disk_allocation_ratio = 1.0
 ```
 
 ### 2. Neutron Configuration
+
 ```bash
 # Edit neutron.conf
 sudo nano /etc/neutron/neutron.conf
@@ -239,4 +259,5 @@ max_routes = 100
 ```
 
 ## Next Steps
-1. [Verification Guide](verification.md) 
+
+1. [Verification Guide](verification.md)
