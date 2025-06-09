@@ -89,7 +89,7 @@ node1 ansible_host=YOUR_IP ansible_user=YOUR_USER ansible_ssh_private_key_file=~
 ### 4. Run Installation
 
 ```bash
-ansible-playbook -i inventory.ini playbook.yml
+ansible-playbook -i playbooks/install_openstack/inventory.ini playbooks/install_openstack/playbook.yml
 ```
 
 ## Post-Installation Configuration
