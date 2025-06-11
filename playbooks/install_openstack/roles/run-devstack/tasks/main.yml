@@ -1,50 +1,63 @@
 ---
+- name: Clean up previous installation
+  shell: |
+    cd /opt/stack/devstack
+    ./unstack.sh || true
+    ./clean.sh || true
+  become: yes
+  become_user: "{{ stack_user }}"
+  ignore_errors: yes
+
+- name: Create stack user
+  user:
+    name: "{{ stack_user }}"
+    state: present
+    shell: /bin/bash
+    create_home: yes
+    home: "/home/{{ stack_user }}"
+  become: true
+
+- name: Set stack user password
+  shell: |
+    echo "{{ stack_user }}:{{ admin_password }}" | chpasswd
+  become: true
+
+- name: Add stack user to sudoers
+  lineinfile:
+    path: /etc/sudoers.d/stack
+    line: "{{ stack_user }} ALL=(ALL) NOPASSWD:ALL"
+    create: yes
+    mode: '0440'
+  become: true
+
 - name: Ensure /opt/stack/devstack ownership and permissions
   file:
     path: /opt/stack/devstack
+    state: directory
     owner: "{{ stack_user }}"
     group: "{{ stack_user }}"
     mode: '0755'
-    recurse: yes
+  become: true
 
 - name: Get Python version
   command: python3 --version
   register: python_version
   changed_when: false
 
-- name: Create DevStack local.conf for non-interactive install
-  copy:
+- name: Set derived facts for floating IP
+  set_fact:
+    floating_base: "{{ floating_range.split('/')[0] }}"
+    floating_end: "{{ floating_range.split('/')[0].rsplit('.', 1)[0] }}.254"
+    floating_subnet: "{{ floating_range.split('/')[0] }}/24"
+    python3_short_version: "{{ python_version.stdout.split()[1].split('.')[0] }}.{{ python_version.stdout.split()[1].split('.')[1] }}"
+
+- name: Copy local.conf template
+  template:
+    src: local.conf.j2
     dest: /opt/stack/devstack/local.conf
-    content: |
-      [[local|localrc]]
-      # Passwords
-      ADMIN_PASSWORD={{ admin_password }}
-      DATABASE_PASSWORD={{ admin_password }}
-      RABBIT_PASSWORD={{ admin_password }}
-      SERVICE_PASSWORD={{ admin_password }}
-      
-      # Network configuration
-      HOST_IP={{ openstack_host_ip }}
-      FIXED_RANGE={{ fixed_range }}
-      FLOATING_RANGE={{ floating_range }}
-      PUBLIC_NETWORK_GATEWAY={{ public_network_gateway }}
-      
-      # Enable services
-      ENABLED_SERVICES=rabbit,mysql,key,horizon,n-api,n-crt,n-obj,n-cpu,n-cond,n-sch,n-novnc,n-cauth,placement-client,placement-api
-      
-      # Logging
-      LOGFILE=/opt/stack/logs/stack.sh.log
-      VERBOSE=True
-      
-      # Other settings
-      RECLONE=yes
-      OFFLINE=False
-      USE_PYTHON3=True
-      PYTHON3_VERSION={{ python_version.stdout.split()[1].split('.')[0] }}.{{ python_version.stdout.split()[1].split('.')[1] }}
     owner: "{{ stack_user }}"
     group: "{{ stack_user }}"
     mode: '0644'
-  become: yes
 
 - name: Create logs directory
   file:
@@ -53,16 +66,51 @@
     owner: "{{ stack_user }}"
     group: "{{ stack_user }}"
     mode: '0755'
-  become: yes
+  become: true
 
-- name: Run DevStack installer with full logging
+- name: Create pip config directory
+  file:
+    path: "/home/{{ stack_user }}/.pip"
+    state: directory
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+    mode: '0755'
+  become: true
+
+- name: Set pip timeout and retry settings
+  copy:
+    dest: "/home/{{ stack_user }}/.pip/pip.conf"
+    content: |
+      [global]
+      timeout = 60
+      retries = 3
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+    mode: '0644'
+  become: true
+
+- name: Run DevStack installation with logging
   shell: |
-    bash /opt/stack/devstack/stack.sh 2>&1 | tee /opt/stack/logs/stack_install.log
-  args:
-    chdir: /opt/stack/devstack
+    cd /opt/stack/devstack
+    export PIP_DEFAULT_TIMEOUT=60
+    export PIP_RETRIES=3
+    ./stack.sh 2>&1 | tee /opt/stack/logs/stack_install.log
   become: yes
   become_user: "{{ stack_user }}"
-  register: stack_result
-  failed_when: stack_result.rc != 0
-  changed_when: "'stack.sh completed' in stack_result.stdout or stack_result.rc == 0"
-  notify: log_stack_result
+  args:
+    creates: /opt/stack/devstack/.stack
+  register: stack_output
+
+- name: Display DevStack installation output
+  debug:
+    var: stack_output.stdout_lines
+  when: stack_output.stdout_lines is defined
+
+- name: Create Swift data directory
+  file:
+    path: /opt/stack/data/swift
+    state: directory
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+    mode: '0755'
+  become: true
