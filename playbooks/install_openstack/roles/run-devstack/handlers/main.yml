@@ -2,3 +2,7 @@
 - name: log_stack_result
   debug:
     msg: "DevStack installer result: {{ stack_result }}"
+
+- name: log_service_check
+  debug:
+    msg: "OpenStack services status: {{ service_check.stdout_lines }}"
