@@ -1,0 +1,72 @@
+[[local|localrc]]
+# Credentials
+ADMIN_PASSWORD={{ admin_password }}
+DATABASE_PASSWORD={{ admin_password }}
+RABBIT_PASSWORD={{ admin_password }}
+SERVICE_PASSWORD={{ admin_password }}
+
+# Network configuration
+FIXED_RANGE={{ fixed_range }}
+FLOATING_RANGE={{ floating_range }}
+PUBLIC_NETWORK_GATEWAY={{ public_network_gateway }}
+PUBLIC_NETWORK_ALLOCATION_POOL_START={{ public_network_allocation_pool_start }}
+PUBLIC_NETWORK_ALLOCATION_POOL_END={{ public_network_allocation_pool_end }}
+
+# Neutron configuration
+NEUTRON_USE_SECURITY_GROUPS={{ neutron_use_security_groups | lower }}
+NEUTRON_PUBLIC_INTERFACE={{ neutron_public_interface }}
+NEUTRON_PRIVATE_INTERFACE={{ neutron_private_interface }}
+NEUTRON_NETWORK_TYPE={{ neutron_network_type }}
+NEUTRON_PHYSICAL_NETWORK={{ neutron_physical_network }}
+
+# Enable services
+enable_service neutron
+enable_service neutron-api
+enable_service neutron-dhcp
+enable_service neutron-l3
+enable_service neutron-metadata
+enable_service neutron-qos
+enable_service neutron-segments
+enable_service neutron-sfc
+
+# Traditional Neutron ML2 configuration
+Q_USE_SECGROUP=true
+Q_AGENT=openvswitch
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch
+Q_ML2_TENANT_NETWORK_TYPE=vxlan
+Q_ML2_PLUGIN_TYPE_DRIVERS=flat,vlan,vxlan
+Q_ML2_PLUGIN_EXT_DRIVERS=port_security
+Q_L3_ENABLED=True
+Q_L3_ROUTER_PER_TENANT=True
+Q_USE_PROVIDERNET_FOR_PUBLIC=True
+
+# Explicitly disable OVN
+disable_service ovn
+disable_service ovn-northd
+disable_service ovn-controller
+disable_service ovn-sb
+disable_service ovn-nb
+disable_service ovn-metadata-agent
+
+# Storage configuration
+VOLUME_BACKING_FILE_SIZE={{ cinder_volume_size }}
+SWIFT_HASH_SUFFIX={{ swift_hash_suffix }}
+SWIFT_REPLICAS={{ swift_replicas }}
+
+# Logging
+ENABLE_LOGGING={{ enable_logging | lower }}
+
+# System configuration
+TIMEZONE={{ system_timezone }}
+
+# Additional settings
+RECLONE=yes
+OFFLINE=false
+USE_PYTHON3=true
+
+# Force traditional Neutron
+NEUTRON_OVN_ENABLED=False
+NEUTRON_OVN_METADATA_AGENT=False
+NEUTRON_OVN_SB_PORT=6642
+NEUTRON_OVN_NB_PORT=6641
+NEUTRON_OVN_METADATA_PORT=9697 
