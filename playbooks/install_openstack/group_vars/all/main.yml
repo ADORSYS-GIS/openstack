@@ -1,27 +1,36 @@
 ---
-# Common variables for all hosts
-ansible_python_interpreter: /usr/bin/python3
-
-# OpenStack configuration
-openstack_release: "2023.2"  # Antelope
-openstack_region: "RegionOne"
-openstack_admin_password: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
-openstack_demo_password: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+# OpenStack host configuration
+openstack_host_ip: "{{ ansible_host | default(inventory_hostname) }}"
+admin_password: "devstack"
 
 # Network configuration
-openstack_public_interface: "eth0"
-openstack_private_interface: "eth1"
-openstack_public_network: "10.0.0.0/24"
-openstack_private_network: "192.168.0.0/24"
+fixed_range: "10.0.0.0/24"
+floating_range: "172.24.4.0/24"
+public_network_gateway: "172.24.4.225"
+
+# User configuration
+stack_user: "stack"
+
+# DevStack configuration
+devstack_branch: "master"
+devstack_repo: "https://github.com/openstack/devstack.git"
 
 # System configuration
 system_timezone: "UTC"
-ntp_servers:
-  - "0.pool.ntp.org"
-  - "1.pool.ntp.org"
-  - "2.pool.ntp.org"
+
+# Node roles
+is_controller: "{{ inventory_hostname == 'node1' }}"
+is_compute: "{{ inventory_hostname in ['node2', 'node3'] }}"
 
 # Logging configuration
-log_directory: "logs"
-log_level: "INFO"
-log_retention_days: 30 
+enable_logging: true
+
+# Storage configuration
+cinder_volume_size: "20G"
+swift_hash_suffix: "66a3d6b56c1f479c8b4e70ab5c2000f5"
+swift_replicas: 1
+
+# Network configuration
+neutron_use_security_groups: true
+neutron_public_interface: "eth0"
+neutron_private_interface: "eth1" 
