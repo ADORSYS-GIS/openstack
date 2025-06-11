@@ -1,6 +1,33 @@
 ---
 # Install system prerequisites for OpenStack
 
+- name: Check for KVM support
+  block:
+    - name: Verify KVM support
+      command: egrep -q '(vmx|svm)' /proc/cpuinfo
+      register: kvm_check
+      failed_when: false
+      changed_when: false
+    - name: Fail if KVM not supported
+      fail:
+        msg: "KVM virtualization is not supported on this system"
+      when: kvm_check.rc != 0
+
+- name: Verify network interfaces
+  block:
+    - name: Check network interfaces
+      shell: |
+        for iface in ens3; do
+          ip link show $iface >/dev/null 2>&1
+        done
+      register: network_check
+      failed_when: false
+      changed_when: false
+    - name: Fail if interfaces missing
+      fail:
+        msg: "Required network interfaces are not available"
+      when: network_check.rc != 0
+
 - name: Update apt cache
   apt:
     update_cache: yes
@@ -43,6 +70,10 @@
       - ntpdate
     state: present
   become: yes
+  register: package_install
+  retries: 3
+  delay: 5
+  until: package_install is success
 
 - name: Get Python version
   command: python3 --version
