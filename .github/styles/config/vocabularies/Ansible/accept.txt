@@ -51,7 +51,25 @@
 (?i)ntp
 (?i)update_cache
 (?i)inventory_docs
-(?i)uninstallation
+(?i)uninstallation 
+(?i)Pulumi
+(?i)sudo(ers?)?
+(?i)linux
+(?i)homebrew
+(?i)Kubuntu
+(?i)Lubuntu
+(?i)VPNs
+(?i)networkd
+(?i)virtualized
+(?i)systemd
+(?i)minimalistic
+(?i)netplan
+(?i)Libvirts?
+(?i)v?lans?
+(?i)v?networks?
+(?i)ethernets?
+(?i)multipass?
+(?i)v?switchs?
 (?i)vms?
 
 // Notes:
