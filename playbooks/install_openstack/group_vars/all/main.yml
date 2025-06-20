@@ -1,0 +1,36 @@
+---
+# OpenStack host configuration
+openstack_host_ip: "{{ ansible_host | default(inventory_hostname) }}"
+admin_password: "devstack"
+
+# Network configuration
+fixed_range: "10.0.0.0/24"
+floating_range: "172.24.4.0/24"
+public_network_gateway: "172.24.4.225"
+
+# User configuration
+stack_user: "stack"
+
+# DevStack configuration
+devstack_branch: "master"
+devstack_repo: "https://github.com/openstack/devstack.git"
+
+# System configuration
+system_timezone: "UTC"
+
+# Node roles
+is_controller: "{{ inventory_hostname == 'node1' }}"
+is_compute: "{{ inventory_hostname in ['node2', 'node3'] }}"
+
+# Logging configuration
+enable_logging: true
+
+# Storage configuration
+cinder_volume_size: "20G"
+swift_hash_suffix: "66a3d6b56c1f479c8b4e70ab5c2000f5"
+swift_replicas: 1
+
+# Network configuration
+neutron_use_security_groups: true
+neutron_public_interface: "eth0"
+neutron_private_interface: "eth1" 

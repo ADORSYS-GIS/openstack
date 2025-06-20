@@ -1,0 +1,141 @@
+---
+# Create stack user with passwordless sudo
+
+- name: Check if stack user exists
+  command: id -u {{ stack_user }}
+  register: user_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Stop any processes running as stack user
+  shell: pkill -u {{ stack_user }} || true
+  become: yes
+  when: user_check.rc == 0
+
+- name: Wait for processes to stop
+  wait_for:
+    timeout: 5
+  when: user_check.rc == 0
+
+- name: Check if /opt/stack exists
+  stat:
+    path: /opt/stack
+  register: opt_stack_dir
+
+- name: Remove existing /opt/stack if it exists
+  file:
+    path: /opt/stack
+    state: absent
+  become: yes
+  when: opt_stack_dir.stat.exists
+
+- name: Create or modify stack user
+  user:
+    name: "{{ stack_user }}"
+    home: /opt/stack
+    shell: /bin/bash
+    create_home: yes
+    move_home: yes
+    state: present
+  become: yes
+
+- name: Ensure /opt/stack directory exists
+  file:
+    path: /opt/stack
+    state: directory
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+    mode: '0755'
+  become: yes
+
+- name: Set up sudoers for stack user
+  copy:
+    dest: /etc/sudoers.d/stack
+    content: "{{ stack_user }} ALL=(ALL) NOPASSWD: ALL"
+    mode: '0440'
+  become: yes
+
+- name: Ensure .ssh directory exists
+  file:
+    path: /opt/stack/.ssh
+    state: directory
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+    mode: '0700'
+  become: yes
+
+- name: Generate SSH key for stack user
+  shell: |
+    if [ ! -f /opt/stack/.ssh/id_rsa ]; then
+      ssh-keygen -t rsa -N "" -f /opt/stack/.ssh/id_rsa
+    fi
+  become: yes
+  become_user: "{{ stack_user }}"
+
+- name: Get SSH public key content
+  slurp:
+    src: /opt/stack/.ssh/id_rsa.pub
+  register: ssh_pub_key
+  become: yes
+  become_user: "{{ stack_user }}"
+
+- name: Set up authorized_keys for stack user
+  copy:
+    dest: /opt/stack/.ssh/authorized_keys
+    content: "{{ ssh_pub_key['content'] | b64decode }}"
+    mode: '0600'
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+  become: yes
+
+- name: Ensure stack user has correct shell environment in .bashrc
+  copy:
+    dest: /opt/stack/.bashrc
+    content: |
+      # .bashrc
+      export PATH=$PATH:/usr/local/bin
+      export PYTHONPATH=/opt/stack
+      export DEVSTACK_DIR=/opt/stack/devstack
+      export OS_AUTH_URL=http://{{ openstack_host_ip }}/identity
+      export OS_IDENTITY_API_VERSION=3
+      export OS_IMAGE_API_VERSION=2
+      export OS_PROJECT_DOMAIN_ID=default
+      export OS_PROJECT_NAME=admin
+      export OS_TENANT_NAME=admin
+      export OS_USERNAME=admin
+      export OS_USER_DOMAIN_ID=default
+      export OS_REGION_NAME=RegionOne
+      export OS_PASSWORD={{ admin_password }}
+    mode: '0644'
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+  become: yes
+  notify: reload bashrc
+
+- name: Ensure stack user has correct shell environment in .bash_profile
+  copy:
+    dest: /opt/stack/.bash_profile
+    content: |
+      # .bash_profile
+      if [ -f /opt/stack/.bashrc ]; then
+          . /opt/stack/.bashrc
+      fi
+    mode: '0644'
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+  become: yes
+  notify: reload bash_profile
+
+- name: Ensure stack user has correct shell environment in .profile
+  copy:
+    dest: /opt/stack/.profile
+    content: |
+      # .profile
+      if [ -f /opt/stack/.bashrc ]; then
+          . /opt/stack/.bashrc
+      fi
+    mode: '0644'
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+  become: yes
+  notify: reload profile

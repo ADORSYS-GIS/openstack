@@ -1,0 +1,26 @@
+---
+- name: Install OpenStack via DevStack
+  hosts: all
+  become: yes
+  vars_files:
+    - group_vars/all.yml
+  pre_tasks:
+    - name: Create stack user with passwordless sudo
+      user:
+        name: "{{ stack_user }}"
+        state: present
+        shell: /bin/bash
+    - name: Ensure Ansible remote tmp directory exists for stack user
+      file:
+        path: /home/{{ stack_user }}/.ansible/tmp
+        state: directory
+        owner: "{{ stack_user }}"
+        group: "{{ stack_user }}"
+        mode: '0700'
+  roles:
+    - prerequisites
+    - create-user
+    - setup-env
+    - clone-devstack
+    - run-devstack
+    - post-install

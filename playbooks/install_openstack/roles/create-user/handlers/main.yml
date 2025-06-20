@@ -1,0 +1,20 @@
+---
+# Handlers for create-user role
+
+- name: reload bashrc
+  shell: |
+    . /opt/stack/.bashrc
+  become: yes
+  become_user: "{{ stack_user }}"
+
+- name: reload bash_profile
+  shell: |
+    . /opt/stack/.bash_profile
+  become: yes
+  become_user: "{{ stack_user }}"
+
+- name: reload profile
+  shell: |
+    . /opt/stack/.profile
+  become: yes
+  become_user: "{{ stack_user }}"

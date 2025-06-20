@@ -1,0 +1,42 @@
+# Project information
+site_name: Adorsys OpenStack
+site_description: 'OpenStack project backed by adorsys'
+site_url: 'https://openstack.github.io/adorsys-gis'
+
+# Theme settings
+theme:
+  name: material
+  locale: en
+  highlightjs: true
+  palette:
+    scheme: slate
+    primary: purple
+
+# Navbar settings (site structure)
+nav:
+  - Home: README.md
+
+# Extra settings
+markdown_extensions:
+  - admonition
+  - codehilite
+  - attr_list
+  - footnotes
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+
+repo_name: OpenStack
+repo_url: https://github.com/adorsys-gis/openstack
+edit_uri: edit/main/docs/
