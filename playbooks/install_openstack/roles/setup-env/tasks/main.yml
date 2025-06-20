@@ -5,7 +5,7 @@
     state: directory
     owner: "{{ stack_user }}"
     group: "{{ stack_user }}"
-    mode: '0755'
+    mode: "0755"
   become: yes
 
 - name: Ensure stack user has correct shell environment in .bashrc
@@ -28,7 +28,7 @@
       export OS_PASSWORD={{ admin_password }}
     owner: "{{ stack_user }}"
     group: "{{ stack_user }}"
-    mode: '0644'
+    mode: "0644"
   become: yes
   notify: reload bashrc
 
@@ -42,7 +42,7 @@
       fi
     owner: "{{ stack_user }}"
     group: "{{ stack_user }}"
-    mode: '0644'
+    mode: "0644"
   become: yes
   notify: reload bash_profile
 
@@ -56,6 +56,6 @@
       fi
     owner: "{{ stack_user }}"
     group: "{{ stack_user }}"
-    mode: '0644'
+    mode: "0644"
   become: yes
   notify: reload profile

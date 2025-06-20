@@ -7,6 +7,7 @@ This document provides instructions for uninstalling OpenStack services that wer
 Based on the repository structure, the following OpenStack components were implemented:
 
 1. **DevStack Installation**
+
    - DevStack environment setup
    - OpenStack services deployment
    - Development environment configuration

@@ -74,7 +74,6 @@ command:
 sudo systemctl status NetworkManager
 ```
 
-
 If the service is active, you will see a return indicating status as "running".
 Otherwise, the service will be inactive or uninstalled.
 
@@ -150,7 +149,6 @@ DHCP.
 If you need a static IPv4 address for your interface, for example for a server,
 here's how to configure that:
 
-
 ```sh
 network:
   version: 2
@@ -172,10 +170,8 @@ network:
 
 ### IPv6 Configuration with DHCP
 
-
 To configure an interface to obtain an IPv6 address via DHCP, the syntax is
 similar to that for IPv4. Here's how to configure DHCP for IPv6 on Netplan:
-
 
 ```sh
 network:
@@ -217,7 +213,6 @@ network:
 Setting up a Wi-Fi network with Netplan requires specifying the SSID and security
 key. Here's an example of how to configure a Wi-Fi interface:
 
-
 ```sh
 network:
   version: 2
@@ -242,7 +237,6 @@ If you have followed the Ubuntu server installation documentation, then there is
 no need to configure the network interface for Wi-Fi or ethernet manually,
 because it was surely configured during the installation of Ubuntu server. You may
 use the following command to ensure that network connection is well configured:
-
 
 ```sh
 cat /etc/netplan/50-cloud-init.yaml
@@ -292,19 +286,17 @@ To configure any of these network interfaces manually using Ansible script, do
 the following:
 
 i. We need to install Ansible on our machine to be able to run Ansible scripts.
-   Run the following command to install Ansible:
-
+Run the following command to install Ansible:
 
 ```sh
 sudo apt update && sudo apt upgrade -y
-sudo apt install python3 
+sudo apt install python3
 sudo python3 venv my_venv | sudo source my_venv/bin/activate | cd my_venv
 sudo apt install -y build-essential libssl-dev libffi-dev python3-dev python3-pip
 python3 install ansible --user
 ```
 
 ii. Create a playbook.yml file, copy and paste the following:
-
 
 ```yaml
 ---
@@ -316,7 +308,7 @@ ii. Create a playbook.yml file, copy and paste the following:
     interface_name: "ens33"
     static_ip: "10.42.0.10/24"
     gateway4: "10.42.0.1"
-    nameservers:   
+    nameservers:
       - "8.8.8.8"
       - "8.8.4.4"
 

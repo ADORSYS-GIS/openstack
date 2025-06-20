@@ -14,7 +14,7 @@
     state: directory
     owner: "{{ stack_user }}"
     group: "{{ stack_user }}"
-    mode: '0755'
+    mode: "0755"
   become: true
 
 - name: Get Python version
@@ -35,7 +35,7 @@
     dest: /opt/stack/devstack/local.conf
     owner: "{{ stack_user }}"
     group: "{{ stack_user }}"
-    mode: '0644'
+    mode: "0644"
 
 - name: Create logs directory
   file:
@@ -43,7 +43,7 @@
     state: directory
     owner: "{{ stack_user }}"
     group: "{{ stack_user }}"
-    mode: '0755'
+    mode: "0755"
   become: true
 
 - name: Create pip config directory
@@ -52,7 +52,7 @@
     state: directory
     owner: "{{ stack_user }}"
     group: "{{ stack_user }}"
-    mode: '0755'
+    mode: "0755"
   become: true
 
 - name: Set pip timeout and retry settings
@@ -64,7 +64,7 @@
       retries = 3
     owner: "{{ stack_user }}"
     group: "{{ stack_user }}"
-    mode: '0644'
+    mode: "0644"
   become: true
 
 - name: Run DevStack installation with logging
@@ -90,5 +90,5 @@
     state: directory
     owner: "{{ stack_user }}"
     group: "{{ stack_user }}"
-    mode: '0755'
+    mode: "0755"
   become: true

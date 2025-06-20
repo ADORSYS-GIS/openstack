@@ -33,4 +33,4 @@ swift_replicas: 1
 # Network configuration
 neutron_use_security_groups: true
 neutron_public_interface: "eth0"
-neutron_private_interface: "eth1" 
+neutron_private_interface: "eth1"

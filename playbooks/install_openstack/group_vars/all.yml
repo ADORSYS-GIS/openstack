@@ -52,4 +52,4 @@ ovn_sb_port: 6642
 ovn_nb_port: 6641
 ovn_metadata_port: 9697
 ovn_enable_chassis_as_gw: true
-ovn_enable_tls_routing: true 
+ovn_enable_tls_routing: true

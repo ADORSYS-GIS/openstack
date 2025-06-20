@@ -16,7 +16,7 @@
         state: directory
         owner: "{{ stack_user }}"
         group: "{{ stack_user }}"
-        mode: '0700'
+        mode: "0700"
   roles:
     - prerequisites
     - create-user

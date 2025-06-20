@@ -4,7 +4,7 @@
     state: directory
     owner: "{{ stack_user }}"
     group: "{{ stack_user }}"
-    mode: '0755'
+    mode: "0755"
   become: yes
 
 - name: Clone DevStack repository
@@ -24,6 +24,6 @@
     state: directory
     owner: "{{ stack_user }}"
     group: "{{ stack_user }}"
-    mode: '0755'
+    mode: "0755"
     recurse: yes
   become: yes

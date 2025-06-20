@@ -138,4 +138,4 @@
 
     - name: Display Open vSwitch test results
       debug:
-        msg: "Open vSwitch status: {{ ovs_test.stdout if ovs_test.rc == 0 else 'Open vSwitch not available' }}" 
+        msg: "Open vSwitch status: {{ ovs_test.stdout if ovs_test.rc == 0 else 'Open vSwitch not available' }}"
