@@ -1,42 +1,82 @@
+# NETWORK CONFIGURATION USING NETPLAN WITH ANSIBLE
+
 ## WHAT IS NETPLAN
 
-Netplan is a modern network configuration tool, primarily used in Ubuntu-based Linux distributions. Its goal is to simplify the management of network interfaces through the use of YAML files. Before its introduction, network configuration in Linux was done through files like /etc/network/interfaces or other methods specific to the services used, like NetworkManager or systemd-networkd. With Netplan, these configurations are unified, providing a standard and accessible solution.
+Netplan is a modern network configuration tool, primarily used in Ubuntu-based
+Linux distributions. Its goal is to simplify the management of network interfaces
+through the use of YAML files. Before its introduction, network configuration in
+Linux was done through files like /etc/network/interfaces or other methods
+specific to the services used, like NetworkManager or systemd-networkd. With
+Netplan, these configurations are unified, providing a standard and accessible
+solution.
 
-This guide is designed to show you how to use Netplan with Ansible to efficiently configure your network interfaces, whether you need to manage Ethernet connections, Wi-Fi, or even advanced configurations like VLANs and static routes, alongside with Ansible to automate all these tedious processes.
+This guide is designed to show you how to use Netplan with Ansible to efficiently
+configure your network interfaces, whether you need to manage Ethernet
+connections, Wi-Fi, or even advanced configurations like VLANs and static routes,
+alongside with Ansible to automate all these tedious processes.
 
 ## WHY NETPLAN
 
-Netplan was first introduced to the Ubuntu universe in version 17.10 (Artful Aardvark). Prior to this release, Linux server and system administrators often used traditional file and ifup/down/etc/network/interfaces tools to manage their network interfaces. These methods, while widely used, were becoming increasingly limited in modern, complex network environments.
+Netplan was first introduced to the Ubuntu universe in version 17.10 (Artful
+Aardvark). Prior to this release, Linux server and system administrators often
+used traditional file and ifup/down/etc/network/interfaces tools to manage their
+network interfaces. These methods, while widely used, were becoming increasingly
+limited in modern, complex network environments.
 
-With the emergence of new needs, particularly around dynamic network management, the need for a tool that unifies the different network services has become apparent. Netplan is designed to fill this gap. It acts as an overlay simplifying the management of systemd-networkd (systemd is the network manager) and NetworkManager. This allows administrators to use a single, simplified syntax, regardless of the underlying service.
+With the emergence of new needs, particularly around dynamic network management,
+the need for a tool that unifies the different network services has become
+apparent. Netplan is designed to fill this gap. It acts as an overlay simplifying
+the management of systemd-networkd (systemd is the network manager) and
+NetworkManager. This allows administrators to use a single, simplified syntax,
+regardless of the underlying service.
 
-Netplan is the choice for Ubuntu distributions that enabled a smoother transition to cloud infrastructures and virtualized environments, where tools like cloud-init benefit from automated and more flexible network configuration.
+Netplan is the choice for Ubuntu distributions that enabled a smoother transition
+to cloud infrastructures and virtualized environments, where tools like cloud-init
+benefit from automated and more flexible network configuration.
 
 ## Network Managers
 
-As mentioned above, Netplan acts as a unified configuration interface for two main network managers: NetworkManager and systemd-networkd. Both services play a key role in managing network interfaces on Ubuntu distributions and its derivatives, but they are not used in the same contexts.
+As mentioned above, Netplan acts as a unified configuration interface for two
+main network managers: NetworkManager and systemd-networkd. Both services play a
+key role in managing network interfaces on Ubuntu distributions and their
+derivatives, but they are not used in the same contexts.
 
 ### Network Manager
 
-NetworkManager is the network manager primarily used on desktop systems like Ubuntu Desktop or its graphical derivatives such as Kubuntu and Lubuntu. It is designed to simplify network connection management, especially in environments where interfaces change frequently, such as with Wi-Fi connections, VPNs, or mobile networks.
+NetworkManager is the network manager primarily used on desktop systems like
+Ubuntu Desktop or its graphical derivatives such as Kubuntu and Lubuntu. It is
+designed to simplify network connection management, especially in environments
+where interfaces change frequently, such as with Wi-Fi connections, VPNs, or
+mobile networks.
 
-On a system using NetworkManager, you often have access to a graphical interface, such as the one built into the GNOME desktop environment, to manage networks. This makes NetworkManager ideal for workstations where flexibility and user interaction are essential.
+On a system using NetworkManager, you often have access to a graphical interface,
+such as the one built into the GNOME desktop environment, to manage networks.
+This makes NetworkManager ideal for workstations where flexibility and user
+interaction are essential.
 
 ### systemd-networkd
 
-systemd-networkd, on the other hand, is more often used on server systems, such as Ubuntu Server, where network interface management is more static and does not require frequent user interaction. This service is minimalistic and seamlessly integrated into the systemd system, making it suitable for servers and headless environments.
+systemd-networkd, on the other hand, is more often used on server systems, such
+as Ubuntu Server, where network interface management is more static and does not
+require frequent user interaction. This service is minimalistic and seamlessly
+integrated into the systemd system, making it suitable for servers and headless
+environments.
 
 ## Checking Your Network Manager
 
-It is important to know which network manager is active, as it determines how Netplan will apply your network configuration.
+It is important to know which network manager is active, as it determines how
+Netplan will apply your network configuration.
 
-To check if NetworkManager is installed and active, you can run the following command:
+To check if NetworkManager is installed and active, you can run the following
+command:
 
 ```sh
 sudo systemctl status NetworkManager
 ```
 
-If the service is active, you will see a return indicating status as "running". Otherwise, the service will be inactive or uninstalled.
+
+If the service is active, you will see a return indicating status as "running".
+Otherwise, the service will be inactive or uninstalled.
 
 To check if systemd-networkd is active, use the following command:
 
@@ -44,13 +84,19 @@ To check if systemd-networkd is active, use the following command:
 sudo systemctl status systemd-networkd
 ```
 
-Similarly, if this service is active, it indicates that systemd-networkd is running.
+Similarly, if this service is active, it indicates that systemd-networkd is
+managing the network.
 
 ## Netplan File Structure and Permissions
 
-The configuration files used by Netplan are in YAML format, a simple and readable format that makes it easy to configure network interfaces. These files are located in the directory /etc/netplan/ and it is from there that network configurations are applied.
+The configuration files used by Netplan are in YAML format, a simple and readable
+format that makes it easy to configure network interfaces. These files are
+located in the directory /etc/netplan/ and it is from there that network
+configurations are applied.
 
-Each Netplan file follows a strict YAML syntax with well-defined indentations. Here is a simple example of a configuration where the Ethernet interface uses DHCP to obtain an IP address automatically:
+Each Netplan file follows a strict YAML syntax with well-defined indentations.
+Here is a simple example of a configuration where the Ethernet interface uses
+DHCP to obtain an IP address automatically:
 
 ```sh
 network:
@@ -64,18 +110,28 @@ network:
 Explanation:
 
 - network: Main block that contains all network configurations.
-- version: The version of the Netplan configuration file (currently it is version 2).
-- renderer: Defines which service manages network configuration. Here, networkd means that systemd-networkd is used. For a desktop environment, one can use NetworkManager.
-- ethernets: This block contains the Ethernet interfaces. In this example, eth0 is the interface being configured.
+- version: The version of the Netplan configuration file (version 2).
+- renderer: Defines which service manages network configuration. Here, networkd
+  means that systemd-networkd is used. For a desktop environment, one can use
+  NetworkManager.
+- ethernets: This block contains the Ethernet interfaces. In this example, eth0
+  is the interface being configured.
+
 - dhcp4: Enables DHCP for IPv4, which assigns an IP address automatically.
 
 ## Typical Configurations with Netplan
 
-Netplan is a flexible tool that allows you to configure different types of networks: IPv4 and IPv6 addresses, DHCP or static configurations, as well as more complex scenarios like network bridges, link aggregation (bonding), and Wi-Fi connections. Here is a set of typical configurations that cover these different cases.
+Netplan is a flexible tool that allows you to configure different types of
+networks: IPv4 and IPv6 addresses, DHCP or static configurations, as well as more
+complex scenarios like network bridges, link aggregation (bonding), and Wi-Fi
+connections. Here is a set of typical configurations that cover these different
+cases.
 
 ### IPv4 Configuration with DHCP
 
-To configure a network interface with an IPv4 address obtained via DHCP, here is a simple configuration. This is commonly used for workstations or servers in environments where the IP address is automatically provided by a DHCP server:
+To configure a network interface with an IPv4 address obtained via DHCP, here is
+a simple configuration. This is commonly used for workstations or servers in
+environments where the IP address is automatically provided by a DHCP server:
 
 ```sh
 network:
@@ -86,11 +142,14 @@ network:
       dhcp4: true
 ```
 
-In this example, the eth0 interface automatically obtains an IPv4 address via DHCP.
+In this example, the eth0 interface automatically obtains an IPv4 address via
+DHCP.
 
 ### Configuring a Fixed IPv4 Address
 
-If you need a static IPv4 address for your interface, for example for a server, here's how to configure that:
+If you need a static IPv4 address for your interface, for example for a server,
+here's how to configure that:
+
 
 ```sh
 network:
@@ -113,7 +172,10 @@ network:
 
 ### IPv6 Configuration with DHCP
 
-To configure an interface to obtain an IPv6 address via DHCP, the syntax is similar to that for IPv4. Here's how to configure DHCP for IPv6 on Netplan:
+
+To configure an interface to obtain an IPv6 address via DHCP, the syntax is
+similar to that for IPv4. Here's how to configure DHCP for IPv6 on Netplan:
+
 
 ```sh
 network:
@@ -124,7 +186,8 @@ network:
       dhcp6: true
 ```
 
-This configuration allows the eth0 interface to obtain a dynamic IPv6 address via DHCPv6.
+This configuration allows the eth0 interface to obtain a dynamic IPv6 address via
+DHCPv6.
 
 ### Configuring a Static IPv6 Address
 
@@ -151,7 +214,9 @@ network:
 
 ### Wi-Fi Configuration
 
-Setting up a Wi-Fi network with Netplan requires specifying the SSID and security key. Here's an example of how to configure a Wi-Fi interface:
+Setting up a Wi-Fi network with Netplan requires specifying the SSID and security
+key. Here's an example of how to configure a Wi-Fi interface:
+
 
 ```sh
 network:
@@ -173,13 +238,18 @@ In this example:
 
 ## Checking Network Connectivity
 
-If you have followed the Ubuntu server installation documentation, then there is no need to configure the network interface for Wi-Fi or ethernet manually, because it was surely configured during the installation of Ubuntu server. You may use the following command to ensure that network connection is well configured:
+If you have followed the Ubuntu server installation documentation, then there is
+no need to configure the network interface for Wi-Fi or ethernet manually,
+because it was surely configured during the installation of Ubuntu server. You may
+use the following command to ensure that network connection is well configured:
+
 
 ```sh
 cat /etc/netplan/50-cloud-init.yaml
 ```
 
-Also, you can use the following commands to check whether you are connected to the internet:
+Also, you can use the following commands to check whether you are connected to
+the internet:
 
 ```sh
 ping -c 5 8.8.8.8
@@ -191,21 +261,25 @@ OR
 ping -c 5 google.com
 ```
 
-If you see zero packet loss, all 5 packets were transmitted and 5 packets received, then it means that the DNS (Domain Name System) is able to resolve domain names to IP addresses and you are connected to the internet.
+If you see zero packet loss, all 5 packets were transmitted and 5 packets
+received, then it means that the DNS (Domain Name System) is able to resolve
+domain names to IP addresses and you are connected to the internet.
 
 ## Configuring Network Interfaces Manually
 
-If you want to configure Wi-Fi, static IPv4, static IPv6, IPv4 with DHCP, or IPv6 with DHCP manually, do the following:
+If you want to configure Wi-Fi, static IPv4, static IPv6, IPv4 with DHCP, or
+IPv6 with DHCP manually, do the following:
 
-1. You need to:
+1- You need to:
 
 ```sh
 sudo nano /etc/netplan/50-cloud-init.yaml
 ```
 
-Then replace the configuration with any of the configurations above, depending on your choice.
+Then replace the configuration with any of the configurations above, depending
+on your choice.
 
-2. To apply the changes, run the following command:
+2- To apply the changes, run the following command:
 
 ```sh
 netplan generate
@@ -214,9 +288,12 @@ netplan apply
 
 ## Configuring Network Interfaces with Ansible
 
-To configure any of these network interfaces manually using Ansible script, do the following:
+To configure any of these network interfaces manually using Ansible script, do
+the following:
 
-1. We need to install Ansible on our machine to be able to run Ansible scripts. Run the following command to install Ansible:
+i. We need to install Ansible on our machine to be able to run Ansible scripts.
+   Run the following command to install Ansible:
+
 
 ```sh
 sudo apt update && sudo apt upgrade -y
@@ -226,7 +303,8 @@ sudo apt install -y build-essential libssl-dev libffi-dev python3-dev python3-pi
 python3 install ansible --user
 ```
 
-2. Create a playbook.yml file, copy and paste the following:
+ii. Create a playbook.yml file, copy and paste the following:
+
 
 ```yaml
 ---
@@ -272,7 +350,7 @@ python3 install ansible --user
         var: ip_result.stdout_lines
 ```
 
-3. To execute the Ansible code, run this command:
+iii. To execute the Ansible code, run this command:
 
 ```sh
 sudo ansible-playbook -i host playbook.yaml
@@ -286,7 +364,10 @@ inet 192.168.1.100/24 brd 192.168.1.255 scope global ens33
 
 Then this indicates that your network interface "ens33" has been configured.
 
-Alternatively, if you want to configure a wireless network interface with a static IP address (i.e., a network interface that uses Wi-Fi), replace the content in the /etc/netplan/50-cloud-init.yaml file with the following Ansible script:
+Alternatively, if you want to configure a wireless network interface with a
+static IP address (i.e., a network interface that uses Wi-Fi), replace the
+content in the /etc/netplan/50-cloud-init.yaml file with the following Ansible
+script:
 
 ```yaml
 ---
