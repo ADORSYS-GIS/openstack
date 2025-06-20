@@ -19,29 +19,29 @@ servers are essential:
 
 - **Token-based authentication**:
 
-    In large cloud infrastructures like OpenStack, time synchronization is
-    critical because authentication tokens are time-sensitive. If a server's
-    system clock is not synchronized, it may reject valid tokens with errors such
-    as "not yet valid" or "expired." NTP ensures consistent and accurate time
-    across all nodes in the infrastructure, helping to prevent such
-    authentication failures.
+  In large cloud infrastructures like OpenStack, time synchronization is
+  critical because authentication tokens are time-sensitive. If a server's
+  system clock is not synchronized, it may reject valid tokens with errors such
+  as "not yet valid" or "expired." NTP ensures consistent and accurate time
+  across all nodes in the infrastructure, helping to prevent such
+  authentication failures.
 
 - **Logs consistency issues**:
 
-    In large cloud infrastructures, services often run across multiple servers.
-    Without proper time synchronization, each server may record log entries using
-    slightly different timestamps. This makes it difficult to trace errors across
-    multiple systems. By using NTP, all servers maintain a consistent system
-    time, ensuring logs are aligned and easier to interpret during debugging or
-    audits.
+  In large cloud infrastructures, services often run across multiple servers.
+  Without proper time synchronization, each server may record log entries using
+  slightly different timestamps. This makes it difficult to trace errors across
+  multiple systems. By using NTP, all servers maintain a consistent system
+  time, ensuring logs are aligned and easier to interpret during debugging or
+  audits.
 
 - **Scheduled jobs**:
 
-    Certain tasks or jobs may need to run simultaneously across multiple servers.
-    If server clocks are not synchronized, these actions may execute at
-    inconsistent times, leading to failures, data corruption, or unexpected
-    behavior. NTP ensures that all servers maintain a consistent system time,
-    enabling coordinated and predictable task execution.
+  Certain tasks or jobs may need to run simultaneously across multiple servers.
+  If server clocks are not synchronized, these actions may execute at
+  inconsistent times, leading to failures, data corruption, or unexpected
+  behavior. NTP ensures that all servers maintain a consistent system time,
+  enabling coordinated and predictable task execution.
 
 An NTP server is a fundamental component in any cloud or distributed
 infrastructure. It ensures reliable communication, secure authentication,

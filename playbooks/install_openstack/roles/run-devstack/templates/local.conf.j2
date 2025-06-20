@@ -1,0 +1,104 @@
+[[local|localrc]]
+
+# Credentials
+ADMIN_PASSWORD={{ admin_password }}
+DATABASE_PASSWORD={{ database_password }}
+RABBIT_PASSWORD={{ rabbit_password }}
+SERVICE_PASSWORD={{ service_password }}
+
+# Network configuration
+FIXED_RANGE={{ fixed_range }}
+FLOATING_RANGE={{ floating_range }}
+PUBLIC_NETWORK_GATEWAY={{ public_network_gateway }}
+PUBLIC_NETWORK_ALLOCATION_POOL_START={{ public_network_allocation_pool_start | default('192.168.100.100') }}
+PUBLIC_NETWORK_ALLOCATION_POOL_END={{ public_network_allocation_pool_end | default('192.168.100.200') }}
+ALLOCATION_POOLS={{ allocation_pools }}
+
+# System configuration
+TIMEZONE={{ timezone }}
+LOGDIR={{ log_dir }}
+
+# Core services
+enable_service mysql
+enable_service rabbit
+enable_service etcd3
+enable_service key
+enable_service g-api
+enable_service g-reg
+enable_service n-api
+enable_service n-cpu
+enable_service n-cond
+enable_service n-sch
+enable_service n-novnc
+enable_service n-xvnc
+enable_service c-api
+enable_service c-vol
+enable_service placement-api
+enable_service placement-client
+enable_service horizon
+
+# Storage configuration
+VOLUME_BACKING_FILE_SIZE={{ cinder_volume_size | default('10G') }}
+
+# Neutron configuration (basic)
+enable_service neutron
+enable_service q-svc
+enable_service q-agt
+enable_service q-dhcp
+enable_service q-l3
+enable_service q-meta
+enable_service q-metering
+
+# Network type configuration
+NEUTRON_NETWORK_TYPE={{ neutron_network_type | default('vxlan') }}
+NEUTRON_PHYSICAL_NETWORK={{ neutron_physical_network | default('public') }}
+
+# Bridge configuration
+PUBLIC_INTERFACE={{ public_interface }}
+PRIVATE_INTERFACE={{ neutron_private_interface | default('eth2') }}
+
+# Logging
+LOGFILE={{ log_dir }}/stack.log
+LOGDIR=$DEST/logs
+ENABLE_DEBUG_LOG_LEVEL=True
+ENABLE_VERBOSE_LOGGING=True
+SCREEN_LOGDIR={{ log_dir }}/screen
+
+# System config
+RECLONE=yes
+OFFLINE=false
+USE_PYTHON3=true
+TIMEZONE={{ system_timezone }}
+
+# Networking - Public and Fixed IP ranges
+FIXED_RANGE={{ fixed_range }}
+FLOATING_RANGE={{ floating_range }}
+PUBLIC_NETWORK_GATEWAY={{ public_network_gateway }}
+PUBLIC_NETWORK_ALLOCATION_POOL_START={{ public_network_allocation_pool_start }}
+PUBLIC_NETWORK_ALLOCATION_POOL_END={{ public_network_allocation_pool_end }}
+
+# Network interfaces
+NEUTRON_PUBLIC_INTERFACE={{ neutron_public_interface }}
+NEUTRON_PRIVATE_INTERFACE={{ neutron_private_interface }}
+
+# Neutron config for OVS
+Q_USE_SECGROUP=True
+Q_L3_ENABLED=True
+Q_AGENT=openvswitch
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch
+Q_ML2_TENANT_NETWORK_TYPE=vxlan
+Q_ML2_PLUGIN_TYPE_DRIVERS=flat,vlan,vxlan
+Q_ML2_PLUGIN_EXT_DRIVERS=port_security,qos,trunk
+Q_L3_ROUTER_PER_TENANT=True
+Q_USE_PROVIDERNET_FOR_PUBLIC=True
+
+# Neutron bridge interfaces
+NEUTRON_OVS_BRIDGE=br-int
+NEUTRON_OVS_BRIDGE_IFACES=$NEUTRON_PUBLIC_INTERFACE
+NEUTRON_OVS_BRIDGE_IFACES_EXTRA=$NEUTRON_PRIVATE_INTERFACE
+NEUTRON_OVS_BRIDGE_IFACES_EXTRA_OPTIONS="type=internal"
+
+# Neutron extra options
+NEUTRON_DHCP_AGENT_EXTRA_OPTS="--enable-metadata"
+NEUTRON_L3_AGENT_EXTRA_OPTS="--enable-metadata"
+NEUTRON_METADATA_AGENT_EXTRA_OPTS="--enable-metadata"

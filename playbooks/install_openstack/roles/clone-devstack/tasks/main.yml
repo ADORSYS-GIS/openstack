@@ -1,0 +1,29 @@
+- name: Ensure /opt/stack directory exists
+  file:
+    path: /opt/stack
+    state: directory
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+    mode: "0755"
+  become: yes
+
+- name: Clone DevStack repository
+  git:
+    repo: "{{ devstack_repo }}"
+    dest: /opt/stack/devstack
+    version: "{{ devstack_branch }}"
+    force: yes
+  become: yes
+  become_user: "{{ stack_user }}"
+  register: git_clone_result
+  notify: log_git_clone
+
+- name: Set proper permissions on DevStack directory
+  file:
+    path: /opt/stack/devstack
+    state: directory
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+    mode: "0755"
+    recurse: yes
+  become: yes

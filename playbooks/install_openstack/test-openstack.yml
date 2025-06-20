@@ -1,0 +1,141 @@
+---
+- name: Test OpenStack Installation
+  hosts: all
+  become: yes
+  become_user: "{{ stack_user }}"
+  vars_files:
+    - "{{ playbook_dir }}/group_vars/all.yml"
+  tasks:
+    - name: Check if openstack client is installed
+      command: which openstack
+      register: openstack_client
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Install openstack client if not present
+      apt:
+        name: python3-openstackclient
+        state: present
+        update_cache: yes
+      become: yes
+      become_user: root
+      when: openstack_client.rc != 0
+
+    - name: Source OpenStack credentials
+      shell: |
+        source /opt/stack/devstack/openrc admin admin
+        env | grep OS_
+      args:
+        executable: /bin/bash
+      register: openrc_output
+      changed_when: false
+
+    - name: Display OpenStack environment
+      debug:
+        msg: "OpenStack environment: {{ openrc_output.stdout_lines }}"
+
+    - name: Test Keystone (Identity Service)
+      shell: |
+        source /opt/stack/devstack/openrc admin admin
+        openstack token issue
+      args:
+        executable: /bin/bash
+      register: keystone_test
+      changed_when: false
+
+    - name: Display Keystone test results
+      debug:
+        msg: "Keystone is working: {{ keystone_test.stdout }}"
+
+    - name: Test Nova (Compute Service)
+      shell: |
+        source /opt/stack/devstack/openrc admin admin
+        openstack compute service list
+      args:
+        executable: /bin/bash
+      register: nova_test
+      changed_when: false
+
+    - name: Display Nova test results
+      debug:
+        msg: "Nova services status: {{ nova_test.stdout }}"
+
+    - name: Test Neutron (Network Service)
+      shell: |
+        source /opt/stack/devstack/openrc admin admin
+        openstack network agent list
+      args:
+        executable: /bin/bash
+      register: neutron_test
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Display Neutron test results
+      debug:
+        msg: "Neutron agents status: {{ neutron_test.stdout if neutron_test.rc == 0 else 'Neutron service not available' }}"
+
+    - name: Test Glance (Image Service)
+      shell: |
+        source /opt/stack/devstack/openrc admin admin
+        openstack image list
+      args:
+        executable: /bin/bash
+      register: glance_test
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Display Glance test results
+      debug:
+        msg: "Glance images: {{ glance_test.stdout if glance_test.rc == 0 else 'Glance service not available' }}"
+
+    - name: Test Horizon (Dashboard)
+      uri:
+        url: "http://{{ openstack_host_ip }}/dashboard"
+        method: GET
+        return_content: yes
+        status_code: 200
+      register: horizon_test
+      ignore_errors: yes
+
+    - name: Display Horizon test results
+      debug:
+        msg: "Horizon dashboard is {{ 'accessible' if horizon_test.status == 200 else 'not accessible' }}"
+
+    - name: Test RabbitMQ
+      shell: |
+        sudo rabbitmqctl cluster_status
+      args:
+        executable: /bin/bash
+      register: rabbitmq_test
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Display RabbitMQ test results
+      debug:
+        msg: "RabbitMQ cluster status: {{ rabbitmq_test.stdout if rabbitmq_test.rc == 0 else 'RabbitMQ not available' }}"
+
+    - name: Test MySQL
+      shell: |
+        sudo mysql -u root -p{{ admin_password }} -e "SHOW DATABASES;"
+      args:
+        executable: /bin/bash
+      register: mysql_test
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Display MySQL test results
+      debug:
+        msg: "MySQL databases: {{ mysql_test.stdout if mysql_test.rc == 0 else 'MySQL not available' }}"
+
+    - name: Test Open vSwitch
+      shell: |
+        sudo ovs-vsctl show
+      args:
+        executable: /bin/bash
+      register: ovs_test
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Display Open vSwitch test results
+      debug:
+        msg: "Open vSwitch status: {{ ovs_test.stdout if ovs_test.rc == 0 else 'Open vSwitch not available' }}"

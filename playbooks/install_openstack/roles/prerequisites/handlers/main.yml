@@ -1,0 +1,8 @@
+---
+# Handlers for prerequisites role
+
+- name: restart ntp
+  systemd:
+    name: ntp
+    state: restarted
+  become: yes

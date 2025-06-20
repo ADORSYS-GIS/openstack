@@ -2,7 +2,7 @@
 
 As discussed in the [NTP documentation](/docs/ntp_docs.md), NTP (Network Time Protocol) is used to synchronize time across all servers in an infrastructure. In this tutorial, we'll learn how to install and configure NTP using an Ansible playbook.
 
-Ansible automates tasks through *playbooks*, which define the desired state of systems. We'll write a playbook to install NTP on all servers.
+Ansible automates tasks through _playbooks_, which define the desired state of systems. We'll write a playbook to install NTP on all servers.
 
 ## Prerequisites
 

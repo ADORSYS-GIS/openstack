@@ -1,0 +1,6 @@
+extends: spelling
+message: "Possible spelling error"
+level: suggestion
+scope: raw
+ignorecase: true
+word_list: accept.txt

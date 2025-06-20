@@ -1,0 +1,9 @@
+- name: Install Ntp using ansible playbook
+  hosts: all
+  become: yes
+  tasks:
+    - name: install ntp package
+      apt:
+        name: ntp
+        state: present
+        update_cache: yes
