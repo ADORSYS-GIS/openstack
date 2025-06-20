@@ -1,6 +1,6 @@
 ---
 - name: Install QEMU, KVM, and Libvirt on Ubuntu Server
-  hosts: all # This playbook is designed to run on all hosts in the inventory but can be limited to specific groups or hosts as needed 
+  hosts: all # This playbook is designed to run on all hosts in the inventory but can be limited to specific groups or hosts as needed
   become: true
   tasks:
     - name: Install required packages

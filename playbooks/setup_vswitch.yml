@@ -14,7 +14,7 @@
     - name: Create a virtual bridge (vswitch)
       ansible.builtin.command: "brctl addbr {{ bridge_name }}"
       changed_when: false
-      ignore_errors: true  # In case bridge already exists
+      ignore_errors: true # In case bridge already exists
 
     - name: Bring up the bridge
       ansible.builtin.command: "ip link set {{ bridge_name }} up"

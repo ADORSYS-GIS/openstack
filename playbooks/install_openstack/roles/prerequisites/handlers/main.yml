@@ -5,4 +5,4 @@
   systemd:
     name: ntp
     state: restarted
-  become: yes 
+  become: yes

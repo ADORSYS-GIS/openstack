@@ -40,29 +40,29 @@ brew install ansible
 
 1. Create SSH keys for authentication:
 
-    ```bash
-    ssh-keygen -t ed25519 -f ~/.ssh/personal_key -C "your_email@domain.com"
-    ```
+   ```bash
+   ssh-keygen -t ed25519 -f ~/.ssh/personal_key -C "your_email@domain.com"
+   ```
 
-    This command creates a key that will be used for automatic authentication when logging into your servers.
+   This command creates a key that will be used for automatic authentication when logging into your servers.
 
 2. Create a new SSH key specifically for Ansible automation tasks:
 
-    ```bash
-    ssh-keygen -t ed25519 -f ~/.ssh/ansible_key -C "ansible@$(hostname)"
-    ```
+   ```bash
+   ssh-keygen -t ed25519 -f ~/.ssh/ansible_key -C "ansible@$(hostname)"
+   ```
 
 3. Copy the SSH keys to your servers:
 
-    ```bash
-    ssh-copy-id -i ~/.ssh/ansible_key.pub lc@188.0.0.1
-    ```
+   ```bash
+   ssh-copy-id -i ~/.ssh/ansible_key.pub lc@188.0.0.1
+   ```
 
-    ```bash
-    ssh-copy-id -i ~/.ssh/personal.pub  lc@188.0.0.1
-    ```
+   ```bash
+   ssh-copy-id -i ~/.ssh/personal.pub  lc@188.0.0.1
+   ```
 
-    These commands copy your authentication and Ansible SSH keys to the server, simplifying configuration and management.
+   These commands copy your authentication and Ansible SSH keys to the server, simplifying configuration and management.
 
 ### Using Playbooks
 
@@ -73,7 +73,7 @@ Here is an example of a playbook that installs and starts the Apache web server:
 ```yaml
 - name: Install and start Apache web server
   hosts: webservers
-  become: true  # Use sudo
+  become: true # Use sudo
   tasks:
     - name: Install Apache
       apt:
@@ -117,21 +117,21 @@ Ad-hoc commands are used to run single, simple tasks on your servers without the
 
 - **Ping All Servers**
 
-    ```bash
-    ansible all -i hosts.ini -m ping
-    ```
+  ```bash
+  ansible all -i hosts.ini -m ping
+  ```
 
 - **Reboot Web Servers**
 
-    ```bash
-    ansible web -i hosts.ini -a "reboot" -b
-    ```
+  ```bash
+  ansible web -i hosts.ini -a "reboot" -b
+  ```
 
 - **Install VLC on Web Servers**
 
-    ```bash
-    ansible web -i hosts.ini -b -m apt -a "name=vlc state=present"
-    ```
+  ```bash
+  ansible web -i hosts.ini -b -m apt -a "name=vlc state=present"
+  ```
 
 Ad-hoc commands are useful for performing quick tasks, such as installing a package or rebooting a server.
 
