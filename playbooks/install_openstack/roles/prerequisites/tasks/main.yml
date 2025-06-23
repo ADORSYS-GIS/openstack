@@ -146,3 +146,10 @@
     groups: libvirt
     append: yes
   become: yes
+
+- name: Ensure DNS resolver is set (Multipass/VM safe)
+  become: yes
+  copy:
+    dest: /etc/resolv.conf
+    content: |
+      nameserver 8.8.8.8
