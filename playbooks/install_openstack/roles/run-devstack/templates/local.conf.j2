@@ -7,7 +7,7 @@ ADMIN_PASSWORD={{ admin_password }}
 DATABASE_PASSWORD={{ database_password }}
 RABBIT_PASSWORD={{ rabbit_password }}
 SERVICE_PASSWORD={{ service_password }}
-
+SWIFT_HASH={{ swift_hash_suffix | default('devstack-suffix') }}
 # ===================================
 # System Configuration
 # ===================================
@@ -16,7 +16,7 @@ RECLONE=yes
 OFFLINE=false
 USE_PYTHON3=true
 TIMEZONE={{ system_timezone | default('UTC') }}
-HOST_IP={{ host_ip }}  # Set dynamically or via Ansible
+HOST_IP={{ host_ip }}
 
 # ===================================
 # Logging Configuration
@@ -55,13 +55,13 @@ enable_service rabbit
 enable_service etcd3
 enable_service key
 enable_service g-api
-enable_service g-reg
+enable_service g-reg              # optional
 enable_service n-api
 enable_service n-cpu
 enable_service n-cond
 enable_service n-sch
 enable_service n-novnc
-enable_service n-xvnc
+enable_service n-xvnc            # optional
 enable_service c-api
 enable_service c-vol
 enable_service placement-api
@@ -83,11 +83,6 @@ enable_service s-proxy s-object s-container s-account
 # Neutron Configuration (ML2 + OVS)
 # ===================================
 enable_service neutron
-enable_service q-svc
-enable_service q-agt
-enable_service q-dhcp
-enable_service q-l3
-enable_service q-meta
 enable_service neutron-api
 enable_service neutron-dhcp
 enable_service neutron-l3

@@ -67,6 +67,27 @@
     mode: "0644"
   become: true
 
+- name: Start Open vSwitch using service
+  service:
+    name: openvswitch-switch
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Wait until Open vSwitch DB socket is available
+  stat:
+    path: /var/run/openvswitch/db.sock
+  register: ovs_socket
+  retries: 10
+  delay: 3
+  until: ovs_socket.stat.exists
+  become: yes
+
+- name: Fail if Open vSwitch DB socket is still missing after retries
+  fail:
+    msg: "Open vSwitch DB socket not found. openvswitch-switch may not have started correctly."
+  when: not ovs_socket.stat.exists
+
 - name: Run DevStack installation with logging
   shell: |
     cd /opt/stack/devstack

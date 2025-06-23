@@ -43,7 +43,7 @@ enable_logging: true
 
 # Storage configuration
 cinder_volume_size: "20G"
-swift_hash_suffix: "66a3d6b56c1f479c8b4e70ab5c2000f5"
+swift_hash_suffix: "devstack-suffix"
 swift_replicas: 1
 
 # Network configuration
