@@ -1,6 +1,15 @@
 ---
 # OpenStack host configuration
 openstack_host_ip: "{{ ansible_host | default(inventory_hostname) }}"
+
+# Host IP for DevStack (used as HOST_IP)
+host_ip: "{{ openstack_host_ip | default(ansible_host | default(inventory_hostname)) }}"
+
+# Local IP used for Neutron tunneling (VXLAN endpoint)
+local_ip: >-
+  {{ hostvars[inventory_hostname]['ansible_' + neutron_private_interface]['ipv4']['address']
+     | default(ansible_host | default(inventory_hostname)) }}
+
 admin_password: "devstack"
 database_password: "devstack"
 rabbit_password: "devstack"
