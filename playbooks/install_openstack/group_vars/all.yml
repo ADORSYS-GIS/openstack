@@ -3,12 +3,10 @@
 openstack_host_ip: "{{ ansible_host | default(inventory_hostname) }}"
 
 # Host IP for DevStack (used as HOST_IP)
-host_ip: "{{ openstack_host_ip | default(ansible_host | default(inventory_hostname)) }}"
+host_ip: "{{ ansible_default_ipv4.address }}"
 
 # Local IP used for Neutron tunneling (VXLAN endpoint)
-local_ip: >-
-  {{ hostvars[inventory_hostname]['ansible_' + neutron_private_interface]['ipv4']['address']
-     | default(ansible_host | default(inventory_hostname)) }}
+local_ip: "{{ ansible_default_ipv4.address }}"
 
 admin_password: "devstack"
 database_password: "devstack"
@@ -50,8 +48,9 @@ swift_replicas: 1
 
 # Network configuration
 neutron_use_security_groups: true
-neutron_public_interface: "eth0"
-neutron_private_interface: "eth1"
+neutron_public_interface: "{{ ansible_default_ipv4.interface }}"
+neutron_private_interface: >-
+  {{ ansible_interfaces | difference(['lo', ansible_default_ipv4.interface]) | first | default(ansible_default_ipv4.interface) }}
 neutron_network_type: "flat"
 neutron_physical_network: "public"
 
