@@ -5,86 +5,41 @@
 (?i)SELinux
 (?i)bootable
 (?i)bootloader
-(?i)Ctrl
-(?i)Subnet
-(?i)Nameservers
+(?i)ctrl
+(?i)subnet
+(?i)nameservers
 (?i)ufw
-(?i)Ubuntu
+(?i)ubuntu
 (?i)ntp
 (?i)update_cache
 (?i)inventory_docs
-(?i)Pulumi
+(?i)pulumi
 (?i)sudo(ers?)?
 (?i)linux
-(?i)homebrew  
-(?i)Kubuntu
-(?i)Lubuntu
-(?i)VPNs
+(?i)homebrew
+(?i)kubuntu
+(?i)lubuntu
+(?i)vpn(s)?
 (?i)networkd
 (?i)virtualized
 (?i)systemd
 (?i)minimalistic
 (?i)netplan
-(?i)Libvirts?
+(?i)libvirts?
 (?i)v?lans?
 (?i)v?networks?
 (?i)ethernets?
 (?i)multipass?
 (?i)v?switchs?
 (?i)vms?
-<<<<<<< HEAD
-// Notes:
-// - All entries are case-insensitive using `(?i)`
-// - Redundant prefixes/suffixes or improper comment syntax (`////`) removed
-
 (?i)macoss?
 (?i)oss?
-
-// Networking
-(?i)bootable
-(?i)bootloader
-(?i)subnet
-(?i)nameservers
-(?i)v?lans?
-(?i)v?networks?
-(?i)v?switchs?
-(?i)ethernets?
 (?i)hostname
 (?i)ips
-
-// Security
-(?i)sudo(ers?)?
-(?i)ufw
-(?i)vpn(s)?  // plural optional
-
-// Operating systems
-(?i)ubuntu
-(?i)kubuntu
-(?i)lubuntu
-(?i)linux
-(?i)systemd
-(?i)networkd
-(?i)netplan
-(?i)minimalistic
-(?i)virtualized
-
-// Hardware / Drivers
 (?i)ryzen
 (?i)nvme
-
-// Misc
-(?i)ctrl
-(?i)ntp
-(?i)update_cache
-(?i)inventory_docs
 (?i)uninstallation
-(?i)vms?
-
 
 // Notes:
 // - All entries are case-insensitive using `(?i)`
-// - Redundant prefixes/suffixes or improper comment syntax (`////`) removed
-=======
-(?i)macoss?
-(?i)oss?
->>>>>>> origin/main
+// - Redundant prefixes/suffixes or improper comment syntax removed
