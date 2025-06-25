@@ -1,36 +1,55 @@
+# General Open Source Tools
 (?i)ansible
 (?i)openstack
-(?i)balenaEtcher
-(?i)UNetbootin
-(?i)SELinux
+(?i)Pulumi
+(?i)homebrew
+
+# Boot and Virtualization
 (?i)bootable
 (?i)bootloader
-(?i)Ctrl
-(?i)Subnet
-(?i)Nameservers
-(?i)ufw
-(?i)Ubuntu
-(?i)ntp
-(?i)update_cache
-(?i)inventory_docs
-(?i)Pulumi
-(?i)sudo(ers?)?
-(?i)linux
-(?i)homebrew  
-(?i)Kubuntu
-(?i)Lubuntu
-(?i)VPNs
-(?i)networkd
+(?i)Libvirts?
+(?i)multipass?
 (?i)virtualized
 (?i)systemd
-(?i)minimalistic
-(?i)netplan
-(?i)Libvirts?
-(?i)v?lans?
+(?i)networkd
+
+# Networking
+(?i)Subnet
+(?i)Nameservers
+(?i)VPNs
+(?i)ufw
+(?i)v[sS]witch
+(?i)v?LANs?
 (?i)v?networks?
 (?i)ethernets?
-(?i)multipass?
-(?i)v?switchs?
-(?i)vms?
-(?i)macoss?
-(?i)oss?
+(?i)IPs
+(?i)hostname
+
+
+# OS Variants and Platforms
+(?i)Ubuntu
+(?i)Kubuntu
+(?i)Lubuntu
+(?i)macOSs?
+(?i)linux
+
+# Terminal and CLI Terms
+(?i)sudo(ers?)?
+(?i)Ctrl
+(?i)update_cache
+(?i)inventory_docs
+
+# OpenStack Terms
+(?i)Fernet
+(?i)idempotency
+
+# Tools and Miscellaneous
+(?i)UNetbootin
+(?i)balenaEtcher
+(?i)minimalistic
+(?i)ntp
+
+# New fixes from recent Vale output
+(?i)VMs?
+(?i)SELinux
+(?i)Netplan
