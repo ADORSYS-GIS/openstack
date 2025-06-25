@@ -1,0 +1,22 @@
+---
+- name: Ensure Keystone log file exists and is owned by keystone
+  file:
+    path: /var/log/keystone/keystone-manage.log
+    state: touch
+    owner: keystone
+    group: keystone
+    mode: "0640"
+
+- name: Populate Keystone database (db_sync)
+  command: keystone-manage db_sync
+  become_user: keystone
+
+- name: Bootstrap Keystone service
+  command: >
+    keystone-manage bootstrap
+    --bootstrap-password {{ keystone_admin_password }}
+    --bootstrap-admin-url {{ keystone_admin_url }}
+    --bootstrap-internal-url {{ keystone_internal_url }}
+    --bootstrap-public-url {{ keystone_public_url }}
+    --bootstrap-region-id {{ keystone_region }}
+  become_user: keystone

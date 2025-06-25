@@ -1,0 +1,12 @@
+- name: Insert 'NameServer localhost' after ServerRoot line
+  lineinfile:
+    path: /etc/apache2/apache2.conf
+    line: "ServerName localhost"
+    insertafter: '^#ServerRoot = "/etc/apache2"'
+    state: present
+    backup: yes
+
+- name: Restart Apache2 after config change
+  service:
+    name: apache2
+    state: restarted
