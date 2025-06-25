@@ -1,0 +1,33 @@
+---
+# Database configuration
+neutron_db_name: neutron
+neutron_db_user: neutron
+neutron_db_password: "{{ vault_neutron_db_password }}"
+
+# RabbitMQ configuration
+rabbitmq_user: openstack
+rabbitmq_password: "{{ vault_rabbitmq_password }}"
+rabbitmq_host: "{{ groups['controllers'][0] }}"
+
+# Keystone configuration
+keystone_admin_url: "http://{{ groups['controllers'][0] }}:5000/v3"
+keystone_internal_url: "http://{{ groups['controllers'][0] }}:5000/v3"
+neutron_keystone_user: neutron
+neutron_keystone_password: "{{ vault_neutron_keystone_password }}"
+service_project: service
+
+# Network configuration
+overlay_interface: "{{ ansible_default_ipv4.interface }}"
+tenant_network_types: vxlan
+vni_ranges: 1:1000
+enable_security_group: true
+metadata_secret: "{{ vault_metadata_secret }}"
+
+# Package configuration
+neutron_packages:
+  - neutron-server
+  - neutron-plugin-ml2
+  - neutron-linuxbridge-agent
+  - neutron-l3-agent
+  - neutron-dhcp-agent
+  - neutron-metadata-agent

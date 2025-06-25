@@ -1,0 +1,5 @@
+# Contents of vault.yml
+vault_neutron_db_password: StrongPassword123
+vault_rabbitmq_password: RabbitPass123
+vault_neutron_keystone_password: NeutronKeystonePass123
+vault_metadata_secret: MetadataSecret123

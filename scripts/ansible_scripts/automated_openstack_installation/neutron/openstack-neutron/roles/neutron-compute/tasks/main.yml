@@ -1,0 +1,38 @@
+---
+- name: Include common tasks
+  include_role:
+    name: common
+    tasks_from: main
+
+- name: Install compute packages
+  apt:
+    name: "{{ neutron_packages }}"
+    state: present
+
+- name: Configure Linux Bridge agent
+  template:
+    src: linuxbridge_agent.ini.j2
+    dest: /etc/neutron/plugins/ml2/linuxbridge_agent.ini
+    owner: root
+    group: neutron
+    mode: "0640"
+  notify: Restart neutron-linuxbridge-agent
+
+- name: Configure Nova to use Neutron
+  ini_file:
+    path: /etc/nova/nova.conf
+    section: neutron
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  loop:
+    - { option: "auth_url", value: "{{ keystone_admin_url }}" }
+    - { option: "auth_type", value: "password" }
+    - { option: "project_domain_name", value: "default" }
+    - { option: "user_domain_name", value: "default" }
+    - { option: "region_name", value: "RegionOne" }
+    - { option: "project_name", value: "{{ service_project }}" }
+    - { option: "username", value: "{{ neutron_keystone_user }}" }
+    - { option: "password", value: "{{ neutron_keystone_password }}" }
+    - { option: "service_metadata_proxy", value: "true" }
+    - { option: "metadata_proxy_shared_secret", value: "{{ metadata_secret }}" }
+  notify: Restart nova-compute

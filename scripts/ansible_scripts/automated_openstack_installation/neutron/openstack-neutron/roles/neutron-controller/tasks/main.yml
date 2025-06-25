@@ -1,0 +1,100 @@
+---
+- name: Include common tasks
+  include_role:
+    name: common
+    tasks_from: main
+
+- name: Install controller packages
+  apt:
+    name: "{{ neutron_packages }}"
+    state: present
+
+- name: Create Neutron database
+  community.mysql.mysql_db:
+    name: "{{ neutron_db_name }}"
+    state: present
+
+- name: Create Neutron database user
+  community.mysql.mysql_user:
+    name: "{{ neutron_db_user }}"
+    password: "{{ neutron_db_password }}"
+    host: "%"
+    priv: "{{ neutron_db_name }}.*:ALL"
+    state: present
+
+- name: Configure ML2 plugin
+  template:
+    src: ml2_conf.ini.j2
+    dest: /etc/neutron/plugins/ml2/ml2_conf.ini
+    owner: root
+    group: neutron
+    mode: "0640"
+  notify: Restart neutron-server
+
+- name: Configure L3 agent
+  template:
+    src: l3_agent.ini.j2
+    dest: /etc/neutron/l3_agent.ini
+    owner: root
+    group: neutron
+    mode: "0640"
+  notify: Restart neutron-l3-agent
+
+- name: Configure DHCP agent
+  template:
+    src: dhcp_agent.ini.j2
+    dest: /etc/neutron/dhcp_agent.ini
+    owner: root
+    group: neutron
+    mode: "0640"
+  notify: Restart neutron-dhcp-agent
+
+- name: Configure metadata agent
+  template:
+    src: metadata_agent.ini.j2
+    dest: /etc/neutron/metadata_agent.ini
+    owner: root
+    group: neutron
+    mode: "0640"
+  notify: Restart neutron-metadata-agent
+
+- name: Populate Neutron database
+  command: >
+    neutron-db-manage --config-file /etc/neutron/neutron.conf
+    --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head
+  become: yes
+
+- name: Register Neutron service in Keystone
+  openstack.cloud.identity_service:
+    cloud: "{{ lookup('env', 'OS_CLOUD') }}"
+    service: network
+    service_type: network
+    service_description: "OpenStack Networking Service"
+    state: present
+
+- name: Create public endpoint
+  openstack.cloud.endpoint:
+    cloud: "{{ lookup('env', 'OS_CLOUD') }}"
+    service: network
+    endpoint_type: public
+    url: "http://{{ ansible_fqdn }}:9696"
+    region: RegionOne
+    state: present
+
+- name: Create internal endpoint
+  openstack.cloud.endpoint:
+    cloud: "{{ lookup('env', 'OS_CLOUD') }}"
+    service: network
+    endpoint_type: internal
+    url: "http://{{ ansible_fqdn }}:9696"
+    region: RegionOne
+    state: present
+
+- name: Create admin endpoint
+  openstack.cloud.endpoint:
+    cloud: "{{ lookup('env', 'OS_CLOUD') }}"
+    service: network
+    endpoint_type: admin
+    url: "http://{{ ansible_fqdn }}:9696"
+    region: RegionOne
+    state: present

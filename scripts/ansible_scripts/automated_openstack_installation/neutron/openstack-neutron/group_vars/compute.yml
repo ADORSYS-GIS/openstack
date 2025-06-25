@@ -1,0 +1,6 @@
+---
+neutron_service_mode: compute
+neutron_packages:
+  - neutron-linuxbridge-agent
+neutron_agents:
+  - neutron-linuxbridge-agent
