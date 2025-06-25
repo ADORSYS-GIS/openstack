@@ -1,8 +1,5 @@
 # Understanding VLANs and Their Operation
 
-A VLAN (Virtual LAN) is an overlay layer 2 network that helps us organize devices
-into different groups connected to a virtual network on the physical network.
-
 VLANs help us partition a LAN into smaller virtual networks for security
 purposes. This allows us to have different logically distinct virtual networks
 rather than having many physical small LANs.
@@ -25,22 +22,22 @@ There are two types of VLANs:
 ```mermaid
 flowchart TD
     subgraph "Physical Network Infrastructure"
-        SW["Switch"] 
+        SW["Switch"]
     end
     
     subgraph "VLAN 10 (Marketing)"
-        PC1["Computer 1\nIP: 192.168.10.2\nVLAN 10"]
-        PC2["Computer 2\nIP: 192.168.10.3\nVLAN 10"]
+        PC1["Computer 1\nIP address: 192.168.10.2\nVLAN 10"]
+        PC2["Computer 2\nIP address: 192.168.10.3\nVLAN 10"]
     end
     
     subgraph "VLAN 20 (Engineering)"
-        PC3["Computer 3\nIP: 192.168.20.2\nVLAN 20"]
-        PC4["Computer 4\nIP: 192.168.20.3\nVLAN 20"]
+        PC3["Computer 3\nIP address: 192.168.20.2\nVLAN 20"]
+        PC4["Computer 4\nIP address: 192.168.20.3\nVLAN 20"]
     end
     
     subgraph "VLAN 30 (Finance)"
-        PC5["Computer 5\nIP: 192.168.30.2\nVLAN 30"]
-        PC6["Computer 6\nIP: 192.168.30.3\nVLAN 30"]
+        PC5["Computer 5\nIP address: 192.168.30.2\nVLAN 30"]
+        PC6["Computer 6\nIP address: 192.168.30.3\nVLAN 30"]
     end
     
     SW --- PC1

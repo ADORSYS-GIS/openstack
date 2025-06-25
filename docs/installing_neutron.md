@@ -1,7 +1,7 @@
 # Installing Openstack Networking Service (Neutron)
 
 Neutron is the networking service of OpenStack. It allows us to create networks
-for our VMs, allocate floating IPs, add security groups, and many more.
+for our VMs, allocate floating IP addresses, add security groups, and many more.
 
 It makes use of open source SDN tools to enable virtual networking support.
 
@@ -80,7 +80,7 @@ installation and configuration guide, visit
 [neutron installation docs](https://docs.openstack.org/neutron/latest/install/controller-install-ubuntu.html#prerequisites)
 
 - To begin with the installation, you need a database that will be used for
-  storing user networks, subnets, ports, and even routers which other OpenStack
+  storing user networks, subnetworks, ports, and even routers which other OpenStack
   services like Nova can use.
 - It is good to run all these commands as a root user.
 
@@ -146,13 +146,14 @@ openstack endpoint create --region RegionOne \
 - This option helps us to connect directly with the underlying physical network
   infrastructure (PNI) and connects VMs directly on the external network in our
   data center or the internet.
-- With this, an external network can communicate directly with our VM using its IP.
+- With this, an external network can communicate directly with our VM using its IP
+  address.
 - It uses only technologies like VLAN.
 
 ### 2. Self-Service Network
 
 - This option helps us to create virtual networks for our VMs and also allows for
-  VMs to communicate with each other even in different subnets or networks using
+  VMs to communicate with each other even in different subnetworks or networks using
   routers.
 - It uses NAT for connecting our VMs to the internet by translating their IP into
   an IP that has internet access.
@@ -214,4 +215,6 @@ openstack network list
 openstack network create NETWORK_NAME
 
 # Let's add a subnet
-openstack subnet create --network <network-name> --subnet-range <CIDR> <subnet
+openstack subnet create --network <network-name> \
+  --subnet-range <CIDR> <subnet-name>
+```
