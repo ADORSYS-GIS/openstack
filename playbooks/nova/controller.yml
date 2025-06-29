@@ -1,0 +1,9 @@
+- hosts: controller
+  roles:
+    - common
+    - keystone
+    - glance
+    - nova-db
+    - nova-controller
+    - nova-cells
+    - openstack-test

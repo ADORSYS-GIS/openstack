@@ -1,0 +1,51 @@
+- name: Install Nova controller packages
+  ansible.builtin.apt:
+    name:
+      - nova-api
+      - nova-conductor
+      - nova-scheduler
+      - nova-placement-api
+    state: present
+    update_cache: yes
+
+- name: Configure nova.conf
+  ansible.builtin.template:
+    src: nova.conf.j2
+    dest: /etc/nova/nova.conf
+    owner: root
+    group: nova
+    mode: '0640'
+
+- name: Run nova-manage db sync
+  command: nova-manage db sync
+
+- name: Create cell1
+  command: nova-manage cell_v2 create_cell --name cell1 --verbose
+
+- name: Create flavor small
+  openstack.cloud.flavor:
+    name: small
+    ram: 2048
+    vcpus: 1
+    disk: 20
+
+- name: Set quotas for project foo
+  openstack.cloud.quota:
+    project: foo
+    cores: 10
+    instances: 10
+    ram: 51200
+
+- name: Launch test VM
+  openstack.cloud.server:
+    state: present
+    name: ansible-test
+    image: cirros
+    flavor: small
+    network: demo-net
+    timeout: 600
+
+- name: Delete test VM
+  openstack.cloud.server:
+    state: absent
+    name: ansible-test 

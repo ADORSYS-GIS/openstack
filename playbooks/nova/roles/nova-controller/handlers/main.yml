@@ -1,0 +1,9 @@
+- name: restart nova services
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - nova-api
+    - nova-conductor
+    - nova-scheduler
+    - nova-placement-api 

@@ -1,0 +1,23 @@
+- name: Create nova DB
+  community.mysql.mysql_db:
+    name: nova
+    state: present
+    login_user: root
+    login_password: "{{ db_root_pass }}"
+
+- name: Create nova_cell0 DB
+  community.mysql.mysql_db:
+    name: nova_cell0
+    state: present
+    login_user: root
+    login_password: "{{ db_root_pass }}"
+
+- name: Grant privileges to nova user
+  community.mysql.mysql_user:
+    name: nova
+    host: "%"
+    password: "{{ nova_db_pass }}"
+    priv: 'nova.*:ALL,GRANT'
+    state: present
+    login_user: root
+    login_password: "{{ db_root_pass }}" 

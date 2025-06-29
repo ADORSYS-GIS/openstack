@@ -1,0 +1,19 @@
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - python3
+      - python3-pip
+      - ntp
+    state: present
+    update_cache: yes
+
+- name: Install OpenStack SDK
+  ansible.builtin.pip:
+    name:
+      - openstacksdk
+      - python-openstackclient
+    state: present 
