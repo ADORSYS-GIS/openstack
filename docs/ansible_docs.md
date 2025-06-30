@@ -111,10 +111,10 @@ tools that can be used for infrastructure automation and server management:
 
 Each of them is based on specific aspects:
 
-| Tools     | Language                     | Best Used For                                     |
-|-----------|-----------------------------|---------------------------------------------------|
-| Chef      | Ruby                        | Complex enterprise environments                   |
-| SaltStack | YAML                        | Large-scale deployments                           |
-| Pulumi    | Programming language (various) | Infrastructure provision and manage cloud      |
-|           |                             | resources                                         |
-| Puppet    | Puppet DSL                  | Large-scale environments                          |
+| Tools    | Language             | Best Used For                      |
+|-----------|-------------------------|----------------------------------|
+| Chef    | Ruby       | Complex enterprise environments   |
+|SaltStack| YAML       | Large-scale deployments |
+| Pulumi    | Programming language | Infrastructure provision and |
+|           | (various)            | cloud resource management|
+| Puppet | Puppet DSL| Large-scale environments |
