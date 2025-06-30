@@ -67,17 +67,18 @@ This Ansible project aims to:
 
 The project follows best practices for Ansible roles, structured as:
 
+```text
 glance-ansible/
 ├── inventory.ini                # Defines target hosts (default: localhost)
-├── glance.yml                  # Main playbook orchestrating Keystone & Glance roles
+├── glance.yml                   # Main playbook orchestrating Keystone & Glance roles
 └── roles/
-    ├── keystone/               # Keystone role (identity service)
-    │   ├── defaults/main.yml   # Default variables for Keystone
-    │   └── tasks/main.yml      # Keystone installation & configuration steps
-    └── glance/                 # Glance role (image service)
-        ├── defaults/main.yml   # Default variables for Glance
-        └── tasks/main.yml      # Glance installation & configuration steps
-
+    ├── keystone/                # Keystone role (identity service)
+    │   ├── defaults/main.yml    # Default variables for Keystone
+    │   └── tasks/main.yml       # Keystone installation & configuration steps
+    └── glance/                  # Glance role (image service)
+        ├── defaults/main.yml    # Default variables for Glance
+        └── tasks/main.yml       # Glance installation & configuration steps
+```
 
 - `inventory.ini`: Defines target hosts (in this case, localhost as controller node).  
 - `glance.yml`: Main playbook invoking both Keystone and Glance roles in proper sequence.  
@@ -198,46 +199,8 @@ export OS_IDENTITY_API_VERSION=3
 
 ```bash
 openstack token issue
-````
+```
 
 3. **List Keystoone Image**
 
-```sh
-openstack image list
 ```
-
-Look for the 'cirros' image uploaded by the playbook.
-
-## Extending and Customizing
-
-- Add roles for other OpenStack services like Nova (compute), Neutron (networking), Cinder (block storage).
-
-- Change Glance backend storage from local filesystem to Swift or Ceph.
-
-- Configure HTTPS with SSL certificates for Apache.
-
-- Integrate with external authentication backends (LDAP, OAuth).
-
-- Automate multi-node OpenStack deployments.
-
-## Troubleshooting Guide
-
-| Issue                          | Diagnostic Steps                                   | Resolution Suggestions                          |
-|-------------------------------|--------------------------------------------------|------------------------------------------------|
-| Keystone API not reachable     | Check Apache and Keystone logs                    | Restart services, verify configs and firewall   |
-| MariaDB connection errors      | Attempt to connect manually with `mysql` CLI     | Reset root password, ensure MariaDB is running  |
-| Glance API fails to start      | Inspect `/var/log/glance/` logs                    | Check config files and database connections     |
-| OpenStack CLI authentication fails | Verify environment variables and Keystone credentials | Re-run Keystone bootstrap or reset passwords    |
-| Image upload fails             | Validate network and storage permissions          | Check Glance logs, storage directory permissions|
-
-## References
-
-- [OpenStack Official Documentation](https://docs.openstack.org/)
-- [Keystone Service Documentation](https://docs.openstack.org/keystone/latest/)
-- [Glance Service Documentation](https://docs.openstack.org/glance/latest/)
-- [Ansible Best Practices](https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html)
-- [Fernet Tokens in Keystone](https://docs.openstack.org/keystone/latest/admin/fernet_tokens.html)
-
-## Summary
-
-This project automates a critical piece of an OpenStack cloud environment with an emphasis on security, maintainability, and extensibility. It combines robust database configuration, secure service bootstrapping, and integrated testing in an Ansible-driven workflow, making it suitable for lab environments, proof-of-concepts, or a foundation for production deployments.
