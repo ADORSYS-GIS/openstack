@@ -2,6 +2,7 @@
 - hosts: localhost
   become: yes
 
+
   pre_tasks:
     - name: Install MariaDB server
       apt:
@@ -22,6 +23,13 @@
         state: started
         delay: 2
         timeout: 30
+
+    - name: Ensure keystone user exists
+      ansible.builtin.user:
+        name: keystone
+        system: yes
+        shell: /usr/sbin/nologin
+
 
     - name: Ensure Keystone log directory exists and is owned by keystone
       file:
