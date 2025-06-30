@@ -39,7 +39,20 @@
 (?i)ryzen
 (?i)nvme
 (?i)uninstallation
+(?i)config
+(?i)configs
+(?i)Cirros
+(?i)Idempotency
+(?i)hostnames
+(?i)Fernet
+(?i)Ceph
+(?i)OAuth
+(?i)APIs
+(?i)cirros
 
 // Notes:
 // - All entries are case-insensitive using `(?i)`
 // - Redundant prefixes/suffixes or improper comment syntax removed
+
+
+
