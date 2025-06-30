@@ -1,7 +1,7 @@
 # Installing Openstack Networking Service (Neutron)
 
 Neutron is the networking service of OpenStack. It allows us to create networks
-for our VMs, allocate floating IP addresses, add security groups, and many more.
+for our VMs, allocate floating IPs, add security groups, and many more.
 
 It makes use of open source SDN tools to enable virtual networking support.
 
@@ -80,7 +80,7 @@ installation and configuration guide, visit
 [neutron installation docs](https://docs.openstack.org/neutron/latest/install/controller-install-ubuntu.html#prerequisites)
 
 - To begin with the installation, you need a database that will be used for
-  storing user networks, subnetworks, ports, and even routers which other OpenStack
+  storing user networks, subnets, ports, and even routers which other OpenStack
   services like Nova can use.
 - It is good to run all these commands as a root user.
 
@@ -120,7 +120,8 @@ openstack role add --project service --user neutron admin
 
 # create neutron service entity
 openstack service create --name neutron \
-  --description "OpenStack Networking Service. Installed By YOUR_NAME on DATE_OF_INSTALLATION" network
+  --description "OpenStack Networking Service. Installed By YOUR_NAME on \
+  DATE_OF_INSTALLATION" network
 ```
 
 ### 4. Create Networking API Endpoints
@@ -146,14 +147,13 @@ openstack endpoint create --region RegionOne \
 - This option helps us to connect directly with the underlying physical network
   infrastructure (PNI) and connects VMs directly on the external network in our
   data center or the internet.
-- With this, an external network can communicate directly with our VM using its IP
-  address.
+- With this, an external network can communicate directly with our VM using its IP.
 - It uses only technologies like VLAN.
 
 ### 2. Self-Service Network
 
 - This option helps us to create virtual networks for our VMs and also allows for
-  VMs to communicate with each other even in different subnetworks or networks using
+  VMs to communicate with each other even in different subnets or networks using
   routers.
 - It uses NAT for connecting our VMs to the internet by translating their IP into
   an IP that has internet access.
@@ -191,7 +191,7 @@ apt install neutron-openvswitch-agent
 ```
 
 For the configuration, refer to the documentation since it will be the same if
-needed to type it:  
+we needed to type it ourselves:  
 [configure neutron on the compute node](https://docs.openstack.org/neutron/latest/install/compute-install-ubuntu.html)
 
 Also, for further configuration of OVN and other networking agents and plugins,
