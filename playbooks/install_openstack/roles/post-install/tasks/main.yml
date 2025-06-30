@@ -1,0 +1,33 @@
+---
+- name: Output Horizon dashboard URL and admin credentials
+  debug:
+    msg: "Horizon dashboard URL: http://{{ openstack_host_ip }}/dashboard, Admin credentials: admin/{{ admin_password }}"
+
+- name: Check if UFW is installed
+  command: which ufw
+  register: ufw_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Optionally open firewall ports
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - 80
+    - 443
+  when: ufw_check.rc == 0 and enable_logging | default(false)
+
+- name: Validate OpenStack services
+  command: >
+    systemctl status {{ item }}
+  loop:
+    - apache2
+    - mysql
+    - rabbitmq-server
+    - openvswitch-switch
+  register: service_status
+  failed_when: service_status.rc != 0
+  changed_when: service_status.changed
+  notify: log_service_status

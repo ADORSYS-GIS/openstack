@@ -115,6 +115,7 @@ Explanation:
   NetworkManager.
 - ethernets: This block contains the Ethernet interfaces. In this example, eth0
   is the interface being configured.
+
 - dhcp4: Enables DHCP for IPv4, which assigns an IP address automatically.
 
 ## Typical Configurations with Netplan
@@ -285,11 +286,11 @@ To configure any of these network interfaces manually using Ansible script, do
 the following:
 
 i. We need to install Ansible on our machine to be able to run Ansible scripts.
-   Run the following command to install Ansible:
+Run the following command to install Ansible:
 
 ```sh
 sudo apt update && sudo apt upgrade -y
-sudo apt install python3 
+sudo apt install python3
 sudo python3 venv my_venv | sudo source my_venv/bin/activate | cd my_venv
 sudo apt install -y build-essential libssl-dev libffi-dev python3-dev python3-pip
 python3 install ansible --user
@@ -307,7 +308,7 @@ ii. Create a playbook.yml file, copy and paste the following:
     interface_name: "ens33"
     static_ip: "10.42.0.10/24"
     gateway4: "10.42.0.1"
-    nameservers:   
+    nameservers:
       - "8.8.8.8"
       - "8.8.4.4"
 

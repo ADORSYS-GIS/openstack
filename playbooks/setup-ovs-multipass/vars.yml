@@ -1,0 +1,27 @@
+---
+# OVS Configuration
+ovs_bridge: ansible-ovs-br0
+vlan_ids: [100, 200, 300, 400]
+
+# Multipass Configuration
+multipass_vms:
+  - name: ovs-vm1
+    cpus: 1
+    mem: 1G
+    disk: 5G
+    vlan: 100
+  - name: ovs-vm2
+    cpus: 1
+    mem: 1G
+    disk: 5G
+    vlan: 200
+  - name: ovs-vm3
+    cpus: 1
+    mem: 1G
+    disk: 5G
+    vlan: 300
+  - name: ovs-vm4
+    cpus: 1
+    mem: 1G
+    disk: 5G
+    vlan: 400

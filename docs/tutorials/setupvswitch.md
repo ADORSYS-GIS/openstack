@@ -90,34 +90,34 @@ Now we'll configure the VLAN tags. VLAN uses the 802.1Q standard, adding a 12-bi
 
 1. First, check available interfaces in your VMs:
 
-    ```sh
-    multipass exec "test-vm1" -- ip -o link show | awk -F ': ' '!/lo/ {print $2; exit}'
-    # Repeat for other VMs. Use your interface name if not ens3
-    ```
+   ```sh
+   multipass exec "test-vm1" -- ip -o link show | awk -F ': ' '!/lo/ {print $2; exit}'
+   # Repeat for other VMs. Use your interface name if not ens3
+   ```
 
 2. Add machines to VLAN0:
 
-    ```sh
-    multipass stop test-vm1 test-vm2 # stop VMs before adding ports
-    sudo ovs-vsctl set port test-vm2-ens3 tag=0
-    sudo ovs-vsctl set port test-vm1-ens3 tag=0
-    multipass start test-vm1 test-vm2
-    ```
+   ```sh
+   multipass stop test-vm1 test-vm2 # stop VMs before adding ports
+   sudo ovs-vsctl set port test-vm2-ens3 tag=0
+   sudo ovs-vsctl set port test-vm1-ens3 tag=0
+   multipass start test-vm1 test-vm2
+   ```
 
 3. Add machines to VLAN1:
 
-    ```sh
-    multipass stop test-vm3 test-vm4
-    sudo ovs-vsctl set port test-vm3-ens3 tag=1
-    sudo ovs-vsctl set port test-vm4-ens3 tag=1
-    multipass start test-vm3 test-vm4
-    ```
+   ```sh
+   multipass stop test-vm3 test-vm4
+   sudo ovs-vsctl set port test-vm3-ens3 tag=1
+   sudo ovs-vsctl set port test-vm4-ens3 tag=1
+   multipass start test-vm3 test-vm4
+   ```
 
 4. Verify port settings:
 
-    ```sh
-    sudo ovs-vsctl show | grep -A 2 "Port"
-    ```
+   ```sh
+   sudo ovs-vsctl show | grep -A 2 "Port"
+   ```
 
 ### Network Interface Configuration
 
@@ -125,17 +125,17 @@ Now we'll configure static IPs for each VM:
 
 1. For VLAN0 (test-vm1 and test-vm2):
 
-    ```sh
-    multipass exec test-vmX -- sudo ip link set ens3 up
-    sudo ip addr add 192.168.100.10X dev ens3
-    ```
+   ```sh
+   multipass exec test-vmX -- sudo ip link set ens3 up
+   sudo ip addr add 192.168.100.10X dev ens3
+   ```
 
 2. For VLAN1 (test-vm3 and test-vm4):
 
-    ```sh
-    multipass exec test-vmX -- sudo ip link set ens3 up
-    sudo ip addr add 192.168.200.10X dev ens3
-    ```
+   ```sh
+   multipass exec test-vmX -- sudo ip link set ens3 up
+   sudo ip addr add 192.168.200.10X dev ens3
+   ```
 
 ### Testing Connectivity
 
