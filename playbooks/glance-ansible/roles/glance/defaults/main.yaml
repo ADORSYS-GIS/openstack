@@ -1,0 +1,7 @@
+---
+new_mysql_root_pass: newpassword
+glance_db_pass: GlancePass123!
+glance_user_pass: GlancePass123!
+controller_host: localhost
+keystone_port: 5001
+keystone_admin_pass: admin

@@ -15,13 +15,13 @@ how to install Ansible here:
 Ansible provides several tools to facilitate server management:
 
 - **OpenSSH**: Used for setting up SSH and generating keys for server
-  authentication
+  authentication.
 - **Ad-hoc Commands**: Used as alternatives to playbooks for quick and simple
-  tasks
+  tasks.
 - **Playbooks**: YAML files containing specific tasks to manage servers, used
-  for complex tasks
+  for complex tasks.
 - **Inventory File**: Contains the list of servers grouped by categories for
-  organized management
+  organized management.
 
 ## How It Works
 
@@ -31,8 +31,8 @@ Ansible relies on SSH to authenticate and configure servers. While you can use a
 single SSH key for managing all servers, it is often recommended to use two
 separate keys:
 
-- One for personal SSH logins
-- Another specifically for automation with Ansible
+- One for personal SSH logins.
+- Another specifically for automation with Ansible.
 
 #### Creation of SSH Keys
 
@@ -72,9 +72,9 @@ For more details, see:
 Playbooks define the automation logic in a structured way. When you run a
 playbook, Ansible:
 
-1. Loads temporary modules to the remote server
-2. Executes the tasks (e.g., install packages, start services)
-3. Removes the modules after execution
+1. Loads temporary modules to the remote server.
+2. Executes the tasks (e.g., install packages, start services).
+3. Removes the modules after execution.
 
 For more details on playbooks:
 
@@ -95,15 +95,15 @@ To learn more about ad-hoc commands, see:
 Ansible excels at server management by providing:
 
 - **Playbooks**: Makes task handover between teams seamless, as all required
-  tasks are documented in playbooks
+  tasks are documented in playbooks.
 - **Inventory Files**: Organizes server IP addresses by groups, making it easy
-  to manage and assign tasks
+  to manage and assign tasks.
 - **SSH Key**: Automates authentication, making server access and management
-  more efficient
+  more efficient.
 
 ## What If Ansible Becomes Outdated?
 
-If Ansible becomes outdated or no longer maintained, other modern tools can be
+If Ansible becomes outdated or is no longer maintained, other modern tools can be
 used for infrastructure automation and server management:
 
 - [Chef](https://docs.chef.io/manage/)

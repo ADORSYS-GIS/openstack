@@ -1,0 +1,155 @@
+---
+- name: Install Glance dependencies
+  apt:
+    name:
+      - glance
+      - python3-glanceclient
+      - apache2
+      - libapache2-mod-wsgi-py3
+      - crudini
+      - wget
+    state: present
+    update_cache: yes
+
+- name: Ensure MySQL root password is valid
+  shell: |
+    mysql -u root -p"{{ new_mysql_root_pass }}" -e "SELECT 1;" || \
+    (mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ new_mysql_root_pass }}'; FLUSH PRIVILEGES;")
+  args:
+    executable: /bin/bash
+
+- name: Create Glance database and user
+  mysql_db:
+    name: glance
+    state: present
+
+- name: Create Glance DB user
+  mysql_user:
+    name: glance
+    password: "{{ glance_db_pass }}"
+    priv: "glance.*:ALL"
+    host: localhost
+    state: present
+
+- name: Configure glance-api.conf
+  block:
+    - name: Set DB connection
+      ini_file:
+        path: /etc/glance/glance-api.conf
+        section: database
+        option: connection
+        value: "mysql+pymysql://glance:{{ glance_db_pass }}@localhost/glance"
+
+    - name: Set Keystone authtoken settings
+      ini_file:
+        path: /etc/glance/glance-api.conf
+        section: keystone_authtoken
+        option: "{{ item.option }}"
+        value: "{{ item.value }}"
+      loop:
+        - { option: www_authenticate_uri, value: "http://{{ controller_host }}:{{ keystone_port }}" }
+        - { option: auth_url, value: "http://{{ controller_host }}:{{ keystone_port }}" }
+        - { option: memcached_servers, value: "{{ controller_host }}:11211" }
+        - { option: auth_type, value: password }
+        - { option: project_domain_name, value: Default }
+        - { option: user_domain_name, value: Default }
+        - { option: project_name, value: service }
+        - { option: username, value: glance }
+        - { option: password, value: "{{ glance_user_pass }}" }
+
+    - name: Configure glance_store
+      ini_file:
+        path: /etc/glance/glance-api.conf
+        section: glance_store
+        option: "{{ item.option }}"
+        value: "{{ item.value }}"
+      loop:
+        - { option: stores, value: "file,http" }
+        - { option: default_store, value: file }
+        - { option: filesystem_store_datadir, value: "/var/lib/glance/images/" }
+
+- name: Run db sync
+  command: glance-manage db_sync
+
+- name: Enable and restart glance-api
+  systemd:
+    name: glance-api
+    state: restarted
+    enabled: yes
+
+- name: Wait for Glance API to start
+  uri:
+    url: http://localhost:9292/v2
+    method: GET
+    status_code: 200
+  register: glance_api_status
+  retries: 30
+  delay: 2
+  until: glance_api_status.status == 200
+
+- name: Ensure Cirros test image exists
+  get_url:
+    url: http://download.cirros-cloud.net/0.6.2/cirros-0.6.2-x86_64-disk.img
+    dest: /tmp/cirros.img
+
+- name: Create Glance user if missing
+  shell: openstack user show glance || openstack user create --domain default --password {{ glance_user_pass }} glance
+  environment:
+    OS_USERNAME: admin
+    OS_PASSWORD: "{{ keystone_admin_pass }}"
+    OS_PROJECT_NAME: admin
+    OS_AUTH_URL: "http://{{ controller_host }}:{{ keystone_port }}/v3"
+    OS_USER_DOMAIN_NAME: Default
+    OS_PROJECT_DOMAIN_NAME: Default
+    OS_IDENTITY_API_VERSION: 3
+  args:
+    executable: /bin/bash
+
+- name: Create service project if missing
+  shell: openstack project show service || openstack project create --domain default service
+  environment:
+    OS_USERNAME: admin
+    OS_PASSWORD: "{{ keystone_admin_pass }}"
+    OS_PROJECT_NAME: admin
+    OS_AUTH_URL: "http://{{ controller_host }}:{{ keystone_port }}/v3"
+    OS_USER_DOMAIN_NAME: Default
+    OS_PROJECT_DOMAIN_NAME: Default
+    OS_IDENTITY_API_VERSION: 3
+  args:
+    executable: /bin/bash
+
+- name: Register Glance service and endpoints
+  shell: |
+    openstack service show image || openstack service create --name glance --description "OpenStack Image" image
+    openstack endpoint list | grep -q glance || (
+      openstack endpoint create --region RegionOne image public "http://{{ controller_host }}:9292" &&
+      openstack endpoint create --region RegionOne image internal "http://{{ controller_host }}:9292" &&
+      openstack endpoint create --region RegionOne image admin "http://{{ controller_host }}:9292"
+    )
+  environment:
+    OS_USERNAME: admin
+    OS_PASSWORD: "{{ keystone_admin_pass }}"
+    OS_PROJECT_NAME: admin
+    OS_AUTH_URL: "http://{{ controller_host }}:{{ keystone_port }}/v3"
+    OS_USER_DOMAIN_NAME: Default
+    OS_PROJECT_DOMAIN_NAME: Default
+    OS_IDENTITY_API_VERSION: 3
+  args:
+    executable: /bin/bash
+
+- name: Upload test image to Glance
+  shell: |
+    openstack image list | grep -q cirros || \
+    openstack image create "cirros" \
+      --file /tmp/cirros.img \
+      --disk-format qcow2 --container-format bare --public
+  environment:
+    OS_USERNAME: admin
+    OS_PASSWORD: "{{ keystone_admin_pass }}"
+    OS_PROJECT_NAME: admin
+    OS_AUTH_URL: "http://{{ controller_host }}:{{ keystone_port }}/v3"
+    OS_USER_DOMAIN_NAME: Default
+    OS_PROJECT_DOMAIN_NAME: Default
+    OS_IDENTITY_API_VERSION: 3
+  args:
+    executable: /bin/bash

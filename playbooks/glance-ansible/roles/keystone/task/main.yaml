@@ -1,0 +1,101 @@
+---
+- name: Install Keystone dependencies
+  apt:
+    name:
+      - mariadb-server
+      - python3-pymysql
+      - keystone
+      - apache2
+      - libapache2-mod-wsgi-py3
+      - crudini
+    update_cache: yes
+    state: present
+
+- name: Ensure MariaDB is started
+  systemd:
+    name: mariadb
+    enabled: yes
+    state: started
+
+- name: Set MySQL root password if not set
+  shell: |
+    mysql -u root -e "exit" && \
+    mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_root_password }}'; FLUSH PRIVILEGES;" || true
+  args:
+    executable: /bin/bash
+
+- name: Create Keystone database and user
+  mysql_db:
+    name: keystone
+    state: present
+  notify:
+    - Create Keystone DB user
+
+- name: Set Keystone database connection string
+  ini_file:
+    path: /etc/keystone/keystone.conf
+    section: database
+    option: connection
+    value: "mysql+pymysql://keystone:{{ keystone_db_password }}@localhost/keystone"
+
+- name: Set Keystone token provider
+  ini_file:
+    path: /etc/keystone/keystone.conf
+    section: token
+    option: provider
+    value: fernet
+
+- name: Set Keystone admin token
+  ini_file:
+    path: /etc/keystone/keystone.conf
+    section: DEFAULT
+    option: admin_token
+    value: "{{ admin_token }}"
+
+- name: Sync Keystone database
+  command: keystone-manage db_sync
+
+- name: Setup Fernet keys
+  command: keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+
+- name: Setup credentials
+  command: keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
+
+- name: Bootstrap Keystone
+  command: >
+    keystone-manage bootstrap
+    --bootstrap-password admin
+    --bootstrap-admin-url http://{{ controller_host }}:{{ keystone_port }}/v3/
+    --bootstrap-internal-url http://{{ controller_host }}:{{ keystone_port }}/v3/
+    --bootstrap-public-url http://{{ controller_host }}:{{ keystone_port }}/v3/
+    --bootstrap-region-id RegionOne
+
+- name: Ensure Keystone port is in ports.conf
+  lineinfile:
+    path: /etc/apache2/ports.conf
+    line: "Listen {{ keystone_port }}"
+    create: yes
+
+- name: Write Keystone Apache config
+  copy:
+    dest: /etc/apache2/sites-available/wsgi-keystone.conf
+    content: |
+      <VirtualHost *:{{ keystone_port }}>
+          WSGIDaemonProcess keystone processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
+          WSGIProcessGroup keystone
+          WSGIScriptAlias / /usr/bin/keystone-wsgi-public
+          ErrorLogFormat "%{cu}t %M"
+          ErrorLog /var/log/apache2/keystone_error.log
+          CustomLog /var/log/apache2/keystone_access.log combined
+      </VirtualHost>
+
+- name: Enable Keystone site
+  command: a2ensite wsgi-keystone.conf
+  notify:
+    - Restart Apache
+
+- name: Restart Apache
+  systemd:
+    name: apache2
+    state: restarted
+    enabled: yes
