@@ -1,4 +1,5 @@
 ---
+## Testing if neutron can be installed using only a single file. But this approach cannot be easily maintained.
 - name: Install and Configure OpenStack Neutron
   hosts: controller
   become: yes

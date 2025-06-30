@@ -1,4 +1,5 @@
 ---
+# Seting up and installing required packages on the controller node.
 - name: Include common tasks
   include_role:
     name: common
@@ -6,13 +7,21 @@
 
 - name: Install controller packages
   apt:
-    name: "{{ neutron_packages }}"
+    name: "{{ neutron_ubuntu_packages if ansible_os_family == 'Debian' else neutron_centos_packages }}"
     state: present
 
 - name: Create Neutron database
-  community.mysql.mysql_db:
-    name: "{{ neutron_db_name }}"
-    state: present
+  command: >
+    mysql -h {{ neutron_db_host }} 
+    -u root 
+    -p{{ vault_mysql_root_password }} 
+    -e "CREATE DATABASE IF NOT EXISTS {{ neutron_db_name }} 
+        CHARACTER SET utf8 
+        COLLATE utf8_general_ci"
+  args:
+    creates: "/var/lib/mysql/{{ neutron_db_name }}"
+
+# communicating/interacting with the mariadb database
 
 - name: Create Neutron database user
   community.mysql.mysql_user:
@@ -64,19 +73,21 @@
     --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head
   become: yes
 
+# this one is using openstack commands from ansible galaxy to create a neutron service in keystone.
+
 - name: Register Neutron service in Keystone
-  openstack.cloud.identity_service:
+  openstack.cloud.catalog_service:
     cloud: "{{ lookup('env', 'OS_CLOUD') }}"
-    service: network
+    name: network
     service_type: network
-    service_description: "OpenStack Networking Service"
+    description: "OpenStack Networking Service"
     state: present
 
 - name: Create public endpoint
   openstack.cloud.endpoint:
     cloud: "{{ lookup('env', 'OS_CLOUD') }}"
     service: network
-    endpoint_type: public
+    interface: public
     url: "http://{{ ansible_fqdn }}:9696"
     region: RegionOne
     state: present
@@ -85,7 +96,7 @@
   openstack.cloud.endpoint:
     cloud: "{{ lookup('env', 'OS_CLOUD') }}"
     service: network
-    endpoint_type: internal
+    interface: internal
     url: "http://{{ ansible_fqdn }}:9696"
     region: RegionOne
     state: present
@@ -94,7 +105,7 @@
   openstack.cloud.endpoint:
     cloud: "{{ lookup('env', 'OS_CLOUD') }}"
     service: network
-    endpoint_type: admin
+    interface: admin
     url: "http://{{ ansible_fqdn }}:9696"
     region: RegionOne
     state: present

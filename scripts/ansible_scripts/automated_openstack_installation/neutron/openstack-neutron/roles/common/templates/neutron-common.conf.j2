@@ -1,0 +1,23 @@
+[DEFAULT]
+core_plugin = ml2
+service_plugins = router
+allow_overlapping_ips = True
+transport_url = rabbit://{{ rabbitmq_user }}:{{ vault_rabbitmq_password }}@{{ rabbitmq_host }}
+auth_strategy = keystone
+
+[database]
+connection = mysql+pymysql://{{ neutron_db_user }}:{{ vault_neutron_db_password }}@{{ neutron_db_host }}/{{ neutron_db_name }}
+
+[keystone_authtoken]
+www_authenticate_uri = {{ keystone_admin_url }}
+auth_url = {{ keystone_internal_url }}
+memcached_servers = {{ neutron_db_host }}:11211
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = {{ service_project }}
+username = {{ neutron_keystone_user }}
+password = {{ vault_neutron_keystone_password }}
+
+[oslo_concurrency]
+lock_path = /var/lib/neutron/tmp
