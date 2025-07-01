@@ -1,0 +1,9 @@
+---
+nova_services:
+  - name: nova-api
+  - name: nova-scheduler
+  - name: nova-conductor
+nova_keystone_service_name: "nova"
+nova_keystone_service_type: "compute"
+nova_keystone_description: "OpenStack Compute Service"
+nova_api_url: "http://controller:8774/v2.1"
