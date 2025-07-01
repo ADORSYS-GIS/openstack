@@ -1,0 +1,19 @@
+# Controller reference (for API communication)
+nova_controller_host: controller
+
+# Compute virtualization
+virt_type: kvm
+
+# Same as controller for service auth
+keystone_auth_url: http://controller:5000/v3
+keystone_user: admin
+keystone_password: openstack
+keystone_project: admin
+keystone_domain: Default
+
+# Nova service account (optional override)
+nova_service_user: nova
+nova_service_password: nova_pass
+
+# Libvirt config
+libvirt_group: libvirt
