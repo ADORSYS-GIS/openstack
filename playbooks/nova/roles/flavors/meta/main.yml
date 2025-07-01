@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  author: onelrian
+  description: Create standard VM flavors for OpenStack compute.
+  license: MIT
+  min_ansible_version: 2.9
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+  categories:
+    - cloud
+    - openstack
+dependencies: []

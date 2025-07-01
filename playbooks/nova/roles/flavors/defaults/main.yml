@@ -1,0 +1,18 @@
+---
+# Define standard flavors to be created
+openstack_flavors:
+  - name: m1.tiny
+    ram: 512
+    vcpus: 1
+    disk: 1
+  - name: m1.small
+    ram: 2048
+    vcpus: 1
+    disk: 20
+
+
+# Project scope (usually "admin")
+flavor_project: admin
+
+# Region name (optional)
+flavor_region: RegionOne
