@@ -1,0 +1,11 @@
+---
+test_vm_name: test-instance
+test_vm_image: cirros
+test_vm_flavor: m1.tiny
+test_vm_network: private  # Must exist already
+test_vm_keypair: test-key
+test_vm_timeout: 300
+test_vm_cleanup: true  # If false, VM will remain for manual inspection
+test_vm_ssh_user: cirros
+test_vm_create_keypair: true
+test_vm_key_path: /tmp/test-key.pem
