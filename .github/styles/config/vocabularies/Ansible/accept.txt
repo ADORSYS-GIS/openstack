@@ -34,3 +34,16 @@
 (?i)vms?
 (?i)macoss?
 (?i)oss?
+(?i)misconfigured
+(?i)cell_discovery
+(?i)check_dependencies
+(?i)env
+(?i)kvm_config
+(?i)nova_compute
+(?i)Hostname
+(?i)kvm
+(?i)qemu
+(?i)nova_controller
+(?i)nova_api
+(?i)test_vm_launch
+(?i)keypair
