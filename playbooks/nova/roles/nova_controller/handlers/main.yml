@@ -1,0 +1,6 @@
+---
+- name: restart nova services
+  service:
+    name: "{{ item.name }}"
+    state: restarted
+  loop: "{{ nova_services }}"
