@@ -1,0 +1,23 @@
+---
+- hosts: controller
+  gather_facts: true
+  become: true
+  roles:
+    - check_dependencies
+    - nova_controller
+    - cell_discovery
+    - flavors
+    - quotas
+
+- hosts: compute
+  gather_facts: true
+  become: true
+  roles:
+    - nova_compute
+    - kvm_config
+
+- hosts: controller
+  gather_facts: true
+  become: true
+  roles:
+    - test_vm_launch

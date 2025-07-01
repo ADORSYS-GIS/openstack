@@ -1,33 +1,10 @@
-# Keystone (Auth)
-keystone_admin_url: http://controller:5000/v3
-keystone_internal_url: http://controller:5000/v3
-keystone_public_url: http://controller:5000/v3
-keystone_auth_url: "{{ keystone_admin_url }}"
-keystone_user: admin
-keystone_password: openstack
-keystone_project: admin
-keystone_domain: Default
-
-# Database
-nova_db_user: nova
-nova_db_password: nova_db_pass
-nova_db_host: controller
-
-# RabbitMQ (optional, used by nova.conf)
-rabbit_user: openstack
-rabbit_password: rabbit_pass
-rabbit_host: controller
-
-# Nova-specific
-nova_service_user: nova
-nova_service_password: nova_pass
-nova_service_project: service
-nova_service_domain: Default
-
-# Glance
-glance_service_user: glance
-glance_service_password: glance_pass
-glance_api_url: http://controller:9292
-
-# Region
-region_name: RegionOne
+---
+- hosts: controller
+  gather_facts: true
+  become: true
+  roles:
+    - check_dependencies
+    - nova_controller
+    - cell_discovery
+    - flavors
+    - quotas
