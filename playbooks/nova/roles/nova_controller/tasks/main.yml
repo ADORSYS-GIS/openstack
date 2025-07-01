@@ -1,0 +1,84 @@
+---
+- name: Install Nova controller packages
+  package:
+    name:
+      - nova-api
+      - nova-conductor
+      - nova-scheduler
+      - python3-openstackclient
+      - python3-nova
+    state: present
+
+- name: Create nova databases
+  mysql_db:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - nova
+    - nova_api
+
+- name: Grant access to nova database
+  mysql_user:
+    name: nova
+    password: "{{ nova_db_password }}"
+    priv: "nova.*:ALL,nova_api.*:ALL"
+    host: "%"
+    state: present
+
+- name: Source admin credentials
+  shell: source /root/admin-openrc.sh
+  args:
+    executable: /bin/bash
+
+- name: Create nova user
+  command: openstack user create --domain default --password "{{ nova_user_password }}" nova
+  register: create_nova_user
+  failed_when: create_nova_user.rc != 0 and 'Conflict' not in create_nova_user.stderr
+  changed_when: "'Created' in create_nova_user.stdout"
+
+- name: Add admin role to nova user
+  command: openstack role add --project service --user nova admin
+  ignore_errors: yes
+
+- name: Register nova service
+  command: openstack service create --name nova --description "{{ nova_keystone_description }}" {{ nova_keystone_service_type }}
+  register: nova_service
+  failed_when: nova_service.rc != 0 and 'Conflict' not in nova_service.stderr
+  changed_when: "'Created' in nova_service.stdout"
+
+- name: Register nova endpoints
+  block:
+    - name: Create public endpoint
+      command: openstack endpoint create --region RegionOne {{ nova_keystone_service_type }} public {{ nova_api_url }}
+      register: ep1
+      failed_when: ep1.rc != 0 and 'Conflict' not in ep1.stderr
+    - name: Create internal endpoint
+      command: openstack endpoint create --region RegionOne {{ nova_keystone_service_type }} internal {{ nova_api_url }}
+      register: ep2
+      failed_when: ep2.rc != 0 and 'Conflict' not in ep2.stderr
+    - name: Create admin endpoint
+      command: openstack endpoint create --region RegionOne {{ nova_keystone_service_type }} admin {{ nova_api_url }}
+      register: ep3
+      failed_when: ep3.rc != 0 and 'Conflict' not in ep3.stderr
+
+- name: Configure nova.conf
+  template:
+    src: nova.conf.j2
+    dest: /etc/nova/nova.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart nova services
+
+- name: Sync nova-api DB
+  command: su -s /bin/sh -c "nova-manage api_db sync" nova
+
+- name: Sync nova DB
+  command: su -s /bin/sh -c "nova-manage db sync" nova
+
+- name: Enable and start nova services
+  service:
+    name: "{{ item.name }}"
+    state: started
+    enabled: true
+  loop: "{{ nova_services }}"
