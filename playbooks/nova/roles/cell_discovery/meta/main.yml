@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  author: chillz
+  description: Register Nova cells and map compute hosts.
+  license: MIT
+  min_ansible_version: 2.9
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+  categories:
+    - cloud
+    - openstack
+dependencies: []
