@@ -1,8 +1,0 @@
-default_openstack_password: "ChangeMe123!"
-
-# All other passwords reference the global variable
-rabbitmq_user: openstack
-rabbitmq_pass: "{{ default_openstack_password }}"
-db_root_pass: "{{ default_openstack_password }}"
-nova_db_pass: "{{ default_openstack_password }}"
-keystone_admin_pass: "{{ default_openstack_password }}" 

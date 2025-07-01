@@ -1,7 +1,0 @@
-- name: Discover hosts
-  shell: nova-manage cell_v2 discover_hosts --by-service
-  delegate_to: "{{ groups['controller'][0] }}"
-
-- name: List hosts in cell
-  shell: nova-manage cell_v2 list_hosts
-  delegate_to: "{{ groups['controller'][0] }}" 

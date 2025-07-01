@@ -1,7 +1,0 @@
-- name: restart nova-compute services
-  ansible.builtin.service:
-    name: "{{ item }}"
-    state: restarted
-  with_items:
-    - nova-compute
-    - libvirtd 
