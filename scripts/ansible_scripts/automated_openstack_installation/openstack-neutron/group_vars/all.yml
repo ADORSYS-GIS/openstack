@@ -13,6 +13,7 @@ mysql_admin_password: "password"
 # Admin user and password
 admin_user: "admin"
 admin_password: "SecretPass"
+admin_project: "admin"
 
 # RabbitMQ configuration
 rabbitmq_user: openstack
@@ -49,3 +50,4 @@ neutron_centos_packages:
   - openstack-neutron-ml2
   - openstack-neutron-linuxbridge
   - ebtables
+

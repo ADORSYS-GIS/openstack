@@ -27,4 +27,9 @@
     owner: root
     group: neutron
     mode: "0640"
-  notify: Restart neutron services
+  notify:
+    - Restart neutron-server
+    - Restart neutron-linuxbridge-agent
+    - Restart neutron-l3-agent
+    - Restart neutron-dhcp-agent
+    - Restart neutron-metadata-agent

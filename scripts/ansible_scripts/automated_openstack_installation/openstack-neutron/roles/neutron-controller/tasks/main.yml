@@ -87,9 +87,9 @@
         mycloud:
           auth:
             auth_url: "http://{{ neutron_db_host }}:5000/v3"
-            username: "demo"
-            password: "demo_secret"
-            project_name: "demo"
+            username: "{{ admin_user }}"  
+            password: "{{ admin_password }}"
+            project_name: "{{ admin_project }}"
             user_domain_name: Default
             project_domain_name: Default
           region_name: RegionOne
@@ -128,6 +128,7 @@
     cloud: "{{ lookup('env', 'OS_CLOUD') }}"
     service: network
     interface: public
+    endpoint_interface: public
     url: "http://{{ ansible_fqdn }}:9696"
     region: RegionOne
     state: present
@@ -137,6 +138,7 @@
     cloud: "{{ lookup('env', 'OS_CLOUD') }}"
     service: network
     interface: internal
+    endpoint_interface: internal
     url: "http://{{ ansible_fqdn }}:9696"
     region: RegionOne
     state: present
@@ -146,6 +148,7 @@
     cloud: "{{ lookup('env', 'OS_CLOUD') }}"
     service: network
     interface: admin
+    endpoint_interface: admin
     url: "http://{{ ansible_fqdn }}:9696"
     region: RegionOne
     state: present
