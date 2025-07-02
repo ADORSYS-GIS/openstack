@@ -30,8 +30,8 @@
       region_name = {{ region_name }}
       project_name = {{ service_project }}
       username = {{ neutron_keystone_user }}
-      password = {{ vault_neutron_keystone_password }}
+      password = {{ neutron_keystone_password }}
       service_metadata_proxy = true
-      metadata_proxy_shared_secret = {{ vault_metadata_secret }}
+      metadata_proxy_shared_secret = {{ metadata_secret }}
     marker: "# {mark} ANSIBLE MANAGED: Neutron Configuration"
   notify: Restart nova-compute

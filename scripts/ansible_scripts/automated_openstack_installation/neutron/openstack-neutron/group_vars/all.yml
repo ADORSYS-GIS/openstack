@@ -3,18 +3,19 @@
 neutron_db_name: neutron
 neutron_db_user: neutron
 neutron_db_host: "{{ groups['controllers'][0] }}"
-neutron_db_password: "{{ vault_neutron_db_password }}"
+neutron_db_password: "NeutronPass"
+mysql_root_password: "password"
 
 # RabbitMQ configuration
 rabbitmq_user: openstack
-rabbitmq_password: "{{ vault_rabbitmq_password }}"
+rabbitmq_password: "RabbitPass123"
 rabbitmq_host: "{{ groups['controllers'][0] }}"
 
 # Keystone configuration
 keystone_admin_url: "http://{{ groups['controllers'][0] }}:5000/v3"
 keystone_internal_url: "http://{{ groups['controllers'][0] }}:5000/v3"
 neutron_keystone_user: neutron
-neutron_keystone_password: "{{ vault_neutron_keystone_password }}"
+neutron_keystone_password: "KeystonePass"
 service_project: service
 region_name: RegionOne
 
@@ -24,7 +25,7 @@ tenant_network_types: vxlan
 vni_ranges: 1:1000
 enable_security_group: true
 enable_ipset: true
-metadata_secret: "{{ vault_metadata_secret }}"
+metadata_secret: "MetadataSecretPass"
 
 # Package configuration
 neutron_ubuntu_packages:

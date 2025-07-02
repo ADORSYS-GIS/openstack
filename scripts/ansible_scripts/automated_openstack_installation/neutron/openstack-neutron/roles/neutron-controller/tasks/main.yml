@@ -14,7 +14,7 @@
   command: >
     mysql -h {{ neutron_db_host }} 
     -u root 
-    -p{{ vault_mysql_root_password }} 
+    -p {{ mysql_root_password }} 
     -e "CREATE DATABASE IF NOT EXISTS {{ neutron_db_name }} 
         CHARACTER SET utf8 
         COLLATE utf8_general_ci"
