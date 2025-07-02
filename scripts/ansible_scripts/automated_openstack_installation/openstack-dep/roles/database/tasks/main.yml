@@ -47,8 +47,6 @@
     login_password: "{{ mysql_admin_password }}"
     login_host: localhost
 
-
-
 - name: Delete nova databases if they exist
   community.mysql.mysql_db:
     name: "{{ item }}"
@@ -93,8 +91,8 @@
   mysql_db:
     name: "{{ item }}"
     state: present
-    login_user: root
-    login_password: "{{ mysql_root_password }}"
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
     login_host: localhost
   loop:
     - keystone
@@ -111,8 +109,8 @@
     priv: "{{ item.db }}.*:ALL"
     host: "%"
     state: present
-    login_user: root
-    login_password: "{{ mysql_root_password }}"
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
   loop:
     - { user: 'keystone', password: '{{ keystone_db_password }}', db: 'keystone' }
     - { user: 'glance', password: '{{ glance_db_password }}', db: 'glance' }
@@ -180,7 +178,6 @@
     login_password: "{{ mysql_admin_password }}"
     login_host: localhost
 
-
 - name: Grant ALL privileges to nova user on nova database (localhost)
   community.mysql.mysql_user:
     name: nova
@@ -225,7 +222,7 @@
     name: nova
     host: "%"
     state: present
-    login_user: root
-    login_password: "{{ mysql_root_password }}"
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
     check_implicit_admin: yes
     priv: "*.*:USAGE"

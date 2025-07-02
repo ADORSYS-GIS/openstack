@@ -11,17 +11,12 @@
     state: present
 
 - name: Create Neutron database
-  command: >
-    mysql -h {{ neutron_db_host }} 
-    -u root 
-    -p {{ mysql_root_password }} 
-    -e "CREATE DATABASE IF NOT EXISTS {{ neutron_db_name }} 
-        CHARACTER SET utf8 
-        COLLATE utf8_general_ci"
-  args:
-    creates: "/var/lib/mysql/{{ neutron_db_name }}"
-
-# communicating/interacting with the mariadb database
+  community.mysql.mysql_db:
+    name: "{{ neutron_db_name }}"
+    state: present
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: "{{ neutron_db_host }}"
 
 - name: Create Neutron database user
   community.mysql.mysql_user:
@@ -30,6 +25,9 @@
     host: "%"
     priv: "{{ neutron_db_name }}.*:ALL"
     state: present
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: "{{ neutron_db_host }}"
 
 - name: Configure ML2 plugin
   template:
@@ -72,6 +70,48 @@
     neutron-db-manage --config-file /etc/neutron/neutron.conf
     --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head
   become: yes
+
+- name: Ensure OpenStack config directory exists
+  file:
+    path: "/root/.config/openstack"
+    state: directory
+    mode: '0700'
+    owner: root
+    group: root
+
+- name: Create clouds.yaml for OpenStack admin
+  copy:
+    dest: "/root/.config/openstack/clouds.yaml"
+    content: |
+      clouds:
+        mycloud:
+          auth:
+            auth_url: "http://{{ neutron_db_host }}:5000/v3"
+            username: "demo"
+            password: "demo_secret"
+            project_name: "demo"
+            user_domain_name: Default
+            project_domain_name: Default
+          region_name: RegionOne
+          interface: public
+          identity_api_version: 3
+    mode: '0600'
+    owner: root
+    group: root
+
+- name: Ensure OS_CLOUD is exported for root user
+  lineinfile:
+    path: "/root/.bashrc"
+    line: 'export OS_CLOUD=mycloud'
+    create: yes
+    state: present
+
+- name: Ensure OS_CLOUD is exported for root user (zsh)
+  lineinfile:
+    path: "/root/.zshrc"
+    line: 'export OS_CLOUD=mycloud'
+    create: yes
+    state: present
 
 # this one is using openstack commands from ansible galaxy to create a neutron service in keystone.
 
