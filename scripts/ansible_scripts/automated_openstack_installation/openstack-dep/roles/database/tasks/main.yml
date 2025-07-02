@@ -1,0 +1,103 @@
+---
+- name: Install MariaDB server
+  apt:
+    name: mariadb-server
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Ensure MySQL is running
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Set MySQL root password (MariaDB < 10.4)
+  shell: |
+    mysql -u root -S /var/run/mysqld/mysqld.sock -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('{{ mysql_root_password }}'); FLUSH PRIVILEGES;"
+  args:
+    executable: /bin/bash
+  when: ansible_os_family == "Debian"
+
+- name: Ensure MySQL listens on all interfaces
+  lineinfile:
+    path: /etc/mysql/mariadb.conf.d/50-server.cnf
+    regexp: '^bind-address'
+    line: 'bind-address = 0.0.0.0'
+    state: present
+    backup: yes
+  notify: Restart mysql
+  when: ansible_os_family == "Debian"
+
+- name: Create OpenStack databases
+  mysql_db:
+    name: "{{ item }}"
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    login_host: localhost
+  loop:
+    - keystone
+    - glance
+    - nova
+    - neutron
+    - nova_api
+    - nova_cell0
+
+- name: Create OpenStack DB users
+  mysql_user:
+    name: "{{ item.user }}"
+    password: "{{ item.password }}"
+    priv: "{{ item.db }}.*:ALL"
+    host: "%"
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+  loop:
+    - { user: 'keystone', password: '{{ keystone_db_password }}', db: 'keystone' }
+    - { user: 'glance', password: '{{ glance_db_password }}', db: 'glance' }
+    - { user: 'nova', password: '{{ nova_db_password }}', db: 'nova' }
+    - { user: 'neutron', password: '{{ neutron_db_password }}', db: 'neutron' }
+
+- name: Grant ALL privileges to nova user on nova database
+  mysql_user:
+    name: nova
+    password: "{{ nova_db_password }}"
+    host: "%"
+    priv: "nova.*:ALL"
+    state: present
+    update_password: always
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    login_host: localhost
+
+- name: Grant ALL privileges to nova user on nova_api database
+  mysql_user:
+    name: nova
+    password: "{{ nova_db_password }}"
+    host: "%"
+    priv: "nova_api.*:ALL"
+    state: present
+    update_password: always
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    login_host: localhost
+
+- name: Grant ALL privileges to nova user on nova_cell0 database
+  mysql_user:
+    name: nova
+    password: "{{ nova_db_password }}"
+    host: "%"
+    priv: "nova_cell0.*:ALL"
+    state: present
+    update_password: always
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    login_host: localhost
+
+- name: Flush MySQL privileges
+  mysql_db:
+    name: ""
+    state: import
+    target: /dev/null
+  ignore_errors: yes
+    

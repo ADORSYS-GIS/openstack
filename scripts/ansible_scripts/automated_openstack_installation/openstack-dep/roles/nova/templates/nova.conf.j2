@@ -1,0 +1,16 @@
+[database]
+connection = mysql+pymysql://nova:{{ nova_db_password }}@{{ controller_host }}/nova
+
+[api_database]
+connection = mysql+pymysql://nova:{{ nova_db_password }}@{{ controller_host }}/nova_api
+
+[keystone_authtoken]
+www_authenticate_uri = {{ keystone_public_url }}
+auth_url = {{ keystone_internal_url }}
+memcached_servers = {{ controller_host }}:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = nova
+password = {{ nova_service_password }}

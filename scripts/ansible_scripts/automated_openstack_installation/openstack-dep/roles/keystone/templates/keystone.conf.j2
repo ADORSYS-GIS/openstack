@@ -1,0 +1,5 @@
+[database]
+connection = mysql+pymysql://{{ keystone_db_name }}:{{ keystone_db_password }}@{{ controller_host }}/{{ keystone_db_name }}
+
+[token]
+provider = fernet

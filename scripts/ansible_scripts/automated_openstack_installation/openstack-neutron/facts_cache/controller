@@ -31,17 +31,17 @@
     "ansible_date_time": {
         "date": "2025-07-02",
         "day": "02",
-        "epoch": "1751445178",
-        "epoch_int": "1751445178",
-        "hour": "08",
-        "iso8601": "2025-07-02T08:32:58Z",
-        "iso8601_basic": "20250702T083258373019",
-        "iso8601_basic_short": "20250702T083258",
-        "iso8601_micro": "2025-07-02T08:32:58.373019Z",
-        "minute": "32",
+        "epoch": "1751450911",
+        "epoch_int": "1751450911",
+        "hour": "10",
+        "iso8601": "2025-07-02T10:08:31Z",
+        "iso8601_basic": "20250702T100831335162",
+        "iso8601_basic_short": "20250702T100831",
+        "iso8601_micro": "2025-07-02T10:08:31.335162Z",
+        "minute": "08",
         "month": "07",
-        "second": "58",
-        "time": "08:32:58",
+        "second": "31",
+        "time": "10:08:31",
         "tz": "UTC",
         "tz_dst": "UTC",
         "tz_offset": "+0000",
@@ -573,7 +573,7 @@
         "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
         "PWD": "/home/ubuntu",
         "SHELL": "/bin/bash",
-        "SUDO_COMMAND": "/bin/sh -c echo BECOME-SUCCESS-gizdquriegmumwnywcztjojobpmnejhb ; /usr/bin/python3 /home/ubuntu/.ansible/tmp/ansible-tmp-1751445181.3114963-2645654-232354726035518/AnsiballZ_setup.py",
+        "SUDO_COMMAND": "/bin/sh -c echo BECOME-SUCCESS-rcxiveqkuiwajrugwckrilzcaxpnxxch ; /usr/bin/python3 /home/ubuntu/.ansible/tmp/ansible-tmp-1751450914.4303856-196057-170384652241018/AnsiballZ_setup.py",
         "SUDO_GID": "1000",
         "SUDO_UID": "1000",
         "SUDO_USER": "ubuntu",
@@ -587,8 +587,8 @@
     "ansible_hostname": "controller",
     "ansible_hostnqn": "",
     "ansible_interfaces": [
-        "ens3",
-        "lo"
+        "lo",
+        "ens3"
     ],
     "ansible_is_chroot": false,
     "ansible_iscsi_iqn": "",
@@ -685,9 +685,9 @@
         "type": "loopback"
     },
     "ansible_loadavg": {
-        "15m": 0.76708984375,
-        "1m": 2.69091796875,
-        "5m": 1.7412109375
+        "15m": 0.00537109375,
+        "1m": 0.080078125,
+        "5m": 0.0166015625
     },
     "ansible_local": {},
     "ansible_locally_reachable_ips": {
@@ -715,16 +715,16 @@
     },
     "ansible_machine": "x86_64",
     "ansible_machine_id": "f8b6a50bfbfa4cb6abbcfef80ce30e05",
-    "ansible_memfree_mb": 2026,
+    "ansible_memfree_mb": 2231,
     "ansible_memory_mb": {
         "nocache": {
-            "free": 2969,
-            "used": 941
+            "free": 3185,
+            "used": 725
         },
         "real": {
-            "free": 2026,
+            "free": 2231,
             "total": 3910,
-            "used": 1884
+            "used": 1679
         },
         "swap": {
             "cached": 0,
@@ -736,10 +736,10 @@
     "ansible_memtotal_mb": 3910,
     "ansible_mounts": [
         {
-            "block_available": 11870107,
+            "block_available": 11867306,
             "block_size": 4096,
             "block_total": 12422878,
-            "block_used": 552771,
+            "block_used": 555572,
             "device": "/dev/sda1",
             "fstype": "ext4",
             "inode_available": 6314862,
@@ -747,7 +747,7 @@
             "inode_used": 107666,
             "mount": "/",
             "options": "rw,relatime,discard,errors=remount-ro,commit=30",
-            "size_available": 48619958272,
+            "size_available": 48608485376,
             "size_total": 50884108288,
             "uuid": "21f08275-91e8-4a2a-85f9-9a52f3ea034b"
         },
@@ -852,7 +852,7 @@
     "ansible_system_capabilities": [],
     "ansible_system_capabilities_enforced": "False",
     "ansible_system_vendor": "QEMU",
-    "ansible_uptime_seconds": 6789,
+    "ansible_uptime_seconds": 12522,
     "ansible_user_dir": "/root",
     "ansible_user_gecos": "root",
     "ansible_user_gid": 0,
