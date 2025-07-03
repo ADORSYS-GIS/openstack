@@ -1,0 +1,22 @@
+[DEFAULT]
+log_dir = /var/log/placement
+
+[api]
+workers = 4
+
+[database]
+connection = mysql+pymysql://placement:{{ placement_service_password }}@{{ controller_host }}/placement
+
+[placement_database]
+connection = mysql+pymysql://placement:{{ placement_service_password }}@{{ controller_host }}/placement
+
+[keystone_authtoken]
+www_authenticate_uri = http://{{ controller_host }}:5000/v3
+auth_url = http://{{ controller_host }}:5000/v3
+memcached_servers = {{ controller_host }}:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = {{ openstack_service_project }}
+username = placement
+password = {{ placement_service_password }} 

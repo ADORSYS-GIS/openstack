@@ -89,7 +89,7 @@
             auth_url: "http://{{ neutron_db_host }}:5000/v3"
             username: "{{ admin_user }}"  
             password: "{{ admin_password }}"
-            project_name: "{{ admin_project }}"
+            project_name: "{{ openstack_service_project }}"
             user_domain_name: Default
             project_domain_name: Default
           region_name: RegionOne

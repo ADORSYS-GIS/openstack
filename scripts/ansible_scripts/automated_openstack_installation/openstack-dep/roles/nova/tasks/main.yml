@@ -1,5 +1,5 @@
 ---
-- name: Install Nova packages
+- name: Install Nova controller packages
   apt:
     name:
       - nova-api
@@ -7,6 +7,7 @@
       - nova-novncproxy
       - nova-scheduler
     state: present
+  when: "'controllers' in group_names"
 
 - name: Configure Nova
   template:
@@ -17,22 +18,35 @@
     mode: 0640
   notify: Restart nova services
 
+- name: Ensure nova-compute is started and enabled
+  service:
+    name: nova-compute
+    state: started
+    enabled: yes
+  when: "'computes' in group_names"
+
+  
+
 - name: Sync Nova API DB
   command: nova-manage api_db sync
   args:
     creates: /var/lib/nova/api_db_synced
+  when: "'controllers' in group_names"
 
 - name: Map cell0
   command: nova-manage cell_v2 map_cell0
   args:
     creates: /var/lib/nova/cell0_mapped
+  when: "'controllers' in group_names"
 
 - name: Create cell1
   command: nova-manage cell_v2 create_cell --name=cell1
   args:
     creates: /var/lib/nova/cell1_created
+  when: "'controllers' in group_names"
 
 - name: Sync Nova DB
   command: nova-manage db sync
   args:
     creates: /var/lib/nova/db_synced
+  when: "'controllers' in group_names"

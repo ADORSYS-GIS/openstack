@@ -8,6 +8,9 @@ memcached_servers = {{ controller_host }}:11211
 auth_type = password
 project_domain_name = Default
 user_domain_name = Default
-project_name = service
+project_name = {{ openstack_service_project }}
 username = glance
 password = {{ glance_service_password }}
+
+[DEFAULT]
+log_dir = /var/log/glance

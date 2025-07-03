@@ -139,84 +139,23 @@
     login_password: "{{ mysql_admin_password }}"
     login_host: localhost
 
-- name: Grant ALL privileges to nova user on nova database
+- debug:
+    msg: "Granting ALL privileges on nova, nova_api, nova_cell0 to nova@% on {{ inventory_hostname }} (groups: {{ group_names }})"
+
+- name: Ensure nova user has all privileges on nova, nova_api, and nova_cell0 databases
   community.mysql.mysql_user:
     name: nova
-    password: "{{ nova_db_password }}"
     host: "%"
-    priv: "nova.*:ALL"
-    state: present
-    append_privs: yes
-    update_password: always
-    login_user: "{{ mysql_admin_user }}"
-    login_password: "{{ mysql_admin_password }}"
-    login_host: localhost
-
-- name: Grant ALL privileges to nova user on nova_api database
-  community.mysql.mysql_user:
-    name: nova
     password: "{{ nova_db_password }}"
-    host: "%"
-    priv: "nova_api.*:ALL"
+    priv: "nova.*:ALL,nova_api.*:ALL,nova_cell0.*:ALL"
     state: present
     append_privs: yes
     update_password: always
     login_user: "{{ mysql_admin_user }}"
     login_password: "{{ mysql_admin_password }}"
     login_host: localhost
+  become: yes
 
-- name: Grant ALL privileges to nova user on nova_cell0 database
-  community.mysql.mysql_user:
-    name: nova
-    password: "{{ nova_db_password }}"
-    host: "%"
-    priv: "nova_cell0.*:ALL"
-    state: present
-    append_privs: yes
-    update_password: always
-    login_user: "{{ mysql_admin_user }}"
-    login_password: "{{ mysql_admin_password }}"
-    login_host: localhost
-
-- name: Grant ALL privileges to nova user on nova database (localhost)
-  community.mysql.mysql_user:
-    name: nova
-    password: "{{ nova_db_password }}"
-    host: "localhost"
-    priv: "nova.*:ALL"
-    state: present
-    append_privs: yes
-    update_password: always
-    login_user: "{{ mysql_admin_user }}"
-    login_password: "{{ mysql_admin_password }}"
-    login_host: localhost
-
-- name: Grant ALL privileges to nova user on nova_api database (localhost)
-  community.mysql.mysql_user:
-    name: nova
-    password: "{{ nova_db_password }}"
-    host: "localhost"
-    priv: "nova_api.*:ALL"
-    state: present
-    append_privs: yes
-    update_password: always
-    login_user: "{{ mysql_admin_user }}"
-    login_password: "{{ mysql_admin_password }}"
-    login_host: localhost
-
-- name: Grant ALL privileges to nova user on nova_cell0 database (localhost)
-  community.mysql.mysql_user:
-    name: nova
-    password: "{{ nova_db_password }}"
-    host: "localhost"
-    priv: "nova_cell0.*:ALL"
-    state: present
-    append_privs: yes
-    update_password: always
-    login_user: "{{ mysql_admin_user }}"
-    login_password: "{{ mysql_admin_password }}"
-    login_host: localhost
-    
 - name: Flush MySQL privileges
   mysql_user:
     name: nova
@@ -226,3 +165,22 @@
     login_password: "{{ mysql_admin_password }}"
     check_implicit_admin: yes
     priv: "*.*:USAGE"
+
+- name: Create placement database
+  mysql_db:
+    name: placement
+    state: present
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost
+
+- name: Create placement user
+  mysql_user:
+    name: placement
+    password: "{{ placement_service_password }}"
+    priv: "placement.*:ALL"
+    host: "%"
+    state: present
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost

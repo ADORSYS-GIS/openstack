@@ -3,3 +3,6 @@ connection = mysql+pymysql://{{ keystone_db_name }}:{{ keystone_db_password }}@{
 
 [token]
 provider = fernet
+
+[DEFAULT]
+log_dir = /var/log/keystone

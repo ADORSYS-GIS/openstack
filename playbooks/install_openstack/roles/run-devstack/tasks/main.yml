@@ -1,0 +1,451 @@
+---
+# 1. System Preparation and Package Installation
+- name: Ensure required packages are installed
+  package:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - openvswitch-switch
+    - openvswitch-common
+    - python3-openvswitch
+  become: yes
+  register: package_install
+  changed_when: package_install.changed
+
+- name: Log package installation results
+  debug:
+    msg: "Installed/Updated packages: {{ package_install.results | selectattr('changed', 'equalto', true) | map(attribute='item') | list }}"
+  when: package_install.changed
+
+# 2. Kernel Module Setup
+- name: Load required kernel modules
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - openvswitch
+    - br_netfilter
+  become: yes
+  register: module_load
+  ignore_errors: yes
+
+- name: Log kernel module loading results
+  debug:
+    msg: "{{ item.failed | default(false) | ternary('Failed to load ' + item.item, 'Successfully loaded ' + item.item) }}"
+  loop: "{{ module_load.results }}"
+  when: module_load.results is defined
+
+# 3. Open vSwitch Service Setup
+- name: Ensure openvswitch-switch is running
+  service:
+    name: openvswitch-switch
+    state: started
+    enabled: yes
+  become: yes
+  register: ovs_service
+
+- name: Log OVS service status
+  debug:
+    msg: "Open vSwitch service {{ 'started' if ovs_service.changed else 'already running' }}"
+
+- name: Wait for OVS to be ready
+  wait_for:
+    path: /var/run/openvswitch/db.sock
+    state: present
+    timeout: 30
+  become: yes
+  register: ovs_socket_wait
+
+- name: Verify OVS daemon status
+  shell: ovs-vsctl show
+  become: yes
+  register: ovs_status
+  changed_when: false
+  failed_when: false
+
+- name: Log OVS daemon status
+  debug:
+    msg: "OVS daemon status: {{ ovs_status.stdout_lines | default('OVS daemon not responding') }}"
+  when: ovs_status.stdout_lines is defined
+
+# 4. Bridge Creation
+- name: Create Open vSwitch bridges
+  block:
+    - name: Check existing bridges
+      shell: ovs-vsctl list-br
+      become: yes
+      register: existing_bridges
+      changed_when: false
+      failed_when: false
+
+    - name: Log existing bridges
+      debug:
+        msg: "Existing OVS bridges: {{ existing_bridges.stdout_lines | default([]) }}"
+      when: existing_bridges.stdout_lines is defined
+
+    - name: Create br-ex bridge
+      command: ovs-vsctl add-br br-ex
+      become: yes
+      register: bridge_result
+      changed_when: bridge_result.rc == 0
+      failed_when: false
+      when: "'br-ex' not in (existing_bridges.stdout_lines | default([]))"
+
+    - name: Log bridge creation result
+      debug:
+        msg: "{{ 'Successfully created br-ex bridge' if bridge_result.rc == 0 else 'Failed to create br-ex bridge' }}"
+      when: bridge_result is defined
+
+    - name: Restart openvswitch-switch service
+      service:
+        name: openvswitch-switch
+        state: restarted
+      become: yes
+      when: bridge_result is defined and bridge_result.rc == 0
+
+  rescue:
+    - name: Log bridge creation error
+      debug:
+        msg: |
+          Error creating Open vSwitch bridge:
+          - Error: {{ ansible_failed_result.stderr | default('Unknown error') }}
+          - Command: {{ ansible_failed_result.cmd | default('Unknown command') }}
+          - RC: {{ ansible_failed_result.rc | default('Unknown') }}
+      failed_when: false
+
+# 5. System Configuration
+- name: Fix resolv.conf for DNS resolution
+  file:
+    src: /run/systemd/resolve/resolv.conf
+    dest: /etc/resolv.conf
+    state: link
+    force: yes
+  become: yes
+  ignore_errors: yes
+
+# 6. Network Interface Detection
+- name: Gather network interfaces
+  setup:
+    filter: ansible_interfaces
+  become: true
+  register: interface_facts
+  retries: 3
+  delay: 5
+  until: interface_facts is success
+
+- name: Ensure ansible_interfaces is present
+  set_fact:
+    ansible_interfaces: "{{ ansible_facts['ansible_interfaces'] | default([]) }}"
+  when: interface_facts is success
+
+- name: Get interface with default route (public)
+  shell: "ip route | grep default | awk '{print $5}'"
+  register: default_iface
+  changed_when: false
+  become: true
+  ignore_errors: yes
+  retries: 3
+  delay: 5
+  until: default_iface is success
+
+- name: Set neutron_public_interface fact with fallback
+  set_fact:
+    neutron_public_interface: >-
+      {{
+        default_iface.stdout | default('')
+        | ternary(
+            default_iface.stdout,
+            (ansible_interfaces | list)
+            | difference(['lo'])
+            | select('match', '^(en|eth)')
+            | list
+            | first
+          )
+      }}
+
+- name: Get all non-loopback interfaces
+  set_fact:
+    available_interfaces: >-
+      {{
+        (ansible_interfaces | list)
+        | difference(['lo', neutron_public_interface])
+        | select('match', '^(en|eth)')
+        | list
+      }}
+
+- name: Set neutron_private_interface fact with fallback
+  set_fact:
+    neutron_private_interface: >-
+      {{
+        (available_interfaces | list | length > 0)
+        | ternary(
+            (available_interfaces | list)[0],
+            neutron_public_interface
+          )
+      }}
+
+- name: Debug interfaces
+  debug:
+    msg: |
+      Available Interfaces: {{ ansible_interfaces | list }}
+      Public Interface: {{ neutron_public_interface }}
+      Private Interface: {{ neutron_private_interface }}
+      Default Route Interface: {{ default_iface.stdout | default('Not found') }}
+      Available Non-Loopback Interfaces: {{ available_interfaces | list }}
+
+- name: Get IP address of neutron_private_interface
+  shell: "ip addr show {{ neutron_private_interface }} | grep 'inet ' | awk '{print $2}' | cut -d/ -f1"
+  register: interface_ip
+  changed_when: false
+  become: true
+  retries: 3
+  delay: 5
+  until: interface_ip is success
+
+- name: Set local_ip variable
+  set_fact:
+    local_ip: "{{ interface_ip.stdout }}"
+  when: interface_ip is success
+
+# 7. DevStack Directory Setup
+- name: Ensure required directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+    mode: '0755'
+  loop:
+    - /opt/stack/logs
+    - /opt/stack/.pip
+    - /opt/stack/requirements
+    - /opt/stack/devstack
+  become: yes
+
+- name: Check network connectivity
+  block:
+    - name: Test connection to OpenDev
+      uri:
+        url: https://opendev.org
+        method: GET
+        return_content: yes
+        status_code: 200
+      register: opendev_check
+      retries: 3
+      delay: 10
+      until: opendev_check is success
+
+    - name: Log network check
+      debug:
+        msg: "Network connectivity to OpenDev: {{ 'OK' if opendev_check.status == 200 else 'Failed' }}"
+  rescue:
+    - name: Log network failure
+      debug:
+        msg: |
+          Network connectivity check failed. Please ensure:
+          - Internet connection is available
+          - DNS resolution is working
+          - No firewall is blocking access to opendev.org
+      failed_when: true
+
+- name: Configure git for better reliability
+  block:
+    - name: Set git config for better reliability
+      git_config:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        scope: system
+      loop:
+        - { name: 'http.postBuffer', value: '524288000' }
+        - { name: 'http.lowSpeedLimit', value: '1000' }
+        - { name: 'http.lowSpeedTime', value: '300' }
+        - { name: 'core.compression', value: '0' }
+      become: yes
+
+    - name: Set git config for the stack user
+      git_config:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        scope: global
+        user: "{{ stack_user }}"
+      loop:
+        - { name: 'http.postBuffer', value: '524288000' }
+        - { name: 'http.lowSpeedLimit', value: '1000' }
+        - { name: 'http.lowSpeedTime', value: '300' }
+        - { name: 'core.compression', value: '0' }
+      become: yes
+      become_user: "{{ stack_user }}"
+
+- name: Clone DevStack repository
+  git:
+    repo: https://opendev.org/openstack/devstack
+    dest: /opt/stack/devstack
+    version: master
+    force: yes
+    depth: 1
+  become: yes
+  become_user: "{{ stack_user }}"
+  register: devstack_clone
+  retries: 3
+  delay: 10
+  until: devstack_clone is success
+
+- name: Log DevStack clone status
+  debug:
+    msg: "DevStack repository {{ 'cloned successfully' if devstack_clone.changed else 'already exists' }}"
+
+- name: Copy local.conf template
+  template:
+    src: local.conf.j2
+    dest: /opt/stack/devstack/local.conf
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+    mode: '0644'
+  become: yes
+  become_user: "{{ stack_user }}"
+
+- name: Set pip timeout and retry settings
+  copy:
+    dest: /opt/stack/.pip/pip.conf
+    content: |
+      [global]
+      timeout = 60
+      retries = 3
+    owner: "{{ stack_user }}"
+    group: "{{ stack_user }}"
+    mode: '0644'
+  become: yes
+  become_user: "{{ stack_user }}"
+
+# 8. DevStack Installation
+- name: Run DevStack installation with logging
+  block:
+    - name: Check system resources before installation
+      shell: |
+        echo "CPU Info:"
+        lscpu | grep -E '^CPU\(s\)|Core|Socket|Thread'
+        echo -e "\nMemory Info:"
+        free -h
+        echo -e "\nDisk Space:"
+        df -h /opt/stack
+      become: yes
+      register: system_resources
+      changed_when: false
+
+    - name: Log system resources
+      debug:
+        msg: "{{ system_resources.stdout_lines }}"
+      when: system_resources.stdout_lines is defined
+
+    - name: Run stack.sh with proper environment
+      shell: |
+        cd /opt/stack/devstack
+        export TERM=xterm-256color
+        export PIP_DEFAULT_TIMEOUT=60
+        export PIP_RETRIES=3
+        export PYTHONUNBUFFERED=1
+        export PYTHONIOENCODING=utf-8
+        export LANG=en_US.UTF-8
+        export LC_ALL=en_US.UTF-8
+        export GIT_HTTP_LOW_SPEED_LIMIT=1000
+        export GIT_HTTP_LOW_SPEED_TIME=300
+        ./stack.sh 2>&1 | tee /opt/stack/logs/stack_install.log
+      become: yes
+      become_user: "{{ stack_user }}"
+      register: stack_output
+      environment:
+        TERM: xterm-256color
+        PIP_DEFAULT_TIMEOUT: 60
+        PIP_RETRIES: 3
+        PYTHONUNBUFFERED: 1
+        PYTHONIOENCODING: utf-8
+        LANG: en_US.UTF-8
+        LC_ALL: en_US.UTF-8
+        GIT_HTTP_LOW_SPEED_LIMIT: 1000
+        GIT_HTTP_LOW_SPEED_TIME: 300
+      retries: 3
+      delay: 300  # 5 minutes between retries
+      until: stack_output is success
+
+    - name: Display DevStack installation output
+      debug:
+        var: stack_output.stdout_lines
+      when: stack_output.stdout_lines is defined
+
+  rescue:
+    - name: Log installation failure
+      debug:
+        msg: |
+          DevStack installation failed. Check /opt/stack/logs/stack_install.log for details.
+          Common issues:
+          - Terminal configuration (TERM environment variable)
+          - Python package dependency conflicts
+          - Network connectivity issues
+          - Open vSwitch service status
+          - Insufficient system resources
+          - Permission issues
+          - Git clone failures
+      failed_when: true
+
+# 9. Service Verification
+- name: Verify OpenStack services
+  block:
+    - name: Check if OpenStack CLI is available
+      stat:
+        path: /opt/stack/data/venv/bin/openstack
+      register: openstack_cli
+
+    - name: Fail if OpenStack CLI is not found
+      fail:
+        msg: "OpenStack CLI not found. Installation may have failed."
+      when: not openstack_cli.stat.exists
+
+    - name: Check OpenStack services
+      shell: |
+        source /opt/stack/data/venv/bin/activate
+        source /opt/stack/devstack/openrc admin admin
+        echo "Service List:"
+        openstack service list
+        echo -e "\nEndpoint List:"
+        openstack endpoint list
+        echo -e "\nNetwork List:"
+        openstack network list
+      become: yes
+      become_user: "{{ stack_user }}"
+      register: service_check
+      changed_when: false
+
+    - name: Display service check results
+      debug:
+        var: service_check.stdout_lines
+      when: service_check.stdout_lines is defined
+
+    - name: Check service logs
+      shell: |
+        echo "Nova Logs:"
+        tail -n 50 /opt/stack/logs/nova-*.log || echo "No Nova logs found"
+        echo -e "\nNeutron Logs:"
+        tail -n 50 /opt/stack/logs/neutron-*.log || echo "No Neutron logs found"
+      become: yes
+      become_user: "{{ stack_user }}"
+      register: service_logs
+      changed_when: false
+      failed_when: false
+
+    - name: Display service logs
+      debug:
+        var: service_logs.stdout_lines
+      when: service_logs.stdout_lines is defined
+
+  rescue:
+    - name: Log service verification failure
+      debug:
+        msg: |
+          Failed to verify OpenStack services. Check the logs for details.
+          Common issues:
+          - Services not started
+          - Authentication failures
+          - Network configuration issues
+          - Database connection problems
+          - OpenStack CLI not installed
+      failed_when: true

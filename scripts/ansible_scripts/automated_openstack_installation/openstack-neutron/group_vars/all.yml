@@ -51,3 +51,5 @@ neutron_centos_packages:
   - openstack-neutron-linuxbridge
   - ebtables
 
+# OpenStack service project
+openstack_service_project: service

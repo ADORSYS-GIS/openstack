@@ -1,8 +1,33 @@
 ---
+
+- hosts: controllers:computes
+  become: yes
+  tasks:
+    - name: Ensure OpenStack client is installed
+      apt:
+        name: python3-openstackclient
+        state: present
+
 - hosts: controllers
   become: yes
   roles:
     - database
     - keystone
     - glance
+    - rabbitmq-server
+    - placement
     - nova
+
+- hosts: computes
+  become: yes
+  tasks:
+    - name: Ensure controller is in /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ hostvars[groups['controllers'][0]].ansible_host }} controller"
+        state: present
+
+- hosts: computes
+  become: yes
+  roles:
+    - nova-compute

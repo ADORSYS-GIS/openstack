@@ -3,7 +3,7 @@ physical_interface_mappings = provider:{{ hostvars[inventory_hostname]['neutron_
 
 [vxlan]
 enable_vxlan = {{ ('vxlan' in tenant_network_types) | bool | lower }}
-local_ip = {{ hostvars[inventory_hostname]['ansible_' + (hostvars[inventory_hostname]['neutron_provider_interface'] | default(ansible_default_ipv4.interface) ]['ipv4']['address'] }}
+local_ip = {{ hostvars[inventory_hostname]['ansible_' + (hostvars[inventory_hostname]['neutron_provider_interface'] | default(ansible_default_ipv4.interface))]['ipv4']['address'] }}
 l2_population = true
 
 [securitygroup]

@@ -1,0 +1,28 @@
+---
+- name: Install Placement API
+  apt:
+    name: placement-api
+    state: present
+  become: yes
+
+- name: Configure Placement
+  template:
+    src: placement.conf.j2
+    dest: /etc/placement/placement.conf
+    owner: root
+    group: placement
+    mode: 0640
+  notify: Restart placement-api
+
+- name: Ensure Placement API is started and enabled
+  service:
+    name: apache2
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Sync Placement database
+  command: placement-manage db sync
+  become: yes
+  args:
+    creates: /var/lib/placement/db_synced 

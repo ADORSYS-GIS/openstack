@@ -1,4 +1,3 @@
-
 [DEFAULT]
 core_plugin = ml2
 service_plugins = router
@@ -7,6 +6,7 @@ transport_url = rabbit://{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ rabbitmq
 auth_strategy = keystone
 notify_nova_on_port_status_changes = True
 notify_nova_on_port_data_changes = True
+log_dir = /var/log/neutron
 
 [database]
 connection = mysql+pymysql://{{ neutron_db_user }}:{{ neutron_db_password }}@{{ neutron_db_host }}/{{ neutron_db_name }}
@@ -18,7 +18,7 @@ memcached_servers = {{ neutron_db_host }}:11211
 auth_type = password
 project_domain_name = default
 user_domain_name = default
-project_name = service
+project_name = {{ openstack_service_project }}
 username = {{ neutron_keystone_user }}
 password = {{ neutron_keystone_password }}
 
