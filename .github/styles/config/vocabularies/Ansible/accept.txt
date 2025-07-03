@@ -38,3 +38,14 @@
 (?i)subnets?
 (?i)subnetworks?
 (?i)IPs?
+(?i)config
+(?i)configs
+(?i)Cirros
+(?i)Idempotency
+(?i)hostnames
+(?i)Fernet
+(?i)Ceph
+(?i)OAuth
+(?i)APIs
+(?i)cirros
+
