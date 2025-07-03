@@ -1,0 +1,37 @@
+name: CI Test for OpenStack Keystone
+
+on:
+  push:
+    branches: main
+  pull_request:
+    branches: main
+
+jobs:
+  keystone-ci:
+    runs-on: ubuntu-latest
+    env:
+      VAGRANT_DEFAULT_PROVIDER: libvirt
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils vagrant vagrant-libvirt ansible
+          sudo usermod -aG libvirt $USER
+          sudo systemctl enable --now libvirtd
+          # Allow time for libvirtd to start
+          sleep 10
+
+      - name: Run CI test script
+        run: |
+          chmod +x ./ci-test.sh
+          ./ci-test.sh
+
+      - name: Upload logs if failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ansible-logs
+          path: playbooks/install_openstack/logs/
