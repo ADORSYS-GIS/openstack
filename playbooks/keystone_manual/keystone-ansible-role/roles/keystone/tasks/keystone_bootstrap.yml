@@ -1,0 +1,40 @@
+---
+- name: Ensure keystone user exists
+  ansible.builtin.user:
+    name: keystone
+    system: yes
+    shell: /usr/sbin/nologin
+
+- name: Ensure /var/log/keystone directory exists
+  file:
+    path: /var/log/keystone
+    state: directory
+    owner: keystone
+    group: keystone
+    mode: "0755"
+  become: yes
+
+- name: Ensure Keystone log file exists and is owned by keystone
+  file:
+    path: /var/log/keystone/keystone-manage.log
+    state: touch
+    owner: keystone
+    group: keystone
+    mode: "0640"
+  become: yes
+
+- name: Populate Keystone database (db_sync)
+  command: keystone-manage db_sync
+  become: yes
+  # become_user: keystone  # Removed to avoid permission issues
+
+- name: Bootstrap Keystone service
+  command: >
+    keystone-manage bootstrap
+    --bootstrap-password {{ keystone_admin_password }}
+    --bootstrap-admin-url {{ keystone_admin_url }}
+    --bootstrap-internal-url {{ keystone_internal_url }}
+    --bootstrap-public-url {{ keystone_public_url }}
+    --bootstrap-region-id {{ keystone_region }}
+  become: yes
+  # become_user: keystone  # Removed to avoid permission issues
