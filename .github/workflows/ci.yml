@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main] 
+    branches: [main]
 
 jobs:
   keystone-ci:
@@ -36,18 +36,20 @@ jobs:
           # Install vagrant-libvirt plugin correctly
           vagrant plugin install vagrant-libvirt
 
-          # Enable and start libvirt daemon
-          sudo usermod -aG libvirt $USER
+          # Start libvirt daemon
           sudo systemctl enable --now libvirtd
           sleep 10
 
       - name: Confirm vagrant-libvirt plugin is installed
         run: |
-          vagrant plugin list | grep vagrant-libvirt || (echo "vagrant-libvirt not installed" && exit 1)
+          vagrant plugin list | grep vagrant-libvirt || (echo "❌ vagrant-libvirt not installed" && exit 1)
 
-      - name: Run CI test script
+      - name: Run CI test script with libvirt permission fix
         run: |
           chmod +x ./ci-test.sh
+          # Patch script to use sudo for libvirt access
+          sed -i 's/vagrant up/sudo vagrant up/g' ./ci-test.sh
+          sed -i 's/vagrant destroy/sudo vagrant destroy/g' ./ci-test.sh
           ./ci-test.sh
 
       - name: Upload logs if test fails
