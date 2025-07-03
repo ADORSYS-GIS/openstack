@@ -33,13 +33,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y vagrant
 
-          # Install vagrant-libvirt plugin (Ruby gem)
-          sudo gem install vagrant-libvirt
+          # Install vagrant-libvirt plugin correctly
+          vagrant plugin install vagrant-libvirt
 
           # Enable and start libvirt daemon
           sudo usermod -aG libvirt $USER
           sudo systemctl enable --now libvirtd
           sleep 10
+
+      - name: Confirm vagrant-libvirt plugin is installed
+        run: |
+          vagrant plugin list | grep vagrant-libvirt || (echo "vagrant-libvirt not installed" && exit 1)
 
       - name: Run CI test script
         run: |
