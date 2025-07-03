@@ -2,26 +2,38 @@ name: CI Test for OpenStack Keystone
 
 on:
   push:
-    branches: main
+    branches: [main]
   pull_request:
-    branches: main
+    branches: [main]
 
 jobs:
   keystone-ci:
     runs-on: ubuntu-latest
     env:
       VAGRANT_DEFAULT_PROVIDER: libvirt
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install dependencies (libvirt, ansible, Vagrant via HashiCorp)
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils vagrant vagrant-libvirt ansible
+          sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils curl gnupg software-properties-common ansible
+
+          # Install Vagrant from HashiCorp (official method)
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com noble main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+          sudo apt-get update
+          sudo apt-get install -y vagrant
+
+          # Install vagrant-libvirt plugin (from RubyGems)
+          sudo apt-get install -y ruby ruby-dev libxml2-dev libxslt-dev zlib1g-dev
+          sudo gem install vagrant-libvirt
+
+          # Ensure libvirt is ready
           sudo usermod -aG libvirt $USER
           sudo systemctl enable --now libvirtd
-          # Allow time for libvirtd to start
           sleep 10
 
       - name: Run CI test script
