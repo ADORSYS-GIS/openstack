@@ -1,4 +1,4 @@
-name: CI Test for OpenStack Keystone
+name: CI Test for OpenStack Keystone (Ansible only)
 
 on:
   push:
@@ -9,50 +9,23 @@ on:
 jobs:
   keystone-ci:
     runs-on: ubuntu-latest
-    env:
-      VAGRANT_DEFAULT_PROVIDER: libvirt
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies (libvirt, Vagrant, Ansible, build tools)
+      - name: Install dependencies (Ansible, Python, etc.)
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils \
-            curl gnupg software-properties-common ansible \
-            ruby ruby-dev libxml2-dev libxslt-dev zlib1g-dev \
-            libvirt-dev pkg-config make gcc
+          sudo apt-get install -y python3 python3-pip ansible
 
-          # Add HashiCorp apt repo for Vagrant
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com noble main" | \
-            sudo tee /etc/apt/sources.list.d/hashicorp.list
+      - name: Set executable permissions
+        run: chmod +x ./ci-test.sh
 
-          sudo apt-get update
-          sudo apt-get install -y vagrant
+      - name: Run CI test script (Ansible Playbooks)
+        run: ./ci-test.sh
 
-          # Install vagrant-libvirt plugin correctly
-          vagrant plugin install vagrant-libvirt
-
-          # Start libvirt daemon
-          sudo systemctl enable --now libvirtd
-          sleep 10
-
-      - name: Confirm vagrant-libvirt plugin is installed
-        run: |
-          vagrant plugin list | grep vagrant-libvirt || (echo "❌ vagrant-libvirt not installed" && exit 1)
-
-      - name: Run CI test script with libvirt permission fix
-        run: |
-          chmod +x ./ci-test.sh
-          # Patch script to use sudo for libvirt access
-          sed -i 's/vagrant up/sudo vagrant up/g' ./ci-test.sh
-          sed -i 's/vagrant destroy/sudo vagrant destroy/g' ./ci-test.sh
-          ./ci-test.sh
-
-      - name: Upload logs if test fails
+      - name: Upload logs if failed
         if: failure()
         uses: actions/upload-artifact@v4
         with:
