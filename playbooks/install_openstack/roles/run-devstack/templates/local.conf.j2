@@ -1,0 +1,123 @@
+[[local|localrc]]
+# Credentials
+ADMIN_PASSWORD={{ admin_password }}
+DATABASE_PASSWORD={{ admin_password }}
+RABBIT_PASSWORD={{ admin_password }}
+SERVICE_PASSWORD={{ admin_password }}
+
+# ==========================
+# Logging Configuration
+# ==========================
+ENABLE_LOGGING=True
+LOGFILE=$DEST/logs/stack.sh.log
+LOGDIR=$DEST/logs
+SCREEN_LOGDIR=$DEST/logs/screen
+USE_SCREEN=True
+VERBOSE=True
+DEBUG=True
+LOG_COLOR=True
+
+# ==========================
+# Network Configuration
+# ==========================
+FIXED_RANGE={{ fixed_range }}
+FLOATING_RANGE={{ floating_range }}
+PUBLIC_NETWORK_GATEWAY={{ public_network_gateway }}
+PUBLIC_NETWORK_ALLOCATION_POOL_START={{ public_network_allocation_pool_start }}
+PUBLIC_NETWORK_ALLOCATION_POOL_END={{ public_network_allocation_pool_end }}
+
+# ==========================
+# Neutron and ML2 Config
+# ==========================
+
+# ML2 Plugin and Mechanism Drivers
+Q_PLUGIN=ml2
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch
+Q_ML2_PLUGIN_TYPE_DRIVERS=flat,vlan,vxlan
+Q_ML2_PLUGIN_EXT_DRIVERS=port_security
+
+# Tenant Network Type (Overlay)
+Q_ML2_TENANT_NETWORK_TYPE=vxlan
+
+# Enable Tunneling
+Q_TUNNELING=True
+Q_TUNNEL_INTERFACE={{ neutron_private_interface }}
+Q_TUNNEL_TYPES=vxlan
+Q_TUNNEL_LOCAL_IP={{ local_ip }}
+
+# Enable Security Groups
+Q_USE_SECGROUP=True
+
+# Open vSwitch Agent
+Q_AGENT=openvswitch
+enable_service q-agt
+
+# Bridge Mappings
+OVS_BRIDGE_MAPPINGS=physnet1:br-ex
+PHYSICAL_NETWORK=physnet1
+OVS_PHYSICAL_BRIDGE=br-ex
+
+# Use Provider Network for Public Access
+Q_USE_PROVIDERNET_FOR_PUBLIC=True
+PUBLIC_INTERFACE={{ neutron_public_interface }}
+
+# Neutron Services
+enable_service neutron
+enable_service neutron-api
+enable_service neutron-dhcp
+enable_service neutron-l3
+enable_service neutron-metadata
+enable_service neutron-qos
+enable_service neutron-segments
+enable_service neutron-sfc
+
+# Neutron L3 and Metadata Agents
+enable_service q-svc
+enable_service q-dhcp
+enable_service q-l3
+enable_service q-meta
+
+# Explicitly enable ML2 plugin
+enable_plugin neutron https://opendev.org/openstack/neutron
+
+# Explicitly disable OVN
+disable_service ovn
+disable_service ovn-northd
+disable_service ovn-controller
+disable_service ovn-sb
+disable_service ovn-nb
+disable_service ovn-metadata-agent
+
+# ==========================
+# Horizon Configuration
+# ==========================
+enable_service horizon
+enable_service apache2
+enable_service keystone
+enable_service keystone-api
+enable_service keystone-admin
+enable_service keystone-svc
+
+# ==========================
+# Storage Configuration
+# ==========================
+VOLUME_BACKING_FILE_SIZE={{ cinder_volume_size }}
+SWIFT_HASH_SUFFIX={{ swift_hash_suffix }}
+SWIFT_REPLICAS={{ swift_replicas }}
+
+# ==========================
+# System Configuration
+# ==========================
+TIMEZONE={{ system_timezone }}
+
+# Additional settings
+RECLONE=yes
+OFFLINE=false
+USE_PYTHON3=true
+
+# Force traditional Neutron
+NEUTRON_OVN_ENABLED=False
+NEUTRON_OVN_METADATA_AGENT=False
+NEUTRON_OVN_SB_PORT=6642
+NEUTRON_OVN_NB_PORT=6641
+NEUTRON_OVN_METADATA_PORT=9697 

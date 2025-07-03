@@ -1,0 +1,5 @@
+---
+- name: Restart placement-api
+  service:
+    name: placement-api
+    state: restarted

@@ -1,0 +1,38 @@
+---
+- name: Install nova-compute
+  apt:
+    name: nova-compute
+    state: present
+
+- name: Configure nova-compute
+  template:
+    src: nova-compute.conf.j2
+    dest: /etc/nova/nova.conf
+    owner: root
+    group: nova
+    mode: 0640
+  notify: Restart nova-compute
+
+- name: Ensure nova-compute is started and enabled
+  service:
+    name: nova-compute
+    state: started
+    enabled: yes
+
+- name: Grant all privileges on nova_api to nova user
+  mysql_user:
+    name: nova
+    host: '%'
+    password: "{{ nova_db_password }}"
+    priv: "nova_api.*:ALL"
+    state: present
+  become: yes
+
+- name: Grant all privileges on nova to nova user
+  mysql_user:
+    name: nova
+    host: '%'
+    password: "{{ nova_db_password }}"
+    priv: "nova.*:ALL"
+    state: present
+  become: yes

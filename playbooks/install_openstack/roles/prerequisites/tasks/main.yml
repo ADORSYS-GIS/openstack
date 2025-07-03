@@ -1,0 +1,222 @@
+---
+# Install system prerequisites for OpenStack
+
+- name: Check for KVM support
+  block:
+    - name: Verify KVM support
+      command: egrep -q '(vmx|svm)' /proc/cpuinfo
+      register: kvm_check
+      failed_when: false
+      changed_when: false
+    - name: Fail if KVM not supported
+      fail:
+        msg: "KVM virtualization is not supported on this system"
+      when: kvm_check.rc != 0
+
+- name: Verify system requirements
+  block:
+    - name: Check available memory
+      shell: free -m | awk '/^Mem:/{print $2}'
+      register: mem_size
+      changed_when: false
+    - name: Fail if memory is insufficient
+      fail:
+        msg: "Insufficient memory. Required: 4GB, Available: {{ mem_size.stdout }}MB"
+      when: mem_size.stdout | int < 4000
+
+    - name: Check available disk space
+      shell: df -BG / | awk 'NR==2 {print $4}' | sed 's/G//'
+      register: disk_space
+      changed_when: false
+    - name: Fail if disk space is insufficient
+      fail:
+        msg: "Insufficient disk space. Required: 20GB, Available: {{ disk_space.stdout }}GB"
+      when: disk_space.stdout | int < 20
+
+- name: Verify network interfaces
+  block:
+    - name: Check network interfaces
+      shell: |
+        for iface in ens3; do
+          ip link show $iface >/dev/null 2>&1
+        done
+      register: network_check
+      failed_when: false
+      changed_when: false
+    - name: Fail if interfaces missing
+      fail:
+        msg: "Required network interfaces are not available"
+      when: network_check.rc != 0
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  become: yes
+
+- name: Enable universe repository
+  apt_repository:
+    repo: "deb http://archive.ubuntu.com/ubuntu {{ ansible_distribution_release }} universe"
+    state: present
+  become: yes
+
+- name: Install required packages
+  apt:
+    name:
+      - git
+      - python3-pip
+      - python3-dev
+      - python3-venv
+      - python3-setuptools
+      - python3-wheel
+      - libffi-dev
+      - libssl-dev
+      - libxml2-dev
+      - libxslt1-dev
+      - libjpeg8-dev
+      - zlib1g-dev
+      - libmysqlclient-dev
+      - libpq-dev
+      - libsqlite3-dev
+      - libvirt-dev
+      - libvirt-daemon-system
+      - qemu-kvm
+      - qemu-utils
+      - libguestfs-tools
+      - openvswitch-switch
+      - openvswitch-common
+      - bridge-utils
+      - ntp
+      - ntpdate
+    state: present
+  become: yes
+  register: package_install
+  retries: 3
+  delay: 5
+  until: package_install is success
+
+- name: Get Python version
+  command: python3 --version
+  register: python_version
+  changed_when: false
+
+- name: Create Python virtual environment
+  command: "python3 -m venv /opt/stack/venv"
+  args:
+    creates: /opt/stack/venv
+  become: yes
+
+- name: Install Python packages in virtual environment
+  pip:
+    name:
+      - virtualenv
+      - setuptools
+      - wheel
+    executable: /opt/stack/venv/bin/pip
+    state: present
+  become: yes
+
+- name: Configure NTP
+  template:
+    src: ntp.conf.j2
+    dest: /etc/ntp.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  notify: restart ntp
+
+- name: Enable and start NTP service
+  systemd:
+    name: ntp
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Configure timezone
+  timezone:
+    name: "{{ system_timezone }}"
+  become: yes
+
+- name: Enable and start libvirt service
+  systemd:
+    name: libvirtd
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Load Open vSwitch kernel module
+  modprobe:
+    name: openvswitch
+    state: present
+  become: yes
+
+- name: Enable and start Open vSwitch services
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+    - openvswitch-switch
+  become: yes
+
+- name: Add stack user to libvirt group
+  user:
+    name: "{{ stack_user }}"
+    groups: libvirt
+    append: yes
+  become: yes
+
+- name: Configure system limits
+  template:
+    src: limits.conf.j2
+    dest: /etc/security/limits.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+
+- name: Configure sysctl parameters
+  template:
+    src: sysctl.conf.j2
+    dest: /etc/sysctl.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  notify: reload sysctl
+
+- name: Disable AppArmor for libvirt
+  file:
+    path: /etc/apparmor.d/disable/usr.sbin.libvirtd
+    state: link
+    src: /etc/apparmor.d/usr.sbin.libvirtd
+  become: yes
+  when: ansible_service_mgr == 'systemd'
+
+- name: Configure libvirt
+  template:
+    src: libvirtd.conf.j2
+    dest: /etc/libvirt/libvirtd.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  notify: restart libvirtd
+
+- name: Configure system parameters
+  template:
+    src: sysctl.conf.j2
+    dest: /etc/sysctl.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: reload sysctl
+
+- name: Configure system limits
+  template:
+    src: limits.conf.j2
+    dest: /etc/security/limits.conf
+    owner: root
+    group: root
+    mode: '0644'

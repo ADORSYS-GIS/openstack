@@ -1,0 +1,32 @@
+[client]
+default-character-set = utf8mb4
+
+[mysqld]
+user = mysql
+bind-address = {{ mysql_bind_address | default('0.0.0.0') }}
+port = 3306
+datadir = /var/lib/mysql
+socket = /var/lib/mysql/mysql.sock
+
+# Character set
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+
+# OpenStack recommended settings
+max_connections = 4096
+innodb_file_per_table = 1
+innodb_buffer_pool_size = 1G
+innodb_log_file_size = 256M
+innodb_flush_log_at_trx_commit = 1
+innodb_lock_wait_timeout = 600
+
+# Logging
+log-error = {{ mysql_log_error | default('/var/log/mysql/error.log') }}
+slow_query_log = 1
+slow_query_log_file = {{ mysql_slow_query_log | default('/var/log/mysql/mysql-slow.log') }}
+
+# General
+sql_mode = STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
+
+[mysql]
+default-character-set = utf8mb4

@@ -1,0 +1,12 @@
+---
+- name: Restart neutron-linuxbridge-agent
+  service:
+    name: neutron-linuxbridge-agent
+    state: restarted
+    enabled: yes
+
+- name: Restart nova-compute
+  service:
+    name: nova-compute
+    state: restarted
+    enabled: yes

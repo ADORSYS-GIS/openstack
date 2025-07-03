@@ -1,0 +1,8 @@
+[database]
+connection = mysql+pymysql://{{ keystone_db_name }}:{{ keystone_db_password }}@{{ controller_host }}/{{ keystone_db_name }}
+
+[token]
+provider = fernet
+
+[DEFAULT]
+log_dir = /var/log/keystone

@@ -1,0 +1,55 @@
+---
+# Database configuration
+neutron_db_name: neutron
+neutron_db_user: neutron
+neutron_db_host: "{{ groups['controllers'][0] }}"
+neutron_db_password: "NeutronPass"
+mysql_root_password: "password"
+
+# MySQL admin user and password
+mysql_admin_user: "admin"
+mysql_admin_password: "password"
+
+# Admin user and password
+admin_user: "admin"
+admin_password: "SecretPass"
+admin_project: "admin"
+
+# RabbitMQ configuration
+rabbitmq_user: openstack
+rabbitmq_password: "RabbitPass123"
+rabbitmq_host: "{{ groups['controllers'][0] }}"
+
+# Keystone configuration
+keystone_admin_url: "http://{{ groups['controllers'][0] }}:5000/v3"
+keystone_internal_url: "http://{{ groups['controllers'][0] }}:5000/v3"
+neutron_keystone_user: neutron
+neutron_keystone_password: "KeystonePass"
+service_project: service
+region_name: RegionOne
+
+# Network configuration
+overlay_interface: "{{ ansible_default_ipv4.interface }}"
+tenant_network_types: vxlan
+vni_ranges: 1:1000
+enable_security_group: true
+enable_ipset: true
+metadata_secret: "MetadataSecretPass"
+
+# Package configuration
+neutron_ubuntu_packages:
+  - neutron-server
+  - neutron-plugin-ml2
+  - neutron-linuxbridge-agent
+  - neutron-l3-agent
+  - neutron-dhcp-agent
+  - neutron-metadata-agent
+# In case we are using a centos distribution
+neutron_centos_packages:
+  - openstack-neutron
+  - openstack-neutron-ml2
+  - openstack-neutron-linuxbridge
+  - ebtables
+
+# OpenStack service project
+openstack_service_project: service

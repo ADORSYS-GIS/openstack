@@ -1,0 +1,45 @@
+---
+- name: Install Keystone packages
+  apt:
+    name: keystone
+    state: present
+
+- name: Configure Keystone
+  template:
+    src: keystone.conf.j2
+    dest: /etc/keystone/keystone.conf
+    owner: root
+    group: keystone
+    mode: 0640
+
+- name: Initialize Keystone DB
+  command: "keystone-manage db_sync"
+  args:
+    creates: /var/lib/keystone/keystone.db
+
+- name: Initialize Fernet keys for Keystone
+  command: keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+  args:
+    creates: /etc/keystone/fernet-keys/0
+
+- name: Initialize Credential keys for Keystone
+  command: keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
+  args:
+    creates: /etc/keystone/credential-keys/0
+
+- name: Bootstrap Keystone
+  command: >
+    keystone-manage bootstrap
+    --bootstrap-password {{ keystone_admin_password }}
+    --bootstrap-admin-url {{ keystone_admin_url }}
+    --bootstrap-internal-url {{ keystone_internal_url }}
+    --bootstrap-public-url {{ keystone_public_url }}
+    --bootstrap-region-id {{ region_name }}
+  when: not keystone_bootstrapped | default(false)
+  register: keystone_bootstrap
+  changed_when: keystone_bootstrap.rc == 0
+
+- name: Set Keystone bootstrapped fact
+  set_fact:
+    keystone_bootstrapped: true
+  when: keystone_bootstrap is changed

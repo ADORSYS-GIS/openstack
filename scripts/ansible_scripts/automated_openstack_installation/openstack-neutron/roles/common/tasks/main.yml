@@ -1,0 +1,35 @@
+---
+# This is to install the dependencies that are needed like database incase not present and also openstack client
+- name: Install common dependencies
+  apt:
+    name:
+      - python3-neutronclient
+      - python3-mysqldb
+    state: present
+    
+- name: Ensure neutron group exists
+  ansible.builtin.group:
+    name: neutron
+    state: present
+
+- name: Ensure /etc/neutron directory exists
+  file:
+    path: /etc/neutron
+    state: directory
+    owner: root
+    group: neutron
+    mode: '0755'
+
+- name: Configure common neutron settings
+  template:
+    src: neutron-common.conf.j2
+    dest: /etc/neutron/neutron.conf
+    owner: root
+    group: neutron
+    mode: "0640"
+  notify:
+    - Restart neutron-server
+    - Restart neutron-linuxbridge-agent
+    - Restart neutron-l3-agent
+    - Restart neutron-dhcp-agent
+    - Restart neutron-metadata-agent
