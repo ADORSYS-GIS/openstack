@@ -6,12 +6,11 @@ Vagrant.configure("2") do |config|
     config.vm.hostname = "ci-keystone"
     config.vm.boot_timeout = 180
 
-    # Use root login with password for Docker image
     config.ssh.username = "root"
     config.ssh.password = "root"
     config.ssh.insert_key = false
 
-    # Disable default synced folder to avoid /etc/fstab error
+    # Explicitly disable synced folders in Docker provider
     config.vm.synced_folder ".", "/vagrant", disabled: true
 
     config.vm.provider "docker" do |docker|
@@ -32,6 +31,8 @@ Vagrant.configure("2") do |config|
     # Local Libvirt development configuration
     config.vm.box = "generic/ubuntu2204"
     config.vm.hostname = "dev-keystone"
+
+    # Only use synced folder locally
     config.vm.synced_folder ".", "/vagrant"
 
     config.vm.provider "libvirt" do |libvirt|
