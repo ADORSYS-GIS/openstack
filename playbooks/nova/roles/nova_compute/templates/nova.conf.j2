@@ -1,0 +1,44 @@
+[DEFAULT]
+enabled_apis = osapi_compute,metadata
+transport_url = rabbit://openstack:password@{{ controller_host }}
+my_ip = {{ ansible_default_ipv4.address }}
+use_neutron = true
+firewall_driver = nova.virt.firewall.NoopFirewallDriver
+
+[api]
+auth_strategy = keystone
+
+[keystone_authtoken]
+auth_url = http://{{ controller_host }}:5000/v3
+memcached_servers = {{ controller_host }}:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = nova
+password = {{ nova_user_password }}
+
+[vnc]
+enabled = true
+vncserver_listen = 0.0.0.0
+vncserver_proxyclient_address = {{ ansible_default_ipv4.address }}
+novncproxy_base_url = http://{{ controller_host }}:6080/vnc_auto.html
+
+[glance]
+api_servers = http://{{ controller_host }}:9292
+
+[oslo_concurrency]
+lock_path = /var/lib/nova/tmp
+
+[placement]
+region_name = RegionOne
+project_domain_name = Default
+project_name = service
+auth_type = password
+user_domain_name = Default
+auth_url = http://{{ controller_host }}:5000/v3
+username = placement
+password = {{ nova_user_password }}
+
+[libvirt]
+virt_type = {{ virt_type }}

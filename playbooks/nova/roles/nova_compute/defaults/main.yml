@@ -1,0 +1,3 @@
+---
+controller_host: "controller"
+virt_type: "kvm"

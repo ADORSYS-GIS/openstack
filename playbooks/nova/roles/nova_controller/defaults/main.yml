@@ -1,0 +1,3 @@
+---
+nova_connection: "mysql+pymysql://nova:{{ nova_db_password }}@controller/nova"
+compute_host: controller

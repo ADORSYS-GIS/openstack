@@ -1,0 +1,24 @@
+---
+- name: Install KVM and virtualization packages
+  package:
+    name: "{{ kvm_packages }}"
+    state: present
+
+- name: Check if CPU supports virtualization
+  command: kvm-ok
+  register: kvm_check
+  failed_when: kvm_check.rc != 0 or "'KVM acceleration can be used' not in kvm_check.stdout"
+
+- name: Ensure nova user to libvirt group
+  user:
+    name: nova
+    groups: libvirt
+    append: yes
+    state: present
+
+- name: Enable and start libvirt-related services
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop: "{{ libvirt_services }}"

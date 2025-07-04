@@ -1,0 +1,52 @@
+---
+- name: Check Keystone availability by requesting token
+  uri:
+    url: "{{ keystone_url }}{{ keystone_token_path }}"
+    method: POST
+    body_format: json
+    return_content: true
+    status_code: 201
+    headers:
+      Content-Type: application/json
+    body: >
+      {
+        "auth": {
+          "identity": {
+            "methods": ["password"],
+            "password": {
+              "user": {
+                "name": "{{ keystone_user }}",
+                "domain": { "id": "default" },
+                "password": "{{ keystone_password }}"
+              }
+            }
+          },
+          "scope": {
+            "project": {
+              "name": "{{ keystone_project }}",
+              "domain": { "id": "default" }
+            }
+          }
+        }
+      }
+  register: keystone_response
+  no_log: true
+
+- name: Extract Keystone token
+  set_fact:
+    keystone_token: "{{ keystone_response['headers']['X-Subject-Token'] }}"
+
+- name: Check Glance service availability
+  uri:
+    url: "{{ keystone_url | regex_replace('/v3$', '') }}/{{ glance_check_endpoint }}"
+    method: GET
+    headers:
+      X-Auth-Token: "{{ keystone_token }}"
+    status_code: 200
+  register: glance_response
+
+- name: Assert Glance is reachable
+  assert:
+    that:
+      - glance_response.status == 200
+    fail_msg: "Glance is not responding. Ensure Glance (US2.4) is installed and accessible."

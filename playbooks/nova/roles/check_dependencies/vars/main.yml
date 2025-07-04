@@ -1,0 +1,3 @@
+---
+keystone_token_path: "/v3/auth/tokens"
+glance_check_endpoint: "/v2/images"

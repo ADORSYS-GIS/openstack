@@ -1,0 +1,59 @@
+---
+- name: Ensure OpenStack credentials are present
+  assert:
+    that:
+      - lookup('env', 'OS_AUTH_URL') != ''
+    fail_msg: "Keystone credentials not set — did you source admin-openrc?"
+
+- name: Create keypair if needed
+  when: test_vm_create_keypair
+  openstack.cloud.keypair:
+    name: "{{ test_vm_keypair }}"
+    state: present
+    public_key_file: "{{ test_vm_key_path }}.pub"
+
+- name: Boot test VM instance
+  openstack.cloud.server:
+    name: "{{ test_vm_name }}"
+    image: "{{ test_vm_image }}"
+    flavor: "{{ test_vm_flavor }}"
+    network: "{{ test_vm_network }}"
+    key_name: "{{ test_vm_keypair }}"
+    wait: true
+    timeout: "{{ test_vm_timeout }}"
+    auto_ip: false
+    state: present
+  register: vm_boot
+
+- name: Assert test VM is ACTIVE
+  assert:
+    that:
+      - vm_boot.server.status == "ACTIVE"
+    fail_msg: "Test VM failed to reach ACTIVE state. Status: {{ vm_boot.server.status }}"
+
+- name: Print test VM info
+  debug:
+    msg: "Test VM {{ test_vm_name }} is ACTIVE. ID: {{ vm_boot.server.id }}"
+
+- name: Delete test VM
+  when: test_vm_cleanup
+  openstack.cloud.server:
+    name: "{{ test_vm_name }}"
+    state: absent
+    wait: true
+    timeout: "{{ test_vm_timeout }}"
+
+- name: Remove keypair
+  when: test_vm_cleanup and test_vm_create_keypair
+  openstack.cloud.keypair:
+    name: "{{ test_vm_keypair }}"
+    state: absent
+
+- name: Remove local key files
+  when: test_vm_cleanup and test_vm_create_keypair
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ test_vm_key_path }}"
+    - "{{ test_vm_key_path }}.pub"

@@ -1,0 +1,6 @@
+---
+keystone_url: "{{ lookup('env', 'OS_AUTH_URL') }}"
+keystone_user: "{{ lookup('env', 'OS_USERNAME') }}"
+keystone_password: "{{ lookup('env', 'OS_PASSWORD') }}"
+keystone_project: "{{ lookup('env', 'OS_PROJECT_NAME') }}"
+glance_url: "{{ lookup('env', 'OS_IMAGE_API_VERSION') | default('v2') }}"

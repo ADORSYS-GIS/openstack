@@ -1,0 +1,7 @@
+---
+galaxy_info:
+  author: onel
+  description: Nova Compute installation and configuration
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu

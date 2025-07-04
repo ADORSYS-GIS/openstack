@@ -1,0 +1,23 @@
+---
+- name: Map cell0 (idempotent)
+  become: true
+  command: "{{ nova_manage_cmd }} cell_v2 map_cell0"
+  register: map_cell0_result
+  changed_when: "'Cell0 is already setup' not in map_cell0_result.stdout"
+  failed_when: map_cell0_result.rc != 0 and 'Cell0 is already setup' not in map_cell0_result.stdout
+
+- name: Create cell1 (if not exists)
+  become: true
+  command: >
+    {{ nova_manage_cmd }} cell_v2 create_cell --name=cell1 --verbose
+  register: create_cell1_result
+  changed_when: "'already exists' not in create_cell1_result.stderr"
+  failed_when: create_cell1_result.rc != 0 and 'already exists' not in create_cell1_result.stderr
+
+- name: Discover compute hosts
+  become: true
+  command: >
+    {{ nova_manage_cmd }} cell_v2 discover_hosts --verbose
+  register: discover_hosts_result
+  changed_when: "'0 hosts' not in discover_hosts_result.stdout"
+  failed_when: discover_hosts_result.rc != 0

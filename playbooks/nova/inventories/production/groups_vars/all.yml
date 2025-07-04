@@ -1,0 +1,3 @@
+nova_db_password: "nova_db_pass"
+nova_user_password: "nova_user_pass"
+
