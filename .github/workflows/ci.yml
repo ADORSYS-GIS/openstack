@@ -1,3 +1,11 @@
+name: CI Test for OpenStack Keystone (Ansible only)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
 jobs:
   keystone-ci:
     runs-on: ubuntu-latest
@@ -29,3 +37,4 @@ jobs:
 
       - name: Run Vagrant-based CI test
         run: ./ci-test.sh
+
