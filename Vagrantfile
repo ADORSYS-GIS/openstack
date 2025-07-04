@@ -10,10 +10,9 @@ Vagrant.configure("2") do |config|
     config.vm.hostname = "ci-keystone"
 
     config.vm.provider "docker" do |docker|
-      docker.image = "ubuntu:22.04"
+      docker.image = "rastasheep/ubuntu-sshd:22.04"
       docker.has_ssh = true
       docker.remains_running = true
-      docker.cmd = ["/bin/bash", "-c", "while true; do sleep 1000; done"]
     end
 
     config.vm.provision "ansible" do |ansible|
