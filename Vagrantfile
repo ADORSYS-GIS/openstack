@@ -2,17 +2,16 @@
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
-  # Shared synced folder (local host <-> guest VM)
   config.vm.synced_folder ".", "/vagrant"
 
   if ENV["CI"]
-    # CI-specific: Use Docker provider for GitHub Actions
     config.vm.hostname = "ci-keystone"
 
     config.vm.provider "docker" do |docker|
-     docker.image = "rastasheep/ubuntu-sshd:18.04"
-     docker.has_ssh = true
-     docker.remains_running = true
+      docker.image = "rastasheep/ubuntu-sshd:22.04"
+      docker.has_ssh = true
+      docker.remains_running = true
+      docker.ports = ["2222:22"]
     end
 
     config.vm.provision "ansible" do |ansible|
@@ -23,9 +22,7 @@ Vagrant.configure("2") do |config|
       }
     end
   else
-    # Local development: Use Libvirt
     config.vm.box = "generic/ubuntu2204"
-
     config.vm.hostname = "dev-keystone"
 
     config.vm.provider "libvirt" do |libvirt|
