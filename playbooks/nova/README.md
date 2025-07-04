@@ -1,9 +1,3 @@
-Here’s the **enhanced and mature version** of your `README.md`, with an added section noting that `group_vars/all.yml` contains vaulted secrets like database and Keystone passwords.
-
-I’ve preserved your structure and tone exactly as requested, only extending where appropriate:
-
----
-
 # OpenStack Nova Ansible Automation
 
 This project provides an **idempotent, role-based Ansible automation framework** for deploying and validating the OpenStack Nova (Compute) service across controller and compute nodes. It is designed for reproducible, production-grade deployments on Ubuntu-based systems.
