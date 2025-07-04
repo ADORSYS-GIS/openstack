@@ -2,16 +2,17 @@
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
-  config.vm.synced_folder ".", "/vagrant"
-
   if ENV["CI"]
     config.vm.hostname = "ci-keystone"
     config.vm.boot_timeout = 180
 
-    # Use root user and password for Docker image ssh login
+    # Use root login with password for Docker image
     config.ssh.username = "root"
     config.ssh.password = "root"
     config.ssh.insert_key = false
+
+    # Disable default synced folder to avoid /etc/fstab error
+    config.vm.synced_folder ".", "/vagrant", disabled: true
 
     config.vm.provider "docker" do |docker|
       docker.image = "rastasheep/ubuntu-sshd:18.04"
@@ -28,8 +29,10 @@ Vagrant.configure("2") do |config|
       }
     end
   else
+    # Local Libvirt development configuration
     config.vm.box = "generic/ubuntu2204"
     config.vm.hostname = "dev-keystone"
+    config.vm.synced_folder ".", "/vagrant"
 
     config.vm.provider "libvirt" do |libvirt|
       libvirt.memory = 4096
