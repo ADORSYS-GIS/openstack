@@ -25,48 +25,48 @@ There are two types of VLANs:
 ```mermaid
 flowchart TD
     subgraph "Physical Network Infrastructure"
-        SW["Switch"] 
+        SW["Switch"]
     end
-    
+
     subgraph "VLAN 10 (Marketing)"
         PC1["Computer 1\nIP: 192.168.10.2\nVLAN 10"]
         PC2["Computer 2\nIP: 192.168.10.3\nVLAN 10"]
     end
-    
+
     subgraph "VLAN 20 (Engineering)"
         PC3["Computer 3\nIP: 192.168.20.2\nVLAN 20"]
         PC4["Computer 4\nIP: 192.168.20.3\nVLAN 20"]
     end
-    
+
     subgraph "VLAN 30 (Finance)"
         PC5["Computer 5\nIP: 192.168.30.2\nVLAN 30"]
         PC6["Computer 6\nIP: 192.168.30.3\nVLAN 30"]
     end
-    
+
     SW --- PC1
     SW --- PC2
     SW --- PC3
     SW --- PC4
     SW --- PC5
     SW --- PC6
-    
+
     RT["Router\n(Inter-VLAN Routing)"]
     SW --- RT
-    
+
     PC1 <--> PC2
     PC3 <--> PC4
     PC5 <--> PC6
-    
+
     PC1 <-.-> |"Traffic Isolated\nUnless Routed"| PC3
     PC3 <-.-> |"Traffic Isolated\nUnless Routed"| PC5
     PC5 <-.-> |"Traffic Isolated\nUnless Routed"| PC1
-    
+
     classDef vlan10 fill:#ffcccc,stroke:#ff0000
     classDef vlan20 fill:#ccffcc,stroke:#00ff00
     classDef vlan30 fill:#ccccff,stroke:#0000ff
     classDef network fill:#f9f9f9,stroke:#666666
     classDef router fill:#ffffcc,stroke:#ffcc00
-    
+
     class PC1,PC2 vlan10
     class PC3,PC4 vlan20
     class PC5,PC6 vlan30

@@ -1,7 +1,7 @@
 # Project information
 site_name: Adorsys OpenStack
-site_description: 'OpenStack project backed by adorsys'
-site_url: 'https://openstack.github.io/adorsys-gis'
+site_description: "OpenStack project backed by adorsys"
+site_url: "https://openstack.github.io/adorsys-gis"
 
 # Theme settings
 theme:

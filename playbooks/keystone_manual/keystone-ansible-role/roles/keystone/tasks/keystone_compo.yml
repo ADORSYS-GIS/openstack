@@ -1,0 +1,8 @@
+- name: Install Keystone and Apache2 with WSGI module
+  apt:
+    name:
+      - keystone
+      - apache2
+      - libapache2-mod-wsgi-py3
+    state: present
+    update_cache: yes

@@ -1,0 +1,27 @@
+---
+# Variables for Keystone Ansible Role
+
+# Database configuration
+db_name: keystone
+db_user: keystone
+db_password: password
+mysql_root_password: password
+
+# Keystone configuration
+keystone_admin_password: "adminPass"
+keystone_region: "RegionOne"
+keystone_admin_url: "http://localhost:5000/v3/"
+keystone_internal_url: "http://localhost:5000/v3/"
+keystone_public_url: "http://localhost:5000/v3/"
+KEYSTONE_DBPASS: password
+
+# OpenRC configuration
+openrc_owner: ubuntu
+openrc_path: /home/ubuntu/openrc
+os_username: admin
+os_password: adminPass
+os_project: admin
+os_user_domain: Default
+os_project_domain: Default
+os_auth_url: http://localhost:5000/v3
+os_identity_api_version: 3

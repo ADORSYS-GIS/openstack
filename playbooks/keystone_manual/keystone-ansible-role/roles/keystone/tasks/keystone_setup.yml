@@ -1,0 +1,8 @@
+- name: Install and configure Keystone
+  include_tasks: db_initialise.yml
+  include_tasks: keystone_compo.yml
+  include_tasks: keystone_setup.yml
+  include_tasks: fernet_config.yml
+  include_tasks: keystone_bootstrap.yml
+  include_tasks: apache2_conf.yml
+  include_tasks: create_openrc.yml

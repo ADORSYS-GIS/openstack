@@ -1,0 +1,23 @@
+- name: Create OpenStack OpenRC file and configure environment
+  copy:
+    dest: "/home/vagrant/openrc"
+    content: |
+      export OS_USERNAME={{ os_username }}
+      export OS_PASSWORD={{ os_password }}
+      export OS_PROJECT_NAME={{ os_project }}
+      export OS_USER_DOMAIN_NAME={{ os_user_domain }}
+      export OS_PROJECT_DOMAIN_NAME={{ os_project_domain }}
+      export OS_AUTH_URL={{ os_auth_url }}
+      export OS_IDENTITY_API_VERSION={{ os_identity_api_version }}
+    owner: vagrant 
+    group: vagrant 
+    mode: "0644"
+
+- name: Ensure openrc is sourced in .zshrc
+  lineinfile:
+    path: "/home/vagrant/.bashrc"
+    line: "source ~/openrc"
+    state: present
+    create: yes
+    owner:  vagrant 
+    group: vagrant 

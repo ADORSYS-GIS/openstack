@@ -1,0 +1,9 @@
+- name: Initialize Fernet key repository
+  command: keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+  args:
+    creates: /etc/keystone/fernet-keys/0
+
+- name: Initialize Credential key repository
+  command: keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
+  args:
+    creates: /etc/keystone/credential-keys/0
