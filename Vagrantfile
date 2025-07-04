@@ -10,8 +10,9 @@ Vagrant.configure("2") do |config|
     config.ssh.password = "root"
     config.ssh.insert_key = false
 
-    # Explicitly disable synced folders in Docker provider
+    # Disable synced folders and fstab updates in Docker
     config.vm.synced_folder ".", "/vagrant", disabled: true
+    config.vm.allow_fstab_modification = false
 
     config.vm.provider "docker" do |docker|
       docker.image = "rastasheep/ubuntu-sshd:18.04"
@@ -32,7 +33,6 @@ Vagrant.configure("2") do |config|
     config.vm.box = "generic/ubuntu2204"
     config.vm.hostname = "dev-keystone"
 
-    # Only use synced folder locally
     config.vm.synced_folder ".", "/vagrant"
 
     config.vm.provider "libvirt" do |libvirt|
