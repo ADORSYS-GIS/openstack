@@ -6,6 +6,12 @@ Vagrant.configure("2") do |config|
 
   if ENV["CI"]
     config.vm.hostname = "ci-keystone"
+    config.vm.boot_timeout = 180
+
+    # Use root user and password for Docker image ssh login
+    config.ssh.username = "root"
+    config.ssh.password = "root"
+    config.ssh.insert_key = false
 
     config.vm.provider "docker" do |docker|
       docker.image = "rastasheep/ubuntu-sshd:18.04"
