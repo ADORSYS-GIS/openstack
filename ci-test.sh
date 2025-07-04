@@ -3,7 +3,7 @@ set -e
 
 # 1. Bring up the Vagrant VM and run provisioning
 echo "[CI] Starting Vagrant VM..."
-vagrant up --provider=libvirt
+vagrant up --provider=docker
 
 # 2. Get the VM's IP address (using the default libvirt network)
 VM_IP=$(vagrant ssh -c "hostname -I | awk '{print \$2}'" | tr -d '\r')
