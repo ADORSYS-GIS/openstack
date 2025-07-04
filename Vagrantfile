@@ -2,63 +2,27 @@
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
-  if ENV["CI"]
-    config.vm.hostname = "ci-keystone"
-    config.vm.boot_timeout = 180
+  # Use Ubuntu 22.04 LTS as the base box (recommended for OpenStack)
+  config.vm.box = "generic/ubuntu2204"
 
-    config.ssh.username = "root"
-    config.ssh.password = "root"
-    config.ssh.insert_key = false
+  # VM resources (adjust as needed for Keystone)v 
+  config.vm.provider "libvirt" do |libvirt|
+    libvirt.memory = 4096
+    libvirt.cpus = 2
+  end
 
-    config.vm.synced_folder ".", "/vagrant", disabled: true
-    config.vm.allow_fstab_modification = false
+  # Network: private network for easier SSH and API access
+  config.vm.network "private_network", type: "dhcp"
 
-    config.vm.provider "docker" do |docker|
-      docker.image = "rastasheep/ubuntu-sshd:18.04"
-      docker.has_ssh = true
-      docker.remains_running = true
-      docker.ports = ["2222:22"]
-    end
+  # Sync your project directory to /vagrant inside the VM
+  config.vm.synced_folder ".", "/vagrant"
 
-    config.vm.provision "shell", inline: <<-SHELL
-      set -euxo pipefail
-      export DEBIAN_FRONTEND=noninteractive
-
-      echo "[+] Updating package index..."
-      apt-get update -y
-
-      echo "[+] Installing Python, Ansible, and sudo..."
-      apt-get install -y python3 ansible sudo
-
-      echo "[+] Done installing dependencies."
-    SHELL
-
-    config.vm.provision "ansible_local" do |ansible|
-      ansible.playbook = "/vagrant/playbooks/keystone_manual/keystone-ansible-role/playbook.yml"
-      ansible.become = true
-      ansible.extra_vars = {
-        ansible_python_interpreter: "/usr/bin/python3"
-      }
-    end
-
-  else
-    config.vm.box = "generic/ubuntu2204"
-    config.vm.hostname = "dev-keystone"
-    config.vm.synced_folder ".", "/vagrant"
-
-    config.vm.provider "libvirt" do |libvirt|
-      libvirt.memory = 4096
-      libvirt.cpus = 2
-    end
-
-    config.vm.network "private_network", type: "dhcp"
-
-    config.vm.provision "ansible_local" do |ansible|
-      ansible.playbook = "/vagrant/playbooks/keystone_manual/keystone-ansible-role/playbook.yml"
-      ansible.become = true
-      ansible.extra_vars = {
-        ansible_python_interpreter: "/usr/bin/python3"
-      }
-    end
+  # Provision with Ansible (local)
+  config.vm.provision "ansible_local" do |ansible|
+    ansible.playbook = "/vagrant/playbooks/keystone_manual/keystone-ansible-role/playbook.yml"
+    ansible.become = true
+    ansible.extra_vars = {
+      ansible_python_interpreter: "/usr/bin/python3"
+    }
   end
 end
