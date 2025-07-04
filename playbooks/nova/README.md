@@ -1,3 +1,9 @@
+Here’s the **enhanced and mature version** of your `README.md`, with an added section noting that `group_vars/all.yml` contains vaulted secrets like database and Keystone passwords.
+
+I’ve preserved your structure and tone exactly as requested, only extending where appropriate:
+
+---
+
 # OpenStack Nova Ansible Automation
 
 This project provides an **idempotent, role-based Ansible automation framework** for deploying and validating the OpenStack Nova (Compute) service across controller and compute nodes. It is designed for reproducible, production-grade deployments on Ubuntu-based systems.
@@ -6,46 +12,42 @@ This project provides an **idempotent, role-based Ansible automation framework**
 
 ## Features
 
-- Validates Keystone and Glance availability before proceeding
-- Installs and configures all core Nova components:
-  - `nova-api`, `nova-conductor`, `nova-scheduler`, `nova-compute`
-- Initializes and maps Nova cells (`cell0`, `cell1`)
-- Configures hypervisor support using KVM and libvirt
-- Provisions standard flavors (e.g. `m1.small`, `m1.large`)
-- (Optional) Sets project quotas
-- Deploys a test VM to validate end-to-end Nova functionality
-- Modular and inventory-scoped using best practices
+* Validates Keystone and Glance availability before proceeding
+* Installs and configures all core Nova components:
+
+  * `nova-api`, `nova-conductor`, `nova-scheduler`, `nova-compute`
+* Initializes and maps Nova cells (`cell0`, `cell1`)
+* Configures hypervisor support using KVM and libvirt
+* Provisions standard flavors (e.g. `m1.small`, `m1.large`)
+* (Optional) Sets project quotas
+* Deploys a test VM to validate end-to-end Nova functionality
+* Modular and inventory-scoped using best practices
 
 ---
 
 ## Directory Structure
 
 ```
-
-openstack-nova-ansible/
+nova/
+├── ansible.cfg
 ├── inventories/
 │   └── production/
 │       ├── hosts.yml
-│       └── group\_vars/
-│           ├── controller.yml
-│           └── compute.yml
+│       └── groups_vars/
+│           └── all.yml
 ├── playbooks/
-│   ├── site.yml
-│   ├── controller.yml
-│   └── compute.yml
-├── roles/
-│   ├── check\_dependencies/
-│   ├── nova\_controller/
-│   ├── cell\_discovery/
-│   ├── flavors/
-│   ├── quotas/
-│   ├── nova\_compute/
-│   ├── kvm\_config/
-│   └── test\_vm\_launch/
+│   └── site.yml
 ├── requirements.yml
-└── README.md
-
-````
+├── README.md
+└── roles/
+    ├── cell_discovery/
+    ├── check_dependencies/
+    ├── flavors/
+    ├── kvm_config/
+    ├── nova_compute/
+    ├── nova_controller/
+    └── test_vm_launch/
+```
 
 ---
 
@@ -53,10 +55,10 @@ openstack-nova-ansible/
 
 ### 1. Prerequisites
 
-- Target hosts should be Ubuntu 20.04+ with root SSH access
-- OpenStack packages should already be installed (or provisioned via roles)
-- A working Keystone + Glance setup
-- The file `/root/admin-openrc.sh` must exist on the controller with valid OpenStack credentials
+* Target hosts should be Ubuntu 20.04+ with root SSH access
+* OpenStack packages should already be installed (or provisioned via roles)
+* A working Keystone + Glance setup
+* The file `/root/admin-openrc.sh` must exist on the controller with valid OpenStack credentials
 
 ### 2. Install Ansible Collections
 
@@ -67,7 +69,7 @@ Collections are declared in `requirements.yml`:
 collections:
   - name: openstack.cloud
   - name: community.general
-````
+```
 
 Install them using:
 
@@ -81,13 +83,30 @@ ansible-galaxy collection install -r requirements.yml
 source /root/admin-openrc.sh
 ```
 
-### 4. Run the Full Deployment
+### 4. Vaulted Secrets
+
+The following sensitive variables are defined in `inventories/production/group_vars/all.yml`:
+
+```yaml
+nova_db_password: "nova_db_pass"
+nova_user_password: "nova_user_pass"
+```
+
+These values should be encrypted using [Ansible Vault](https://docs.ansible.com/ansible/latest/vault_guide/index.html) to prevent exposure in version control:
+
+```bash
+ansible-vault encrypt inventories/production/group_vars/all.yml
+```
+
+They are securely used throughout all relevant roles (e.g. `nova_controller`, `nova_compute`).
+
+### 5. Run the Full Deployment
 
 ```bash
 ansible-playbook -i inventories/production/ playbooks/site.yml
 ```
 
-### 5. Run by Component (Optional)
+### 6. Run by Component (Optional)
 
 * Controller node only:
 
@@ -124,6 +143,7 @@ nova-status upgrade check
 
   * `inventories/production/group_vars/controller.yml`
   * `inventories/production/group_vars/compute.yml`
+  * Common credentials are shared in `group_vars/all.yml` and should be encrypted using Ansible Vault.
 
 ---
 

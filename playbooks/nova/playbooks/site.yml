@@ -7,7 +7,6 @@
     - nova_controller
     - cell_discovery
     - flavors
-    - quotas
 
 - hosts: compute
   gather_facts: true

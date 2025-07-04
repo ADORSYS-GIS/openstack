@@ -2,5 +2,6 @@
 galaxy_info:
   author: onel
   description: Nova Compute installation and configuration
-  license: MIT
-  min_ansible_version: 2.9
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
