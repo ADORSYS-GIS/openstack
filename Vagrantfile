@@ -10,7 +10,7 @@ Vagrant.configure("2") do |config|
     config.ssh.password = "root"
     config.ssh.insert_key = false
 
-    # Disable default synced folder and fstab writing
+    # Disable default synced folder and fstab modification in Docker
     config.vm.synced_folder ".", "/vagrant", disabled: true
     config.vm.allow_fstab_modification = false
 
@@ -21,12 +21,15 @@ Vagrant.configure("2") do |config|
       docker.ports = ["2222:22"]
     end
 
-    # Optional: Ensure python3 and ansible are available
+    # Provision system packages needed for Ansible
     config.vm.provision "shell", inline: <<-SHELL
-      apt update
-      apt install -y python3 ansible sudo
+      set -eux
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update || true
+      apt-get install -y python3 ansible sudo || true
     SHELL
 
+    # Run the Ansible playbook inside the container
     config.vm.provision "ansible_local" do |ansible|
       ansible.playbook = "/vagrant/playbooks/keystone_manual/keystone-ansible-role/playbook.yml"
       ansible.become = true
@@ -34,8 +37,9 @@ Vagrant.configure("2") do |config|
         ansible_python_interpreter: "/usr/bin/python3"
       }
     end
+
   else
-    # Local Libvirt development configuration
+    # Local development with Libvirt
     config.vm.box = "generic/ubuntu2204"
     config.vm.hostname = "dev-keystone"
     config.vm.synced_folder ".", "/vagrant"
@@ -47,6 +51,7 @@ Vagrant.configure("2") do |config|
 
     config.vm.network "private_network", type: "dhcp"
 
+    # Use ansible_local since it's consistent with Docker setup
     config.vm.provision "ansible_local" do |ansible|
       ansible.playbook = "/vagrant/playbooks/keystone_manual/keystone-ansible-role/playbook.yml"
       ansible.become = true
