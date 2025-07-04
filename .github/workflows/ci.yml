@@ -14,16 +14,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies (Ansible, Python, etc.)
+      - name: Install Ansible and Python
         run: |
           sudo apt-get update
           sudo apt-get install -y python3 python3-pip ansible
 
-      - name: Set executable permissions
+      - name: Set executable permissions on ci-test.sh
         run: chmod +x ./ci-test.sh
 
-      - name: Run CI test script (Ansible Playbooks)
-        run: ./ci-test.sh
+      - name: Run Ansible Playbook directly
+        run: |
+          ansible-playbook \
+            -i playbooks/keystone_manual/keystone-ansible-role/inventory.ini \
+            playbooks/keystone_manual/keystone-ansible-role/playbook.yml \
+            -vvv
 
       - name: Upload logs if failed
         if: failure()
