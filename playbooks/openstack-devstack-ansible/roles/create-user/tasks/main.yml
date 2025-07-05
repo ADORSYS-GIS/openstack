@@ -1,0 +1,28 @@
+---
+- name: Create 'stack' user
+  user:
+    name: "{{ stack_user }}"
+    comment: DevStack user
+    shell: /bin/bash
+    home: /opt/stack
+    create_home: yes
+    group: wheel
+    state: present
+
+- name: Ensure /opt/stack directory exists with correct permissions
+  file:
+    path: /opt/stack
+    state: directory
+    owner: stack
+    group: wheel
+    mode: '0755'
+
+- name: Allow 'stack' user passwordless sudo
+  copy:
+    dest: /etc/sudoers.d/stack
+    content: |
+      stack ALL=(ALL) NOPASSWD:ALL
+    owner: root
+    group: root
+    mode: '0440'
+    validate: '/usr/sbin/visudo -cf %s'

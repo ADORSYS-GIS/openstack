@@ -1,0 +1,30 @@
+---
+- name: Create environment setup script for stack user
+  copy:
+    dest: /opt/stack/.devstack_env
+    content: |
+      export FORCE=yes
+      export DEST=/opt/stack
+      export HOST_IP={{ ansible_default_ipv4.address }}
+      export PATH="$HOME/.local/bin:$PATH"
+    owner: stack
+    group: wheel
+    mode: '0644'
+
+- name: Ensure .bashrc exists for stack user
+  file:
+    path: /opt/stack/.bashrc
+    state: touch
+    owner: stack
+    group: wheel
+    mode: '0644'
+
+- name: Ensure .bashrc sources environment script
+  lineinfile:
+    path: /opt/stack/.bashrc
+    line: 'source $HOME/.devstack_env'
+    state: present
+    insertafter: EOF
+    owner: stack
+    group: wheel
+    create: yes

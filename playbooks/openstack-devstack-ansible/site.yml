@@ -1,12 +1,15 @@
 ---
-- name: Install OpenStack via DevStack
-  hosts: all
+- name: Modular DevStack Deployment
+  hosts: devstack
   become: yes
-
+  vars_files:
+    - vault.yml
   roles:
+    - detect-system
     - prerequisites
     - create-user
     - setup-env
     - clone-devstack
+    - configure-devstack
     - run-devstack
     - post-install

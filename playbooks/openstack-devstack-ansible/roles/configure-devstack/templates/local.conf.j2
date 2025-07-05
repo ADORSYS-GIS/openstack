@@ -1,0 +1,106 @@
+[[local|localrc]]
+# Branch
+OS_BRANCH={{ openstack_branch }}
+
+# Passwords
+ADMIN_PASSWORD={{ ADMIN_PASSWORD }}
+DATABASE_PASSWORD={{ DATABASE_PASSWORD }}
+RABBIT_PASSWORD={{ RABBIT_PASSWORD }}
+SERVICE_PASSWORD={{ SERVICE_PASSWORD }}
+
+# Per-service passwords
+KEYSTONE_PASSWORD={{ KEYSTONE_PASSWORD }}
+GLANCE_PASSWORD={{ GLANCE_PASSWORD }}
+NOVA_PASSWORD={{ NOVA_PASSWORD }}
+NEUTRON_PASSWORD={{ NEUTRON_PASSWORD }}
+CINDER_PASSWORD={{ CINDER_PASSWORD }}
+
+# Network
+HOST_IP={{ ansible_default_ipv4.address }}
+FIXED_RANGE=10.0.0.0/24
+NETWORK_GATEWAY=10.0.0.1
+PUBLIC_INTERFACE={{ default_interface }}
+FLOATING_RANGE=172.24.4.0/24
+
+# Logging & Debug
+LOGFILE=/opt/stack/logs/stack.sh.log
+LOGDAYS=2
+VERBOSE=True
+LOG_COLOR=True
+ENABLE_DEBUG_LOG_LEVEL=True
+
+# Enabled services
+{% if enable_keystone %}enable_service key{% endif %}
+{% if enable_glance %}enable_service g-api g-reg{% endif %}
+{% if enable_nova %}enable_service n-api n-cpu n-cond n-sch n-novnc n-super-cond{% endif %}
+{% if enable_neutron %}
+{% if neutron_plugin == 'ovn' %}
+enable_service q-svc q-ovn-metadata-agent q-ovn-controller
+disable_service q-agt
+Q_AGENT=ovn
+Q_PLUGIN=ml2
+{% else %}
+enable_service q-svc q-agt q-dhcp q-l3 q-meta
+Q_AGENT=openvswitch
+Q_PLUGIN=ml2
+Q_ML2_TENANT_NETWORK_TYPE=vxlan
+{% endif %}
+{% endif %}
+# Safety override (force disable)
+disable_service q-agt
+{% if enable_horizon %}enable_service horizon{% endif %}
+{% if enable_cinder %}enable_service cinder c-api c-vol c-sch{% endif %}
+{% if enable_heat %}enable_service heat h-api h-api-cfn h-eng{% endif %}
+{% if enable_swift %}enable_service s-proxy s-object s-container s-account{% endif %}
+{% if enable_barbican %}enable_service barbican{% endif %}
+{% if enable_octavia %}enable_service octavia{% endif %}
+{% if enable_magnum %}enable_service magnum{% endif %}
+{% if enable_manila %}enable_service manila{% endif %}
+{% if enable_ceilometer %}enable_service ceilometer-acentral ceilometer-collector ceilometer-api{% endif %}
+{% if enable_aodh %}enable_service aodh-api aodh-evaluator aodh-notifier aodh-listener{% endif %}
+{% if enable_gnocchi %}enable_service gnocchi-api gnocchi-metricd{% endif %}
+{% if enable_mistral %}enable_service mistral{% endif %}
+{% if enable_congress %}enable_service congress{% endif %}
+
+#############################################
+# Per-service logging configuration
+# Enables debug logging and file-based logs
+# Logs will be stored under /opt/stack/logs/*
+#############################################
+
+[[post-config|$KEYSTONE_CONF]]
+[DEFAULT]
+debug = True
+log_dir = /opt/stack/logs/keystone
+
+[[post-config|$NOVA_CONF]]
+[DEFAULT]
+debug = True
+log_dir = /opt/stack/logs/nova
+
+[[post-config|$GLANCE_API_CONF]]
+[DEFAULT]
+debug = True
+log_dir = /opt/stack/logs/glance
+
+[[post-config|$CINDER_CONF]]
+[DEFAULT]
+debug = True
+log_dir = /opt/stack/logs/cinder
+
+[[post-config|$NEUTRON_CONF]]
+[DEFAULT]
+debug = True
+log_dir = /opt/stack/logs/neutron
+
+[[post-config|$HEAT_CONF]]
+[DEFAULT]
+debug = True
+log_dir = /opt/stack/logs/heat
+
+[[post-config|$SWIFT_CONF]]
+[DEFAULT]
+log_level = DEBUG
+log_dir = /opt/stack/logs/swift
+
+# ... add more services as needed

@@ -1,0 +1,17 @@
+ADMIN_PASSWORD: adminpass
+DATABASE_PASSWORD: dbpass
+RABBIT_PASSWORD: rabbitpass
+SERVICE_PASSWORD: servicepass
+
+# Per-service passwords
+KEYSTONE_PASSWORD: keystonepass
+GLANCE_PASSWORD: glancepass
+NOVA_PASSWORD: novapass
+NEUTRON_PASSWORD: neutronpass
+CINDER_PASSWORD: cinderpass
+HORIZON_PASSWORD: horizonpass
+HEAT_PASSWORD: heatpass
+SWIFT_PASSWORD: swiftpass
+BARBICAN_PASSWORD: barbicanpass
+OCTAVIA_PASSWORD: octaviapass
+MAGNUM_PASSWORD: magnumpass

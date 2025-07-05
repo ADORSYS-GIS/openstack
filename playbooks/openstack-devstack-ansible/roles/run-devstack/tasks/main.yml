@@ -1,0 +1,24 @@
+- name: Check if DevStack has already been run
+  stat:
+    path: /opt/stack/.devstack_installed
+  register: devstack_marker
+
+- name: Run DevStack setup script
+  shell: ./stack.sh > /opt/stack/devstack-install.log 2>&1
+  args:
+    chdir: /opt/stack/devstack
+    executable: /bin/bash
+  become: yes
+  become_user: stack
+  when: not devstack_marker.stat.exists
+  register: devstack_result
+  failed_when: devstack_result.rc != 0
+
+- name: Create marker file to indicate DevStack was installed
+  file:
+    path: /opt/stack/.devstack_installed
+    state: touch
+    owner: stack
+    group: wheel
+    mode: '0644'
+  when: not devstack_marker.stat.exists
