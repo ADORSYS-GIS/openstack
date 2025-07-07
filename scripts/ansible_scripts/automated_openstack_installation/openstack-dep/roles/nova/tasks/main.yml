@@ -18,21 +18,13 @@
     mode: 0640
   notify: Restart nova services
 
-- name: Ensure nova-compute is started and enabled
-  service:
-    name: nova-compute
-    state: started
-    enabled: yes
-  when: "'computes' in group_names"
-
-  
 
 - name: Sync Nova API DB
   command: nova-manage api_db sync
   args:
     creates: /var/lib/nova/api_db_synced
   when: "'controllers' in group_names"
-
+  
 - name: Map cell0
   command: nova-manage cell_v2 map_cell0
   args:
@@ -44,6 +36,7 @@
   args:
     creates: /var/lib/nova/cell1_created
   when: "'controllers' in group_names"
+
 
 - name: Sync Nova DB
   command: nova-manage db sync

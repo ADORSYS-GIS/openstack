@@ -19,20 +19,3 @@
     state: started
     enabled: yes
 
-- name: Grant all privileges on nova_api to nova user
-  mysql_user:
-    name: nova
-    host: '%'
-    password: "{{ nova_db_password }}"
-    priv: "nova_api.*:ALL"
-    state: present
-  become: yes
-
-- name: Grant all privileges on nova to nova user
-  mysql_user:
-    name: nova
-    host: '%'
-    password: "{{ nova_db_password }}"
-    priv: "nova.*:ALL"
-    state: present
-  become: yes

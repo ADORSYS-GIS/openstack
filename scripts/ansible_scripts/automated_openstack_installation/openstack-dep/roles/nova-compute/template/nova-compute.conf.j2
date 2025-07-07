@@ -1,6 +1,6 @@
 [DEFAULT]
 enabled_apis = osapi_compute,metadata
-transport_url = rabbit://openstack:{{ rabbitmq_password }}@{{ controller_host_ip }}:5672/
+transport_url = rabbit://openstack:{{ rabbitmq_password }}@{{ controller_host }}:5672/
 my_ip = {{ ansible_host | default(inventory_hostname) }}
 use_neutron = true
 firewall_driver = nova.virt.firewall.NoopFirewallDriver
@@ -8,15 +8,15 @@ compute_driver = libvirt.LibvirtDriver
 log_dir = /var/log/nova
 
 [api_database]
-connection = mysql+pymysql://nova:{{ nova_db_password }}@{{ controller_host_ip }}/nova_api
+connection = mysql+pymysql://nova:{{ nova_db_password }}@{{ controller_host }}/nova_api
 
 [database]
-connection = mysql+pymysql://nova:{{ nova_db_password }}@{{ controller_host_ip }}/nova
+connection = mysql+pymysql://nova:{{ nova_db_password }}@{{ controller_host }}/nova
 
 [keystone_authtoken]
-www_authenticate_uri = http://{{ controller_host_ip }}:5000/v3
-auth_url = http://{{ controller_host_ip }}:5000/v3
-memcached_servers = {{ controller_host_ip }}:11211
+www_authenticate_uri = http://{{ controller_host }}:5000/v3
+auth_url = http://{{ controller_host }}:5000/v3
+memcached_servers = {{ controller_host }}:11211
 auth_type = password
 project_domain_name = Default
 user_domain_name = Default
@@ -32,7 +32,7 @@ cpu_mode = host-passthrough
 enabled = true
 vncserver_listen = 0.0.0.0
 vncserver_proxyclient_address = {{ ansible_host | default(inventory_hostname) }}
-novncproxy_base_url = http://{{ controller_host_ip }}:6080/vnc_auto.html
+novncproxy_base_url = http://{{ controller_host }}:6080/vnc_auto.html
 
 [placement]
 region_name = RegionOne
@@ -40,6 +40,6 @@ project_domain_name = Default
 project_name = {{ openstack_service_project }}
 auth_type = password
 user_domain_name = Default
-auth_url = http://{{ controller_host_ip }}:5000/v3
+auth_url = http://{{ controller_host }}:5000/v3
 username = placement
 password = {{ placement_service_password }}

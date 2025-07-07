@@ -338,21 +338,21 @@
       when: system_resources.stdout_lines is defined
 
     - name: Run stack.sh with proper environment
-      shell: |
-        cd /opt/stack/devstack
+  shell: |
+    cd /opt/stack/devstack
         export TERM=xterm-256color
-        export PIP_DEFAULT_TIMEOUT=60
-        export PIP_RETRIES=3
+    export PIP_DEFAULT_TIMEOUT=60
+    export PIP_RETRIES=3
         export PYTHONUNBUFFERED=1
         export PYTHONIOENCODING=utf-8
         export LANG=en_US.UTF-8
         export LC_ALL=en_US.UTF-8
         export GIT_HTTP_LOW_SPEED_LIMIT=1000
         export GIT_HTTP_LOW_SPEED_TIME=300
-        ./stack.sh 2>&1 | tee /opt/stack/logs/stack_install.log
-      become: yes
-      become_user: "{{ stack_user }}"
-      register: stack_output
+    ./stack.sh 2>&1 | tee /opt/stack/logs/stack_install.log
+  become: yes
+  become_user: "{{ stack_user }}"
+  register: stack_output
       environment:
         TERM: xterm-256color
         PIP_DEFAULT_TIMEOUT: 60
@@ -367,10 +367,10 @@
       delay: 300  # 5 minutes between retries
       until: stack_output is success
 
-    - name: Display DevStack installation output
-      debug:
-        var: stack_output.stdout_lines
-      when: stack_output.stdout_lines is defined
+- name: Display DevStack installation output
+  debug:
+    var: stack_output.stdout_lines
+  when: stack_output.stdout_lines is defined
 
   rescue:
     - name: Log installation failure

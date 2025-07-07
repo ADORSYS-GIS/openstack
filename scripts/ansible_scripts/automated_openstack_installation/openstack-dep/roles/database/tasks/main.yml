@@ -38,54 +38,46 @@
   notify: Restart mysql
   when: ansible_os_family == "Debian"
 
-- name: Remove nova@localhost if it exists
-  community.mysql.mysql_user:
-    name: nova
-    host: "localhost"
-    state: absent
-    login_user: "{{ mysql_admin_user }}"
-    login_password: "{{ mysql_admin_password }}"
-    login_host: localhost
+# - name: Remove nova@localhost if it exists
+#   community.mysql.mysql_user:
+#     name: nova
+#     host: "localhost"
+#     state: absent
+#     login_user: "{{ mysql_admin_user }}"
+#     login_password: "{{ mysql_admin_password }}"
+#     login_host: localhost
 
-- name: Delete nova databases if they exist
-  community.mysql.mysql_db:
-    name: "{{ item }}"
-    state: absent
-    login_user: "{{ mysql_admin_user }}"
-    login_password: "{{ mysql_admin_password }}"
-    login_host: localhost
-  loop:
-    - nova
-    - nova_api
-    - nova_cell0
+# - name: Delete nova databases if they exist
+#   community.mysql.mysql_db:
+#     name: "{{ item }}"
+#     state: absent
+#     login_user: "{{ mysql_admin_user }}"
+#     login_password: "{{ mysql_admin_password }}"
+#     login_host: localhost
+#   loop:
+#     - nova
+#     - nova_api
+#     - nova_cell0
 
-- name: Delete nova user for all hosts if exists
-  community.mysql.mysql_user:
-    name: nova
-    host: "%"
-    state: absent
-    login_user: "{{ mysql_admin_user }}"
-    login_password: "{{ mysql_admin_password }}"
-    login_host: localhost
+# - name: Delete nova user for all hosts if exists
+#   community.mysql.mysql_user:
+#     name: nova
+#     host: "%"
+#     state: absent
+#     login_user: "{{ mysql_admin_user }}"
+#     login_password: "{{ mysql_admin_password }}"
+#     login_host: localhost
 
-- name: Delete nova user for localhost if exists
-  community.mysql.mysql_user:
-    name: nova
-    host: "localhost"
-    state: absent
-    login_user: "{{ mysql_admin_user }}"
-    login_password: "{{ mysql_admin_password }}"
-    login_host: localhost
+# - name: Delete nova user for localhost if exists
+#   community.mysql.mysql_user:
+#     name: nova
+#     host: "localhost"
+#     state: absent
+#     login_user: "{{ mysql_admin_user }}"
+#     login_password: "{{ mysql_admin_password }}"
+#     login_host: localhost
 
-- name: Ensure nova user exists for localhost
-  community.mysql.mysql_user:
-    name: nova
-    password: "{{ nova_db_password }}"
-    host: "localhost"
-    state: present
-    login_user: "{{ mysql_admin_user }}"
-    login_password: "{{ mysql_admin_password }}"
-    login_host: localhost
+
 
 - name: Create OpenStack databases
   mysql_db:
@@ -99,8 +91,11 @@
     - glance
     - nova
     - neutron
+    - placement
     - nova_api
     - nova_cell0
+
+
 
 - name: Create OpenStack DB users
   mysql_user:
@@ -116,18 +111,8 @@
     - { user: 'glance', password: '{{ glance_db_password }}', db: 'glance' }
     - { user: 'nova', password: '{{ nova_db_password }}', db: 'nova' }
     - { user: 'neutron', password: '{{ neutron_db_password }}', db: 'neutron' }
+    - { user: 'placement', password: '{{ placement_service_password }}', db: 'placement'}
 
-- name: Create nova databases
-  community.mysql.mysql_db:
-    name: "{{ item }}"
-    state: present
-    login_user: "{{ mysql_admin_user }}"
-    login_password: "{{ mysql_admin_password }}"
-    login_host: localhost
-  loop:
-    - nova
-    - nova_api
-    - nova_cell0
 
 - name: Ensure nova user exists for all hosts
   community.mysql.mysql_user:
@@ -139,15 +124,13 @@
     login_password: "{{ mysql_admin_password }}"
     login_host: localhost
 
-- debug:
-    msg: "Granting ALL privileges on nova, nova_api, nova_cell0 to nova@% on {{ inventory_hostname }} (groups: {{ group_names }})"
 
-- name: Ensure nova user has all privileges on nova, nova_api, and nova_cell0 databases
+- name: Ensure nova user has all privileges on nova database
   community.mysql.mysql_user:
     name: nova
     host: "%"
     password: "{{ nova_db_password }}"
-    priv: "nova.*:ALL,nova_api.*:ALL,nova_cell0.*:ALL"
+    priv: "nova.*:ALL"
     state: present
     append_privs: yes
     update_password: always
@@ -155,6 +138,49 @@
     login_password: "{{ mysql_admin_password }}"
     login_host: localhost
   become: yes
+
+- name: Ensure nova user has all privileges on nova_api database
+  community.mysql.mysql_user:
+    name: nova
+    host: "%"
+    password: "{{ nova_db_password }}"
+    priv: "nova_api.*:ALL"
+    state: present
+    append_privs: yes
+    update_password: always
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost
+  become: yes
+
+- name: Ensure nova user has all privileges on nova_cell0 database
+  community.mysql.mysql_user:
+    name: nova
+    host: "%"
+    password: "{{ nova_db_password }}"
+    priv: "nova_cell0.*:ALL"
+    state: present
+    append_privs: yes
+    update_password: always
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost
+  become: yes
+
+
+
+- name: Ensure nova user exists for localhost
+  community.mysql.mysql_user:
+    name: nova
+    password: "{{ nova_db_password }}"
+    host: "localhost"
+    state: present
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost
+
+
+
 
 - name: Flush MySQL privileges
   mysql_user:
@@ -166,21 +192,5 @@
     check_implicit_admin: yes
     priv: "*.*:USAGE"
 
-- name: Create placement database
-  mysql_db:
-    name: placement
-    state: present
-    login_user: "{{ mysql_admin_user }}"
-    login_password: "{{ mysql_admin_password }}"
-    login_host: localhost
 
-- name: Create placement user
-  mysql_user:
-    name: placement
-    password: "{{ placement_service_password }}"
-    priv: "placement.*:ALL"
-    host: "%"
-    state: present
-    login_user: "{{ mysql_admin_user }}"
-    login_password: "{{ mysql_admin_password }}"
-    login_host: localhost
+

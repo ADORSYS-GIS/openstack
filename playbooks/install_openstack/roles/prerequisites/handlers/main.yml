@@ -5,7 +5,7 @@
   systemd:
     name: ntp
     state: restarted
-  become: yes
+  become: yes 
 
 - name: restart libvirtd
   service:

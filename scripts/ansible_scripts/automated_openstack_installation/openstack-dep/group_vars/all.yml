@@ -4,6 +4,7 @@ keystone_db_password: "KeystoneDBPass"
 glance_db_password: "GlanceDBPass"
 nova_db_password: "NovaDBPass"
 neutron_db_password: "NeutronPass"
+placement_db_password: "PlacementDBPass"
 
 # MySQL admin user and password
 mysql_admin_user: "admin"

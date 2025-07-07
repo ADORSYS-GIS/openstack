@@ -12,7 +12,7 @@ mysql_admin_password: "password"
 
 # Admin user and password
 admin_user: "admin"
-admin_password: "SecretPass"
+admin_password: "KeystoneAdminPass"
 admin_project: "admin"
 
 # RabbitMQ configuration
@@ -52,4 +52,4 @@ neutron_centos_packages:
   - ebtables
 
 # OpenStack service project
-openstack_service_project: service
+openstack_service_project: admin
