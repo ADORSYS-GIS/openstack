@@ -1,106 +1,301 @@
+# Determine if Tempest needs global installation based on custom_services
+{% set _install_tempest = false %}
+{% for svc in custom_services %}
+{% if svc.name == 'tempest' and svc.enabled %}
+{% set _install_tempest = true %}
+{% endif %}
+{% endfor %}
+
 [[local|localrc]]
-# Branch
+# ===== OpenStack Branch =====
 OS_BRANCH={{ openstack_branch }}
 
-# Passwords
+# ===== Credentials =====
+# IMPORTANT: Passwords should ideally consist of alphanumeric characters only to prevent service failures.
+# Using special characters can lead to difficult-to-debug issues.
 ADMIN_PASSWORD={{ ADMIN_PASSWORD }}
 DATABASE_PASSWORD={{ DATABASE_PASSWORD }}
 RABBIT_PASSWORD={{ RABBIT_PASSWORD }}
 SERVICE_PASSWORD={{ SERVICE_PASSWORD }}
 
-# Per-service passwords
+# Optional: Per-service credentials
 KEYSTONE_PASSWORD={{ KEYSTONE_PASSWORD }}
 GLANCE_PASSWORD={{ GLANCE_PASSWORD }}
 NOVA_PASSWORD={{ NOVA_PASSWORD }}
 NEUTRON_PASSWORD={{ NEUTRON_PASSWORD }}
 CINDER_PASSWORD={{ CINDER_PASSWORD }}
 
-# Network
-HOST_IP={{ ansible_default_ipv4.address }}
+# ===== Network Configuration =====
+# NOTE: For robust deployments, consider explicitly defining HOST_IP and PUBLIC_INTERFACE
+# instead of relying on auto-detection, especially in multi-homed environments.
+HOST_IP={{ default_ip }}
+PUBLIC_INTERFACE={{ default_interface }}
 FIXED_RANGE=10.0.0.0/24
 NETWORK_GATEWAY=10.0.0.1
-PUBLIC_INTERFACE={{ default_interface }}
 FLOATING_RANGE=172.24.4.0/24
 
-# Logging & Debug
-LOGFILE=/opt/stack/logs/stack.sh.log
+# ===== DevStack Logging =====
+LOGFILE={{ stack_home }}/logs/stack.sh.log
 LOGDAYS=2
 VERBOSE=True
 LOG_COLOR=True
 ENABLE_DEBUG_LOG_LEVEL=True
+SYSLOG=False # Optional: Disable syslog integration as requested
 
-# Enabled services
+# ===== General DevStack Settings =====
+# Optional: Forces Git repository recloning each time stack.sh is run.
+# RECLONE=True
+
+# ===== Base Services =====
+enable_service rabbit
 {% if enable_keystone %}enable_service key{% endif %}
-{% if enable_glance %}enable_service g-api g-reg{% endif %}
-{% if enable_nova %}enable_service n-api n-cpu n-cond n-sch n-novnc n-super-cond{% endif %}
+{% if enable_glance %}
+enable_service g-api
+enable_service g-reg
+{% endif %}
+{% if enable_nova %}
+enable_service n-api
+enable_service n-cpu
+enable_service n-cond
+enable_service n-sch
+enable_service n-novnc
+enable_service n-super-cond
+# Optional: Disable n-cell1 in highly customized Nova topologies where cells are explicitly controlled.
+# disable_service n-cell1
+{% endif %}
+{% if enable_placement or enable_nova %}
+enable_service placement # Explicitly enabling Placement, as it's required by Nova
+{% endif %}
+
+# ===== Neutron Plugin Configuration =====
 {% if enable_neutron %}
+enable_service q-svc
 {% if neutron_plugin == 'ovn' %}
-enable_service q-svc q-ovn-metadata-agent q-ovn-controller
+enable_service ovn-northd
+enable_service q-ovn-metadata-agent
+enable_service q-ovn-controller
 disable_service q-agt
 Q_AGENT=ovn
 Q_PLUGIN=ml2
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=ovn,logger # Recommended for OVN
+Q_ML2_PLUGIN_TYPE_DRIVERS=local,flat,vlan,geneve # Recommended for OVN
+Q_ML2_TENANT_NETWORK_TYPE="geneve" # Recommended for OVN
+Q_USE_PROVIDERNET_FOR_PUBLIC=True # Optional: Enable provider network for public access
 {% else %}
-enable_service q-svc q-agt q-dhcp q-l3 q-meta
+enable_service q-agt
+enable_service q-dhcp
+enable_service q-l3
+enable_service q-meta
 Q_AGENT=openvswitch
 Q_PLUGIN=ml2
 Q_ML2_TENANT_NETWORK_TYPE=vxlan
+Q_USE_PROVIDERNET_FOR_PUBLIC=True # Optional: Enable provider network for public access
 {% endif %}
 {% endif %}
-# Safety override (force disable)
-disable_service q-agt
-{% if enable_horizon %}enable_service horizon{% endif %}
-{% if enable_cinder %}enable_service cinder c-api c-vol c-sch{% endif %}
-{% if enable_heat %}enable_service heat h-api h-api-cfn h-eng{% endif %}
-{% if enable_swift %}enable_service s-proxy s-object s-container s-account{% endif %}
-{% if enable_barbican %}enable_service barbican{% endif %}
-{% if enable_octavia %}enable_service octavia{% endif %}
-{% if enable_magnum %}enable_service magnum{% endif %}
-{% if enable_manila %}enable_service manila{% endif %}
-{% if enable_ceilometer %}enable_service ceilometer-acentral ceilometer-collector ceilometer-api{% endif %}
-{% if enable_aodh %}enable_service aodh-api aodh-evaluator aodh-notifier aodh-listener{% endif %}
-{% if enable_gnocchi %}enable_service gnocchi-api gnocchi-metricd{% endif %}
-{% if enable_mistral %}enable_service mistral{% endif %}
-{% if enable_congress %}enable_service congress{% endif %}
 
-#############################################
-# Per-service logging configuration
-# Enables debug logging and file-based logs
-# Logs will be stored under /opt/stack/logs/*
-#############################################
+# ===== Horizon Dashboard =====
+{% if enable_horizon %}
+enable_service horizon
+{% endif %}
 
+# ===== Block Storage =====
+{% if enable_cinder %}
+enable_service cinder
+enable_service c-api
+enable_service c-vol
+enable_service c-sch
+{% endif %}
+
+# ===== Object Storage =====
+{% if enable_swift %}
+enable_service s-proxy
+enable_service s-object
+enable_service s-container
+enable_service s-account
+{% endif %}
+
+# ===== Heat (Orchestration) =====
+{% if enable_heat %}
+enable_service heat
+enable_service h-api
+enable_service h-api-cfn
+enable_service h-eng
+{% endif %}
+
+# ===== Magnum (Container Infra) =====
+{% if enable_magnum %}
+enable_service magnum
+enable_service magnum-api
+enable_service magnum-conductor
+{% endif %}
+
+# ===== Manila (Shared FS) =====
+{% if enable_manila %}
+enable_service manila
+enable_service m-api
+enable_service m-shr
+enable_service m-sch
+{% endif %}
+
+# ===== Barbican (Key Manager) =====
+{% if enable_barbican %}
+enable_service barbican
+{% endif %}
+
+# ===== Octavia (Load Balancer) =====
+{% if enable_octavia %}
+enable_service octavia
+{% endif %}
+
+# ===== Optional Services from all.yml (requiring enable_plugin) =====
+{% if enable_designate %}
+enable_plugin designate https://opendev.org/openstack/designate
+{% endif %}
+{% if enable_trove %}
+enable_plugin trove https://opendev.org/openstack/trove
+enable_plugin trove-dashboard https://opendev.org/openstack/trove-dashboard
+{% endif %}
+{% if enable_zaqar %}
+enable_plugin zaqar https://github.com/openstack/zaqar
+{% endif %}
+{% if enable_masakari %}
+enable_plugin masakari https://opendev.org/openstack/masakari
+enable_plugin masakaridashboard https://opendev.org/openstack/masakari-dashboard
+{% endif %}
+{% if enable_blazar %}
+enable_plugin blazar https://opendev.org/openstack/blazar
+{% endif %}
+{% if enable_ironic %}
+enable_plugin ironic https://opendev.org/openstack/ironic
+{% endif %}
+{% if enable_senlin %}
+enable_plugin senlin https://opendev.org/openstack/senlin
+enable_plugin senlin-dashboard https://opendev.org/openstack/senlin-dashboard
+{% endif %}
+{% if enable_sahara %}
+enable_plugin sahara https://opendev.org/openstack/sahara
+{% endif %}
+{% if enable_glusterfs %}
+enable_plugin glusterfs https://opendev.org/openstack/devstack-plugin-glusterfs
+{% endif %}
+
+# ===== Telemetry Services =====
+{% if enable_ceilometer %}
+enable_service ceilometer-acentral
+enable_service ceilometer-collector
+enable_service ceilometer-api
+{% endif %}
+{% if enable_aodh %}
+enable_service aodh-api
+enable_service aodh-evaluator
+enable_service aodh-notifier
+enable_service aodh-listener
+{% endif %}
+{% if enable_gnocchi %}
+enable_service gnocchi-api
+enable_service gnocchi-metricd
+{% endif %}
+{% if enable_panko %}
+enable_service panko
+{% endif %}
+
+# ===== Security/Workflow =====
+{% if enable_congress %}
+enable_service congress
+{% endif %}
+{% if enable_mistral %}
+enable_service mistral
+{% endif %}
+
+# ===== Custom Services =====
+{% if _install_tempest %}
+INSTALL_TEMPEST=True # Ensures global Tempest package installation for direct execution
+# Optional: Override Tempest repository if needed
+# TEMPEST_REPO=https://opendev.org/openstack/tempest
+{% endif %}
+{% for svc in custom_services %}
+{% if svc.enabled %}
+enable_service {{ svc.name }}
+{% endif %}
+{% endfor %}
+
+# ===== Debugging per Service (Logging to /opt/stack/logs/) =====
 [[post-config|$KEYSTONE_CONF]]
 [DEFAULT]
 debug = True
-log_dir = /opt/stack/logs/keystone
+log_dir = {{ stack_home }}/logs/keystone
 
 [[post-config|$NOVA_CONF]]
 [DEFAULT]
 debug = True
-log_dir = /opt/stack/logs/nova
+log_dir = {{ stack_home }}/logs/nova
 
 [[post-config|$GLANCE_API_CONF]]
 [DEFAULT]
 debug = True
-log_dir = /opt/stack/logs/glance
+log_dir = {{ stack_home }}/logs/glance
 
 [[post-config|$CINDER_CONF]]
 [DEFAULT]
 debug = True
-log_dir = /opt/stack/logs/cinder
+log_dir = {{ stack_home }}/logs/cinder
 
 [[post-config|$NEUTRON_CONF]]
 [DEFAULT]
 debug = True
-log_dir = /opt/stack/logs/neutron
+log_dir = {{ stack_home }}/logs/neutron
 
 [[post-config|$HEAT_CONF]]
 [DEFAULT]
 debug = True
-log_dir = /opt/stack/logs/heat
+log_dir = {{ stack_home }}/logs/heat
 
 [[post-config|$SWIFT_CONF]]
 [DEFAULT]
 log_level = DEBUG
-log_dir = /opt/stack/logs/swift
+log_dir = {{ stack_home }}/logs/swift
 
-# ... add more services as needed
+[[post-config|$MAGNUM_CONF]]
+[DEFAULT]
+debug = True
+log_dir = {{ stack_home }}/logs/magnum
+
+[[post-config|$MANILA_CONF]]
+[DEFAULT]
+debug = True
+log_dir = {{ stack_home }}/logs/manila
+
+[[post-config|$BARBICAN_CONF]]
+[DEFAULT]
+debug = True
+log_dir = {{ stack_home }}/logs/barbican
+
+[[post-config|$OCTAVIA_CONF]]
+[DEFAULT]
+debug = True
+log_dir = {{ stack_home }}/logs/octavia
+
+[[post-config|$CEILOMETER_CONF]]
+[DEFAULT]
+debug = True
+log_dir = {{ stack_home }}/logs/ceilometer
+
+[[post-config|$AODH_CONF]]
+[DEFAULT]
+debug = True
+log_dir = {{ stack_home }}/logs/aodh
+
+[[post-config|$GNOCCHI_CONF]]
+[DEFAULT]
+debug = True
+log_dir = {{ stack_home }}/logs/gnocchi
+
+[[post-config|$MISTRAL_CONF]]
+[DEFAULT]
+debug = True
+log_dir = {{ stack_home }}/logs/mistral
+
+[[post-config|$CONGRESS_CONF]]
+[DEFAULT]
+debug = True
+log_dir = {{ stack_home }}/logs/congress
