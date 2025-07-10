@@ -1,0 +1,10 @@
+---
+- name: Setup OpenStack Keystone, Glance and Test
+  hosts: all
+  connection: local 
+  become: true
+
+  roles:
+    - keystone
+    - glance
+    - test-setup

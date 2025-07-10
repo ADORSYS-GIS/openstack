@@ -1,6 +1,0 @@
-- name: Deploy OpenStack Keystone and Glance
-  hosts: controller
-  become: true
-  roles:
-    - keystone
-    - glance

@@ -1,6 +1,0 @@
----
-mysql_root_password: newpassword
-keystone_db_password: keystone_db_pass
-admin_token: ADMIN
-controller_host: localhost
-keystone_port: 5001

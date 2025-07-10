@@ -1,0 +1,224 @@
+---
+- name: Install Glance and Keystone dependencies
+  apt:
+    name:
+      - mariadb-server
+      - apache2
+      - libapache2-mod-wsgi-py3
+      - python3-pymysql
+      - python3-openstackclient
+      - python3-keystone
+      - keystone
+      - glance
+      - python3-glanceclient
+      - crudini
+      - memcached
+      - curl
+    state: present
+    update_cache: true
+
+- name: Ensure MariaDB bind-address is set to 127.0.0.1
+  lineinfile:
+    path: /etc/mysql/mariadb.conf.d/50-server.cnf
+    regexp: '^bind-address'
+    line: 'bind-address = 127.0.0.1'
+
+- name: Restart MariaDB after bind-address fix
+  systemd:
+    name: mariadb
+    state: restarted
+
+- name: Ensure Apache listens on Keystone port
+  lineinfile:
+    path: /etc/apache2/ports.conf
+    line: "Listen {{ keystone_port }}"
+    state: present
+
+- name: Configure Keystone Apache site for port {{ keystone_port }}
+  copy:
+    dest: /etc/apache2/sites-available/keystone.conf
+    content: |
+      <VirtualHost *:{{ keystone_port }}>
+        WSGIDaemonProcess keystone user=keystone group=keystone processes=5 threads=1
+        WSGIProcessGroup keystone
+        WSGIScriptAlias / /usr/bin/keystone-wsgi-public
+        <Directory /usr/bin>
+          Require all granted
+        </Directory>
+        ErrorLog /var/log/apache2/keystone_error.log
+        CustomLog /var/log/apache2/keystone_access.log combined
+      </VirtualHost>
+
+- name: Enable Keystone Apache site
+  command: a2ensite keystone
+  ignore_errors: true
+
+- name: Restart Apache after Keystone site enable
+  systemd:
+    name: apache2
+    state: restarted
+
+- name: Drop and create Keystone DB to force repair
+  mysql_db:
+    name: keystone
+    state: absent
+    login_user: root
+    login_password:  "{{ mysql_root_pass }}"
+  ignore_errors: true
+
+- name: Create Keystone database
+  mysql_db:
+    name: keystone
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_pass }}"
+
+- name: Grant Keystone DB user privileges
+  mysql_user:
+    name: keystone
+    password: "{{ keystone_db_pass }}"
+    priv: 'keystone.*:ALL'
+    host: localhost
+    state: present
+    column_case_sensitive: false
+    login_user: root
+    login_password: "{{ mysql_root_pass }}"
+
+- name: Grant Keystone DB user privileges for any host
+  mysql_user:
+    name: keystone
+    password: "{{ keystone_db_pass }}"
+    priv: 'keystone.*:ALL'
+    host: '%'
+    state: present
+    column_case_sensitive: false
+    login_user: root
+    login_password: "{{ mysql_root_pass }}"
+
+- name: Configure Keystone DB connection
+  command: crudini --set /etc/keystone/keystone.conf database connection "mysql+pymysql://keystone:{{ keystone_db_pass }}@localhost/keystone"
+
+- name: Configure Keystone token provider
+  command: crudini --set /etc/keystone/keystone.conf token provider fernet
+
+- name: Setup fernet keys and credentials for Keystone
+  command: keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+
+- name: Credential setup for Keystone
+  command: keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
+
+- name: Sync Keystone DB
+  command: keystone-manage db_sync
+
+- name: Bootstrap Keystone
+  command: >
+    keystone-manage bootstrap
+    --bootstrap-password {{ keystone_admin_pass }}
+    --bootstrap-admin-url http://{{ controller_host }}:{{ keystone_port }}/v3/
+    --bootstrap-internal-url http://{{ controller_host }}:{{ keystone_port }}/v3/
+    --bootstrap-public-url http://{{ controller_host }}:{{ keystone_port }}/v3/
+    --bootstrap-region-id RegionOne
+
+- name: Wait for Keystone to be reachable
+  uri:
+    url: http://{{ controller_host }}:{{ keystone_port }}/v3
+    method: GET
+    status_code: 200
+    return_content: no
+  register: keystone_status
+  retries: 10
+  delay: 3
+  until: keystone_status.status == 200
+
+- name: Set OpenStack environment facts
+  set_fact:
+    os_auth:
+      OS_USERNAME: admin
+      OS_PASSWORD: "{{ keystone_admin_pass }}"
+      OS_PROJECT_NAME: admin
+      OS_USER_DOMAIN_NAME: Default
+      OS_PROJECT_DOMAIN_NAME: Default
+      OS_AUTH_URL: http://{{ controller_host }}:{{ keystone_port }}/v3
+      OS_IDENTITY_API_VERSION: 3
+
+- name: Create Glance database
+  mysql_db:
+    name: glance
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_pass }}"
+
+- name: Create Glance DB user localhost
+  mysql_user:
+    name: glance
+    password: "{{ glance_db_pass }}"
+    priv: "glance.*:ALL"
+    host: localhost
+    state: present
+    column_case_sensitive: false
+    login_user: root
+    login_password: "{{ mysql_root_pass }}"
+
+- name: Create Glance DB user any host
+  mysql_user:
+    name: glance
+    password: "{{ glance_db_pass }}"
+    priv: "glance.*:ALL"
+    host: "%"
+    state: present
+    column_case_sensitive: false
+    login_user: root
+    login_password: "{{ mysql_root_pass }}"
+
+- name: Configure glance-api.conf
+  template:
+    src: glance-api.conf.j2
+    dest: /etc/glance/glance-api.conf
+
+- name: Configure glance-api-paste.ini
+  template:
+    src: glance-api-paste.ini.j2
+    dest: /etc/glance/glance-api-paste.ini
+
+- name: Set permissions on glance config files
+  file:
+    path: "{{ item }}"
+    owner: glance
+    group: glance
+    mode: 0640
+  loop:
+    - /etc/glance/glance-api.conf
+    - /etc/glance/glance-api-paste.ini
+
+- name: Sync Glance DB
+  command: glance-manage --config-file /etc/glance/glance-api.conf db_sync
+
+- name: Enable and restart glance-api service
+  systemd:
+    name: glance-api
+    enabled: yes
+    state: restarted
+
+- name: Create service project
+  shell: openstack project show service || openstack project create --domain default --description "Service Project" service
+  environment: "{{ os_auth }}"
+
+- name: Create Glance user
+  shell: openstack user show glance || openstack user create --domain default --password "{{ glance_user_pass }}" glance
+  environment: "{{ os_auth }}"
+
+- name: Assign admin role to Glance user
+  shell: openstack role add --project service --user glance admin || true
+  environment: "{{ os_auth }}"
+
+- name: Register Glance service
+  shell: openstack service show glance || openstack service create --name glance --description "OpenStack Image" image
+  environment: "{{ os_auth }}"
+
+- name: Register Glance endpoints
+  shell: |
+    for iface in public internal admin; do
+      openstack endpoint list --service glance --interface $iface | grep -q glance || \
+      openstack endpoint create --region RegionOne image $iface http://localhost:9292
+    done
+  environment: "{{ os_auth }}"

@@ -1,0 +1,24 @@
+[composite:glance-api-keystone]
+use = egg:Paste#urlmap
+/v2: glance-api-pipeline
+
+[pipeline:glance-api-pipeline]
+pipeline = authtoken context glance-api-app
+
+[app:glance-api-app]
+paste.app_factory = glance.api.v2.router:API.factory
+
+[filter:authtoken]
+paste.filter_factory = keystonemiddleware.auth_token:filter_factory
+auth_uri = http://localhost:5001
+auth_url = http://localhost:5001
+memcached_servers = localhost:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = glance
+password = GlancePass123!
+
+[filter:context]
+paste.filter_factory = glance.api.middleware.context:ContextMiddleware.factory
