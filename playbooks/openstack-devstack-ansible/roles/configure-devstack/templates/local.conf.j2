@@ -1,301 +1,395 @@
-# Determine if Tempest needs global installation based on custom_services
-{% set _install_tempest = false %}
-{% for svc in custom_services %}
-{% if svc.name == 'tempest' and svc.enabled %}
-{% set _install_tempest = true %}
-{% endif %}
-{% endfor %}
-
 [[local|localrc]]
-# ===== OpenStack Branch =====
-OS_BRANCH={{ openstack_branch }}
 
-# ===== Credentials =====
-# IMPORTANT: Passwords should ideally consist of alphanumeric characters only to prevent service failures.
-# Using special characters can lead to difficult-to-debug issues.
+# --- Fallback Directory for ML2 Plugin Configs ---
+echo "Ensuring required DevStack configuration directories exist..."
+mkdir -p "{{ stack_home }}/etc/neutron/plugins/ml2"
+
+# ==============================================================================
+# Core DevStack Settings
+# ==============================================================================
+DEST={{ stack_home }}
+DATA_DIR=$DEST/data
+USE_SYSTEMD=True
+OS_BRANCH={{ openstack_branch | default('stable/2025.1') }}
+RECLONE={{ 'yes' if devstack_reclone | default(false) else 'no' }}
+
+# --- Logging ---
+LOGFILE=$DEST/logs/stack.sh.log
+LOGDAYS=7
+VERBOSE=True
+LOG_COLOR=True
+SCREEN_LOGDIR=$DEST/logs
+
+# ==============================================================================
+# Security Credentials (Vault/vars)
+# ==============================================================================
 ADMIN_PASSWORD={{ ADMIN_PASSWORD }}
 DATABASE_PASSWORD={{ DATABASE_PASSWORD }}
 RABBIT_PASSWORD={{ RABBIT_PASSWORD }}
 SERVICE_PASSWORD={{ SERVICE_PASSWORD }}
+SERVICE_TOKEN={{ service_token | default(SERVICE_PASSWORD) }}
 
-# Optional: Per-service credentials
-KEYSTONE_PASSWORD={{ KEYSTONE_PASSWORD }}
-GLANCE_PASSWORD={{ GLANCE_PASSWORD }}
-NOVA_PASSWORD={{ NOVA_PASSWORD }}
-NEUTRON_PASSWORD={{ NEUTRON_PASSWORD }}
-CINDER_PASSWORD={{ CINDER_PASSWORD }}
+# Per-service separation
+KEYSTONE_PASSWORD={{ KEYSTONE_PASSWORD | default(SERVICE_PASSWORD) }}
+GLANCE_PASSWORD={{ GLANCE_PASSWORD | default(SERVICE_PASSWORD) }}
+NOVA_PASSWORD={{ NOVA_PASSWORD | default(SERVICE_PASSWORD) }}
+NEUTRON_PASSWORD={{ NEUTRON_PASSWORD | default(SERVICE_PASSWORD) }}
+CINDER_PASSWORD={{ CINDER_PASSWORD | default(SERVICE_PASSWORD) }}
+PLACEMENT_PASSWORD={{ PLACEMENT_PASSWORD | default(SERVICE_PASSWORD) }}
 
-# ===== Network Configuration =====
-# NOTE: For robust deployments, consider explicitly defining HOST_IP and PUBLIC_INTERFACE
-# instead of relying on auto-detection, especially in multi-homed environments.
+# ==============================================================================
+# Network Configuration
+# ==============================================================================
 HOST_IP={{ default_ip }}
 PUBLIC_INTERFACE={{ default_interface }}
-FIXED_RANGE=10.0.0.0/24
-NETWORK_GATEWAY=10.0.0.1
-FLOATING_RANGE=172.24.4.0/24
+FIXED_RANGE={{ fixed_range | default("10.4.0.0/24") }}
+NETWORK_GATEWAY={{ network_gateway | default("10.4.0.1") }}
+FLOATING_RANGE={{ floating_ip_range | default("172.24.4.0/24") }}
+PUBLIC_NETWORK_GATEWAY={{ public_network_gateway | default("172.24.4.1") }}
+MULTI_HOST=True
 
-# ===== DevStack Logging =====
-LOGFILE={{ stack_home }}/logs/stack.sh.log
-LOGDAYS=2
-VERBOSE=True
-LOG_COLOR=True
-ENABLE_DEBUG_LOG_LEVEL=True
-SYSLOG=False # Optional: Disable syslog integration as requested
+# ==============================================================================
+# Core Services
+# ==============================================================================
+enable_service mysql rabbitmq etcd3
 
-# ===== General DevStack Settings =====
-# Optional: Forces Git repository recloning each time stack.sh is run.
-# RECLONE=True
+{% if enable_keystone | default(true) %} enable_service key {% endif %}
+{% if enable_placement | default(true) %} enable_service placement-api placement-client {% endif %}
+{% if enable_glance | default(true) %} enable_service g-api g-reg {% endif %}
+{% if enable_nova | default(true) %} enable_service n-api n-cauth n-cpu n-cond n-sch n-novnc {% endif %}
+{% if enable_horizon | default(true) %} enable_service horizon {% endif %}
 
-# ===== Base Services =====
-enable_service rabbit
-{% if enable_keystone %}enable_service key{% endif %}
-{% if enable_glance %}
-enable_service g-api
-enable_service g-reg
-{% endif %}
-{% if enable_nova %}
-enable_service n-api
-enable_service n-cpu
-enable_service n-cond
-enable_service n-sch
-enable_service n-novnc
-enable_service n-super-cond
-# Optional: Disable n-cell1 in highly customized Nova topologies where cells are explicitly controlled.
-# disable_service n-cell1
-{% endif %}
-{% if enable_placement or enable_nova %}
-enable_service placement # Explicitly enabling Placement, as it's required by Nova
+{% if enable_cinder | default(false) %}
+enable_service cinder c-api c-vol c-sch
+CINDER_DRIVER=lvm
+VOLUME_GROUP_NAME="cinder-volumes"
+VOLUME_BACKING_FILE_SIZE={{ cinder_volume_file_size | default("20G") }}
 {% endif %}
 
-# ===== Neutron Plugin Configuration =====
-{% if enable_neutron %}
-enable_service q-svc
-{% if neutron_plugin == 'ovn' %}
-enable_service ovn-northd
-enable_service q-ovn-metadata-agent
-enable_service q-ovn-controller
-disable_service q-agt
+# ==============================================================================
+# Neutron: ML2/OVS or OVN
+# ==============================================================================
+{% if enable_neutron | default(true) %}
+disable_service n-net
+enable_service neutron q-svc
+
+{% if neutron_plugin | default('ovs') == 'ovn' %}
+# --- OVN Backend ---
+enable_service q-ovn-metadata-agent ovn-controller ovn-northd
+disable_service q-agt q-dhcp q-l3 q-meta
 Q_AGENT=ovn
 Q_PLUGIN=ml2
-Q_ML2_PLUGIN_MECHANISM_DRIVERS=ovn,logger # Recommended for OVN
-Q_ML2_PLUGIN_TYPE_DRIVERS=local,flat,vlan,geneve # Recommended for OVN
-Q_ML2_TENANT_NETWORK_TYPE="geneve" # Recommended for OVN
-Q_USE_PROVIDERNET_FOR_PUBLIC=True # Optional: Enable provider network for public access
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=ovn,logger
+Q_ML2_PLUGIN_TYPE_DRIVERS=geneve,vlan,flat
+Q_ML2_TENANT_NETWORK_TYPE=geneve
+OVN_L3_MODE=True
+ENABLE_TENANT_VLANS=True
 {% else %}
-enable_service q-agt
-enable_service q-dhcp
-enable_service q-l3
-enable_service q-meta
-Q_AGENT=openvswitch
+# --- ML2/OVS Backend ---
+enable_service ovsdb-server ovs-vswitchd
+enable_service q-agt q-dhcp q-l3 q-meta
 Q_PLUGIN=ml2
+Q_AGENT=openvswitch
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch,l2population
+Q_ML2_PLUGIN_TYPE_DRIVERS=vxlan,flat,vlan
 Q_ML2_TENANT_NETWORK_TYPE=vxlan
-Q_USE_PROVIDERNET_FOR_PUBLIC=True # Optional: Enable provider network for public access
+Q_ML2_PLUGIN_EXT_DRIVERS=port_security
+OVS_BRIDGE_MAPPINGS="public:{{ public_bridge | default('br-ex') }}"
+PUBLIC_BRIDGE={{ public_bridge | default('br-ex') }}
+OVS_PHYSICAL_BRIDGE={{ public_bridge | default('br-ex') }}
+ENABLE_TENANT_VLANS=True
 {% endif %}
 {% endif %}
 
-# ===== Horizon Dashboard =====
-{% if enable_horizon %}
-enable_service horizon
+# ==============================================================================
+# Optional Services
+# ==============================================================================
+{% if enable_heat | default(false) %}
+enable_plugin heat https://opendev.org/openstack/heat
+enable_plugin heat-dashboard https://opendev.org/openstack/heat-dashboard
 {% endif %}
 
-# ===== Block Storage =====
-{% if enable_cinder %}
-enable_service cinder
-enable_service c-api
-enable_service c-vol
-enable_service c-sch
+{% if enable_swift | default(false) %}
+# Swift - Object Storage
+enable_plugin swift https://opendev.org/openstack/swift
+enable_service s-proxy s-object s-container s-account
+SWIFT_HASH={{ swift_hash_path_suffix | default("$(od -t x8 -N 8 -A n /dev/urandom)") }}
+SWIFT_REPLICAS={{ swift_replicas | default(1) }}
+SWIFT_DATA_DIR=$DEST/data/swift
 {% endif %}
 
-# ===== Object Storage =====
-{% if enable_swift %}
-enable_service s-proxy
-enable_service s-object
-enable_service s-container
-enable_service s-account
+{% if enable_manila | default(false) %}
+# Manila - Shared File Systems
+enable_plugin manila https://opendev.org/openstack/manila
+enable_plugin manila-ui https://opendev.org/openstack/manila-ui
+enable_service manila m-api m-sch m-shr
+# Add other Manila settings as needed, e.g., default share backend
 {% endif %}
 
-# ===== Heat (Orchestration) =====
-{% if enable_heat %}
-enable_service heat
-enable_service h-api
-enable_service h-api-cfn
-enable_service h-eng
+{% if enable_octavia | default(false) %}
+# Octavia - Load Balancing
+enable_plugin octavia https://opendev.org/openstack/octavia
+enable_plugin octavia-dashboard https://opendev.org/openstack/octavia-dashboard
+enable_service octavia o-api o-hk o-hm o-cw
 {% endif %}
 
-# ===== Magnum (Container Infra) =====
-{% if enable_magnum %}
-enable_service magnum
-enable_service magnum-api
-enable_service magnum-conductor
+{% if enable_barbican | default(false) %}
+# Barbican - Key Management
+enable_plugin barbican https://opendev.org/openstack/barbican
+enable_plugin barbican-dashboard https://opendev.org/openstack/barbican-dashboard
+# Barbican may require dogtag or other KMS backend for production
 {% endif %}
 
-# ===== Manila (Shared FS) =====
-{% if enable_manila %}
-enable_service manila
-enable_service m-api
-enable_service m-shr
-enable_service m-sch
-{% endif %}
-
-# ===== Barbican (Key Manager) =====
-{% if enable_barbican %}
-enable_service barbican
-{% endif %}
-
-# ===== Octavia (Load Balancer) =====
-{% if enable_octavia %}
-enable_service octavia
-{% endif %}
-
-# ===== Optional Services from all.yml (requiring enable_plugin) =====
-{% if enable_designate %}
+{% if enable_designate | default(false) %}
+# Designate - DNSaaS
 enable_plugin designate https://opendev.org/openstack/designate
+enable_plugin designate-dashboard https://opendev.org/openstack/designate-dashboard
+enable_service designate designate-api designate-central designate-mdns designate-pool-manager designate-worker designate-zone-manager
 {% endif %}
-{% if enable_trove %}
+
+{% if enable_trove | default(false) %}
+# Trove - DBaaS
 enable_plugin trove https://opendev.org/openstack/trove
 enable_plugin trove-dashboard https://opendev.org/openstack/trove-dashboard
+enable_service tr-api tr-cond tr-taskmgr
 {% endif %}
-{% if enable_zaqar %}
-enable_plugin zaqar https://github.com/openstack/zaqar
+
+{% if enable_sahara | default(false) %}
+# Sahara - Data Processing
+enable_plugin sahara https://opendev.org/openstack/sahara
+enable_plugin sahara-dashboard https://opendev.org/openstack/sahara-dashboard
+enable_service sahara-api sahara-engine
 {% endif %}
-{% if enable_masakari %}
-enable_plugin masakari https://opendev.org/openstack/masakari
-enable_plugin masakaridashboard https://opendev.org/openstack/masakari-dashboard
+
+{% if enable_magnum | default(false) %}
+# Magnum - Container Orchestration Engine Provisioning
+enable_plugin magnum https://opendev.org/openstack/magnum
+enable_plugin magnum-ui https://opendev.org/openstack/magnum-ui
+MAGNUM_IMAGE_NAME={{ magnum_image_name | default('fedora-coreos-stable') }}
+MAGNUM_KUBECTL_VERSION={{ magnum_kubectl_version | default("v1.28.6") }}
 {% endif %}
-{% if enable_blazar %}
-enable_plugin blazar https://opendev.org/openstack/blazar
-{% endif %}
-{% if enable_ironic %}
+
+{% if enable_ironic | default(false) %}
+# Ironic - Bare Metal Provisioning
 enable_plugin ironic https://opendev.org/openstack/ironic
+enable_plugin ironic-ui https://opendev.org/openstack/ironic-ui
+enable_service ir-api ir-cond
+# Basic Ironic settings, specific drivers may need more config
+IRONIC_DEFAULT_DEPLOY_INTERFACE=direct
+IRONIC_ENABLED_HARDWARE_TYPES=ipmi,redfish,idrac,ilo
+IRONIC_ENABLED_DEPLOY_INTERFACES=direct,ansible
+IRONIC_ENABLED_MANAGEMENT_INTERFACES=ipmitool,redfish,idrac,ilo
+IRONIC_ENABLED_POWER_INTERFACES=ipmitool,redfish,idrac,ilo
+# For DevStack testing with virtual nodes:
+# enable_plugin devstack-plugin-virtual-ironic https://opendev.org/openstack/devstack-plugin-virtual-ironic master
+# IRONIC_VM_COUNT=1 # Adjust as needed
+# IRONIC_VM_SSH_KEY=$(cat ~/.ssh/id_rsa.pub) # Ensure you have this key
 {% endif %}
-{% if enable_senlin %}
+
+{% if enable_senlin | default(false) %}
+# Senlin - Clustering Service
 enable_plugin senlin https://opendev.org/openstack/senlin
 enable_plugin senlin-dashboard https://opendev.org/openstack/senlin-dashboard
-{% endif %}
-{% if enable_sahara %}
-enable_plugin sahara https://opendev.org/openstack/sahara
-{% endif %}
-{% if enable_glusterfs %}
-enable_plugin glusterfs https://opendev.org/openstack/devstack-plugin-glusterfs
+enable_service senlin senlin-api senlin-engine
 {% endif %}
 
-# ===== Telemetry Services =====
-{% if enable_ceilometer %}
-enable_service ceilometer-acentral
-enable_service ceilometer-collector
-enable_service ceilometer-api
-{% endif %}
-{% if enable_aodh %}
-enable_service aodh-api
-enable_service aodh-evaluator
-enable_service aodh-notifier
-enable_service aodh-listener
-{% endif %}
-{% if enable_gnocchi %}
-enable_service gnocchi-api
-enable_service gnocchi-metricd
-{% endif %}
-{% if enable_panko %}
-enable_service panko
+{% if enable_zaqar | default(false) %}
+# Zaqar - Messaging Service
+enable_plugin zaqar https://opendev.org/openstack/zaqar
+# Zaqar does not have a separate dashboard plugin usually integrated into Horizon
+enable_service zaqar-server
 {% endif %}
 
-# ===== Security/Workflow =====
-{% if enable_congress %}
-enable_service congress
-{% endif %}
-{% if enable_mistral %}
-enable_service mistral
+{% if enable_blazar | default(false) %}
+# Blazar - Resource Reservation Service
+enable_plugin blazar https://opendev.org/openstack/blazar
+enable_plugin blazar-dashboard https://opendev.org/openstack/blazar-dashboard
+enable_service blazar blazar-api blazar-manager
 {% endif %}
 
-# ===== Custom Services =====
-{% if _install_tempest %}
-INSTALL_TEMPEST=True # Ensures global Tempest package installation for direct execution
-# Optional: Override Tempest repository if needed
-# TEMPEST_REPO=https://opendev.org/openstack/tempest
+{% if enable_masakari | default(false) %}
+# Masakari - Instances High Availability Service
+enable_plugin masakari https://opendev.org/openstack/masakari
+enable_plugin masakari-dashboard https://opendev.org/openstack/masakari-dashboard
+enable_service masakari masakari-api masakari-engine
 {% endif %}
+
+# ==============================================================================
+# Telemetry Services
+# ==============================================================================
+{% if enable_gnocchi | default(false) %}
+# Gnocchi - Telemetry (Metrics as a Service)
+enable_plugin gnocchi https://opendev.org/openstack/gnocchi
+enable_service gnocchi-api gnocchi-metricd
+# Gnocchi can use different storage backends, default is usually file or Swift
+# GNOCCHI_ARCHIVE_POLICY_FILE=$DEST/gnocchi/archive_policy.json
+{% endif %}
+
+{% if enable_ceilometer | default(false) %}
+# Ceilometer - Telemetry (Data Collection)
+enable_plugin ceilometer https://opendev.org/openstack/ceilometer
+enable_service ceilometer-acentral ceilometer-acompute ceilometer-anotification ceilometer-collector
+# Ceilometer can be used with Gnocchi or other backends
+# By default, DevStack might configure it with gnocchi if gnocchi is also enabled
+{% if enable_gnocchi | default(false) %}
+CEILOMETER_PIPELINE_PUBLISHERS=gnocchi://
+{% endif %}
+{% endif %}
+
+{% if enable_aodh | default(false) %}
+# Aodh - Telemetry (Alarming as a Service)
+enable_plugin aodh https://opendev.org/openstack/aodh
+enable_service aodh-api aodh-evaluator aodh-notifier aodh-listener
+{% endif %}
+
+{% if enable_panko | default(false) %}
+# Panko - Telemetry (Event Storage as a Service)
+enable_plugin panko https://opendev.org/openstack/panko
+enable_service panko-api
+{% endif %}
+
+# ==============================================================================
+# Security and Workflow Services
+# ==============================================================================
+{% if enable_congress | default(false) %}
+# Congress - Governance as a Service
+enable_plugin congress https://opendev.org/openstack/congress
+enable_plugin congress-dashboard https://opendev.org/openstack/congress-dashboard
+enable_service congress-api congress-policy-engine
+{% endif %}
+
+{% if enable_mistral | default(false) %}
+# Mistral - Workflow Service
+enable_plugin mistral https://opendev.org/openstack/mistral
+# Mistral dashboard is usually part of Horizon
+enable_service mistral-api mistral-engine mistral-executor
+{% endif %}
+
+# ==============================================================================
+# Custom Services (User Defined)
+# ==============================================================================
+{% if custom_services is defined %}
 {% for svc in custom_services %}
-{% if svc.enabled %}
-enable_service {{ svc.name }}
+{% if svc.name == 'tempest' and svc.enabled %}
+enable_plugin tempest https://opendev.org/openstack/tempest
+{% endif %}
+{% if svc.name == 'kuryr' and svc.enabled %}
+enable_plugin kuryr-libnetwork https://opendev.org/openstack/kuryr-libnetwork
+enable_service kuryr
 {% endif %}
 {% endfor %}
+{% endif %}
 
-# ===== Debugging per Service (Logging to /opt/stack/logs/) =====
-[[post-config|$KEYSTONE_CONF]]
-[DEFAULT]
-debug = True
-log_dir = {{ stack_home }}/logs/keystone
+# ==============================================================================
+# Post-Config: Override Service INI Files
+# ==============================================================================
 
 [[post-config|$NOVA_CONF]]
 [DEFAULT]
-debug = True
-log_dir = {{ stack_home }}/logs/nova
+force_config_drive = True
+[vnc]
+server_listen = {{ default_ip }}
+server_proxyclient_address = {{ default_ip }}
+[neutron]
+auth_url = http://{{ default_ip }}/identity
+auth_type = password
+username = neutron
+password = {{ NEUTRON_PASSWORD }}
+project_name = service
+project_domain_name = Default
+user_domain_name = Default
+region_name = RegionOne
+service_metadata_proxy = True
+metadata_proxy_shared_secret = {{ SERVICE_PASSWORD }}
 
-[[post-config|$GLANCE_API_CONF]]
-[DEFAULT]
-debug = True
-log_dir = {{ stack_home }}/logs/glance
-
-[[post-config|$CINDER_CONF]]
-[DEFAULT]
-debug = True
-log_dir = {{ stack_home }}/logs/cinder
-
+{% if enable_neutron | default(true) %}
 [[post-config|$NEUTRON_CONF]]
 [DEFAULT]
-debug = True
-log_dir = {{ stack_home }}/logs/neutron
+debug = {{ 'True' if verbose_logging | default(true) else 'False' }}
+core_plugin = ml2
+service_plugins = router
+allow_overlapping_ips = True
+notify_nova_on_port_status_changes = True
+notify_nova_on_port_data_changes = True
+api_workers = 2
+rpc_workers = 2
+[keystone_authtoken]
+auth_url = http://{{ default_ip }}/identity
+www_authenticate_uri = http://{{ default_ip }}/identity
+memcached_servers = {{ default_ip }}:11211
+auth_type = password
+username = neutron
+password = {{ NEUTRON_PASSWORD }}
+project_name = service
+project_domain_name = Default
+user_domain_name = Default
 
-[[post-config|$HEAT_CONF]]
-[DEFAULT]
-debug = True
-log_dir = {{ stack_home }}/logs/heat
+[[post-config|/etc/neutron/plugins/ml2/ml2_conf.ini]]
+[ml2]
+{% if neutron_plugin | default('ovs') == 'ovn' %}
+type_drivers = geneve,vlan,flat
+tenant_network_types = geneve
+mechanism_drivers = ovn,logger
+extension_drivers = port_security
+path_mtu = 1442
+{% else %}
+type_drivers = vxlan,flat,vlan
+tenant_network_types = vxlan
+mechanism_drivers = openvswitch,l2population
+extension_drivers = port_security
+[ml2_type_vxlan]
+vni_ranges = 1:1000
+[ovs]
+local_ip = {{ default_ip }}
+bridge_mappings = public:{{ public_bridge | default('br-ex') }}
+[agent]
+tunnel_types = vxlan
+l2_population = True
+[securitygroup]
+firewall_driver = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+enable_ipset = True
+{% endif %}
+{% endif %}
 
-[[post-config|$SWIFT_CONF]]
-[DEFAULT]
-log_level = DEBUG
-log_dir = {{ stack_home }}/logs/swift
+# ==============================================================================
+# Post-Stack Health Checks
+# ==============================================================================
+[[post-extra]]
+#!/bin/bash
+echo "[[post-extra]] Running health checks..."
 
-[[post-config|$MAGNUM_CONF]]
-[DEFAULT]
-debug = True
-log_dir = {{ stack_home }}/logs/magnum
+function check_api {
+    local svc="$1"; local url="$2"; local timeout=180; local count=0
+    echo -n "Checking $svc API at $url..."
+    while ! curl -fs "$url" >/dev/null; do
+        sleep 2; count=$((count+2))
+        if [ $count -ge $timeout ]; then echo " FAIL."; exit 1; fi
+        echo -n "."; 
+    done
+    echo " OK"
+}
 
-[[post-config|$MANILA_CONF]]
-[DEFAULT]
-debug = True
-log_dir = {{ stack_home }}/logs/manila
+{% if enable_keystone | default(true) %} check_api "Keystone" "http://{{ default_ip }}/identity" {% endif %}
+{% if enable_glance | default(true) %} check_api "Glance" "http://{{ default_ip }}:9292" {% endif %}
+{% if enable_nova | default(true) %} check_api "Nova" "http://{{ default_ip }}:8774" {% endif %}
+{% if enable_neutron | default(true) %} check_api "Neutron" "http://{{ default_ip }}:9696" {% endif %}
 
-[[post-config|$BARBICAN_CONF]]
-[DEFAULT]
-debug = True
-log_dir = {{ stack_home }}/logs/barbican
+# OpenStack CLI sanity
+echo "Testing CLI authentication..."
+source "{{ stack_home }}/openrc" admin admin
+if ! openstack endpoint list > /dev/null; then
+    echo "FAIL: CLI endpoint list failed"; exit 1
+fi
+# Ensure OVSDB is bound to TCP before neutron-ovs-cleanup runs
+echo "Waiting for OVSDB to be ready..."
+for i in {1..10}; do
+  if sudo ovs-vsctl show &>/dev/null; then
+    echo "OVSDB is ready."
+    break
+  fi
+  echo "Waiting..."
+  sleep 3
+done
 
-[[post-config|$OCTAVIA_CONF]]
-[DEFAULT]
-debug = True
-log_dir = {{ stack_home }}/logs/octavia
-
-[[post-config|$CEILOMETER_CONF]]
-[DEFAULT]
-debug = True
-log_dir = {{ stack_home }}/logs/ceilometer
-
-[[post-config|$AODH_CONF]]
-[DEFAULT]
-debug = True
-log_dir = {{ stack_home }}/logs/aodh
-
-[[post-config|$GNOCCHI_CONF]]
-[DEFAULT]
-debug = True
-log_dir = {{ stack_home }}/logs/gnocchi
-
-[[post-config|$MISTRAL_CONF]]
-[DEFAULT]
-debug = True
-log_dir = {{ stack_home }}/logs/mistral
-
-[[post-config|$CONGRESS_CONF]]
-[DEFAULT]
-debug = True
-log_dir = {{ stack_home }}/logs/congress
+# Force OVS to listen on TCP:6640 if not already set
+sudo ovs-vsctl set-manager ptcp:6640:127.0.0.1 || true

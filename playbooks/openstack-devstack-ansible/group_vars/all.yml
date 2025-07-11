@@ -11,6 +11,8 @@ devstack_marker_file: "{{ stack_home }}/.stack_installed"
 # Interface detection fallback
 default_interface: "{{ ansible_default_ipv4.interface }}"
 default_ip: "{{ ansible_default_ipv4.address }}"
+# public_network_gateway:
+# floating_ip_range:
 
 # Core services
 enable_keystone: true
@@ -21,6 +23,7 @@ enable_cinder: true
 enable_placement: true
 enable_horizon: true
 enable_magnum: true
+magnum_kubectl_version: "v1.28.6"
 neutron_plugin: ml2  # or 'ovn' to enable OVN mode
 
 # Optional compute/storage/network services
