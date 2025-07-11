@@ -1,5 +1,6 @@
 [DEFAULT]
 core_plugin = ml2
+log_dir = /var/log/neutron
 service_plugins = router
 allow_overlapping_ips = True
 transport_url = rabbit://{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ rabbitmq_host }}

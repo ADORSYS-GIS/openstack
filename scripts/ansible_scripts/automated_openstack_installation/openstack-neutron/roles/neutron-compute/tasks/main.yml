@@ -18,6 +18,33 @@
     mode: "0640"
   notify: Restart neutron-linuxbridge-agent
 
+# Trying to manually configure the nova component on the compute node 
+- name: Updating apt package cache
+  apt:
+    update_cache: yes
+
+- name: Install nova-compute
+  apt:
+    name: nova-compute
+    state: present
+
+- name: Configure nova-compute
+  template:
+    src: nova-compute.conf.j2
+    dest: /etc/nova/nova.conf
+    owner: root
+    group: nova
+    mode: 0640
+  notify: Restart nova-compute
+
+
+- name: Ensure nova-compute is started and enabled
+  service:
+    name: nova-compute
+    state: started
+    enabled: yes
+
+
 - name: Configure Nova to use Neutron
   blockinfile:
     path: /etc/nova/nova.conf

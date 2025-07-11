@@ -4,7 +4,12 @@ neutron_db_name: neutron
 neutron_db_user: neutron
 neutron_db_host: "{{ groups['controllers'][0] }}"
 neutron_db_password: "NeutronPass"
+nova_db_password: "NovaDBPass"
 mysql_root_password: "password"
+
+# service passwords
+placement_service_password: "PlacementServicePass"
+nova_service_password: "NovaServicePass"
 
 # MySQL admin user and password
 mysql_admin_user: "admin"
@@ -19,6 +24,8 @@ admin_project: "admin"
 rabbitmq_user: openstack
 rabbitmq_password: "RabbitPass123"
 rabbitmq_host: "{{ groups['controllers'][0] }}"
+compute_host: "{{ groups['computes'][0] }}"
+controller_host: "{{ groups['controllers'][0] }}"
 
 # Keystone configuration
 keystone_admin_url: "http://{{ groups['controllers'][0] }}:5000/v3"
