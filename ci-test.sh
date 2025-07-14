@@ -4,15 +4,13 @@ set -e
 # 0. Ensure Vagrant is installed
 if ! command -v vagrant &> /dev/null; then
     echo "[CI] Vagrant is not installed. Installing..."
-
-    # For Debian/Ubuntu-based systems
     sudo apt-get update -y
     sudo apt-get install -y curl gnupg software-properties-common
-
-    curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
-      sudo tee /etc/apt/sources.list.d/hashicorp.list > /dev/null
-
+    curl -fsSL https://apt.releases.hashicorp.com/gpg \
+        | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
+        https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
+        | sudo tee /etc/apt/sources.list.d/hashicorp.list > /dev/null
     sudo apt-get update -y
     sudo apt-get install -y vagrant
     echo "[CI] Vagrant installed successfully."
@@ -23,6 +21,19 @@ fi
 # 1. Bring up the Vagrant VM and run provisioning
 echo "[CI] Starting Vagrant VM..."
 vagrant up --provider=libvirt
+
+# **Provision: Install Ansible correctly inside the VM**
+vagrant ssh <<'VMEOF'
+sudo tee /etc/apt/apt.conf.d/99-force-ipv4 > /dev/null <<EOF
+Acquire::ForceIPv4 "true";
+EOF
+
+sudo apt-get update -y -qq
+sudo apt-get install -y -qq ansible
+
+echo "[VM] Ansible version:"
+ansible --version
+VMEOF
 
 # 2. Get the VM's IP address (using the default libvirt network)
 VM_IP=$(vagrant ssh -c "hostname -I | awk '{print \$2}'" | tr -d '\r')
