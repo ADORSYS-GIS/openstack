@@ -19,6 +19,30 @@ else
     echo "[CI] Vagrant is already installed."
 fi
 
+# 0.1 Install and configure libvirt, KVM, and qemu
+echo "[CI] Installing libvirt, KVM, and qemu..."
+sudo apt-get install -y \
+    libvirt-dev \
+    libvirt-daemon-system \
+    libvirt-clients \
+    qemu-system-x86 \
+    qemu-utils \
+    virt-manager \
+    bridge-utils \
+    libosinfo-bin \
+    cpu-checker
+
+# Ensure libvirtd is running
+echo "[CI] Starting libvirtd service..."
+sudo systemctl enable --now libvirtd
+
+# Add current user to libvirt and kvm groups (needed for access)
+echo "[CI] Adding user '$USER' to libvirt and kvm groups..."
+sudo usermod -aG libvirt "$USER"
+sudo usermod -aG kvm "$USER"
+
+echo "[CI] Re-login or reboot may be required for group changes to apply."
+
 # 1. Ensure KVM and Libvirt are installed
 echo "[CI] Installing libvirt and QEMU tools..."
 sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager
@@ -40,7 +64,7 @@ fi
 echo "[CI] Starting Vagrant VM..."
 vagrant up --provider=libvirt
 
-# 4. Get the VM's IP address (default libvirt network)
+# 2. Get the VM's IP address (using the default libvirt network)
 VM_IP=$(vagrant ssh -c "hostname -I | awk '{print \$2}'" | tr -d '\r')
 echo "[CI] VM IP: $VM_IP"
 
