@@ -204,3 +204,5 @@ openstack token issue
 3. **List Keystoone Image**
 
 ```
+openstack image list
+```
