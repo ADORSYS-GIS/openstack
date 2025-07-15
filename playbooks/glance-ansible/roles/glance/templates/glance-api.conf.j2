@@ -1,0 +1,20 @@
+[database]
+connection = mysql+pymysql://glance:{{ glance_db_pass }}@localhost/glance
+
+[keystone_authtoken]
+www_authenticate_uri = http://{{ controller_host }}:{{ keystone_port }}
+auth_url = http://{{ controller_host }}:{{ keystone_port }}
+memcached_servers = localhost:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = glance
+password = {{ glance_user_pass }}
+
+[paste_deploy]
+flavor = keystone
+
+[DEFAULT]
+debug = true
+filesystem_store_datadir = /var/lib/glance/images/

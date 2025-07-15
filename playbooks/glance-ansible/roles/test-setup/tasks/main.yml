@@ -1,0 +1,106 @@
+---
+- name: Authenticate with Keystone to get token
+  shell: |
+    RESPONSE=$(curl -s -i -X POST "{{ keystone_url }}/auth/tokens" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "auth": {
+          "identity": {
+            "methods": ["password"],
+            "password": {
+              "user": {
+                "name": "{{ admin_user }}",
+                "domain": { "name": "{{ domain_name }}" },
+                "password": "{{ admin_pass }}"
+              }
+            }
+          },
+          "scope": {
+            "project": {
+              "name": "{{ project_name }}",
+              "domain": { "name": "{{ domain_name }}" }
+            }
+          }
+        }
+      }')
+    TOKEN=$(echo "$RESPONSE" | grep -i "X-Subject-Token:" | awk '{print $2}' | tr -d '\r')
+    echo "$TOKEN"
+  register: keystone_token
+  changed_when: false
+
+- name: Fail if Keystone token not received
+  fail:
+    msg: "Failed to get Keystone token"
+  when: keystone_token.stdout == ""
+
+- name: Wait for Glance API to be reachable
+  shell: |
+    RETRY=0
+    while [ $RETRY -lt 10 ]; do
+      HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "X-Auth-Token: {{ keystone_token.stdout }}" "{{ glance_url }}/images") || HTTP_CODE="000"
+      if [ "$HTTP_CODE" = "200" ]; then
+        exit 0
+      fi
+      sleep 3
+      RETRY=$((RETRY + 1))
+    done
+    exit 1
+  register: glance_reachable
+  failed_when: glance_reachable.rc != 0
+  changed_when: false
+
+- name: Download Cirros test image if missing
+  get_url:
+    url: "http://download.cirros-cloud.net/0.6.2/{{ image_file }}"
+    dest: "/tmp/{{ image_file }}"
+    mode: '0644'
+  when: not lookup('file', '/tmp/' + image_file, errors='ignore')
+
+- name: Create Glance image metadata
+  shell: |
+    curl -s -X POST "{{ glance_url }}/images" \
+      -H "X-Auth-Token: {{ keystone_token.stdout }}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "name": "{{ image_name }}",
+        "disk_format": "{{ disk_format }}",
+        "container_format": "{{ container_format }}",
+        "visibility": "public"
+      }'
+  register: create_image_response
+  changed_when: false
+
+- name: Extract Image ID from create response
+  set_fact:
+    image_id: "{{ (create_image_response.stdout | from_json).id }}"
+
+- name: Fail if image ID not found
+  fail:
+    msg: "Failed to create image metadata."
+  when: image_id is not defined or image_id == ""
+
+- name: Upload image binary
+  shell: |
+    curl -s -X PUT "{{ glance_url }}/images/{{ image_id }}/file" \
+      -H "X-Auth-Token: {{ keystone_token.stdout }}" \
+      -H "Content-Type: application/octet-stream" \
+      --data-binary "@/tmp/{{ image_file }}"
+  register: upload_image
+  failed_when: upload_image.rc != 0
+  changed_when: false
+
+- name: Verify image list (prints JSON if jq available)
+  shell: |
+    if command -v jq >/dev/null 2>&1; then
+      curl -s -H "X-Auth-Token: {{ keystone_token.stdout }}" "{{ glance_url }}/images" | jq .
+    else
+      echo "Warning: jq not found, printing raw JSON"
+      curl -s -H "X-Auth-Token: {{ keystone_token.stdout }}" "{{ glance_url }}/images"
+    fi
+  register: image_list
+  changed_when: false
+
+- name: Delete test image
+  shell: |
+    curl -s -X DELETE "{{ glance_url }}/images/{{ image_id }}" -H "X-Auth-Token: {{ keystone_token.stdout }}"
+  changed_when: false
