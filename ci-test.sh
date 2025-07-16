@@ -7,10 +7,15 @@ PROVIDER="libvirt"  # default
 
 echo "[CI] Detected architecture: $ARCH"
 
-# 1. Install required base tools
-echo "[CI] Installing basic dependencies..."
+# 1. Install basic tools and dev libraries
+echo "[CI] Installing system dependencies..."
 sudo apt-get update -y
-sudo apt-get install -y curl gnupg software-properties-common
+sudo apt-get install -y \
+    curl gnupg software-properties-common \
+    build-essential autoconf libtool pkg-config \
+    libvirt-dev libxml2-dev libxslt-dev zlib1g-dev \
+    bridge-utils dnsmasq-base ebtables libguestfs-tools \
+    virtinst ruby-dev
 
 # 2. Install Vagrant if missing
 if ! command -v vagrant &> /dev/null; then
@@ -23,66 +28,45 @@ else
     echo "[CI] Vagrant already installed."
 fi
 
-# 3. Architecture-specific setup
+# 3. Architecture-specific virtualization setup
 if [ "$ARCH" = "x86_64" ]; then
     echo "[CI] Setting up virtualization for x86_64..."
-
     sudo apt-get install -y cpu-checker
     if ! kvm-ok | grep -q 'can be used'; then
         echo "[WARN] KVM not available. Falling back to VirtualBox."
         PROVIDER="virtualbox"
     else
-        # Install libvirt for x86_64
-        echo "[CI] Installing libvirt and KVM packages..."
+        echo "[CI] Installing libvirt & KVM packages..."
         sudo apt-get install -y \
-            libvirt-daemon-system \
-            libvirt-clients \
-            libvirt-dev \
-            qemu-kvm \
-            qemu-system-x86 \
-            bridge-utils \
-            virt-manager \
-            libosinfo-bin
-
-        echo "[CI] Enabling libvirtd..."
+            qemu-kvm qemu-system-x86 \
+            libvirt-daemon-system libvirt-clients \
+            virt-manager libosinfo-bin
         sudo systemctl enable --now libvirtd
-
-        echo "[CI] Adding '$USER' to libvirt and kvm groups..."
         sudo usermod -aG libvirt "$USER"
         sudo usermod -aG kvm "$USER"
     fi
 
 elif [ "$ARCH" = "aarch64" ]; then
     echo "[CI] Setting up virtualization for ARM64..."
-
     sudo apt-get install -y \
-        qemu-system-arm \
-        qemu-efi-aarch64 \
-        libvirt-daemon-system \
-        libvirt-clients \
-        libvirt-dev \
-        bridge-utils \
-        virt-manager \
-        libosinfo-bin
-
-    echo "[CI] Enabling libvirtd..."
+        qemu-system-arm qemu-efi-aarch64 \
+        libvirt-daemon-system libvirt-clients \
+        bridge-utils virt-manager libosinfo-bin
     sudo systemctl enable --now libvirtd
-
-    echo "[CI] Adding '$USER' to libvirt group..."
     sudo usermod -aG libvirt "$USER"
-    PROVIDER="libvirt"  # Keep using libvirt with QEMU ARM backend
+    PROVIDER="libvirt"
 else
     echo "❌ Unsupported architecture: $ARCH"
     exit 1
 fi
 
-# 4. Install Vagrant plugin
+# 4. Install vagrant-libvirt plugin
 if ! vagrant plugin list | grep -q vagrant-libvirt; then
-    echo "[CI] Installing vagrant-libvirt plugin dependencies..."
-    sudo apt-get install -y libxslt-dev libxml2-dev zlib1g-dev ruby-dev
-
     echo "[CI] Installing vagrant-libvirt plugin..."
-    vagrant plugin install vagrant-libvirt
+    vagrant plugin install vagrant-libvirt || {
+        echo "❌ Failed to install vagrant-libvirt plugin."
+        exit 1
+    }
 else
     echo "[CI] vagrant-libvirt plugin already installed."
 fi
