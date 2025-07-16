@@ -1,24 +1,73 @@
+---
 - name: Check if DevStack has already been run
   stat:
     path: /opt/stack/.devstack_installed
   register: devstack_marker
 
-- name: Run DevStack setup script
+# --- Open vSwitch setup (OVN/ML2 precondition) ---
+- name: Install Open vSwitch
+  become: true
+  apt:
+    name: openvswitch-switch
+    state: present
+    update_cache: yes
+
+- name: Enable and start OVS systemd service
+  become: true
+  systemd:
+    name: openvswitch-switch
+    enabled: yes
+    state: started
+
+- name: Check if ovs-vsctl exists
+  become: true
+  command: which ovs-vsctl
+  register: ovs_vsctl_check
+  changed_when: false
+  ignore_errors: true
+
+- name: Set OVS to listen on TCP:6640
+  become: true
+  command: ovs-vsctl set-manager ptcp:6640:127.0.0.1
+  when: ovs_vsctl_check.rc == 0
+
+- name: Verify OVSDB manager is set
+  become: true
+  command: ovs-vsctl get-manager
+  register: ovs_manager_result
+  when: ovs_vsctl_check.rc == 0
+
+- name: Show OVSDB manager result
+  debug:
+    var: ovs_manager_result.stdout
+  when: ovs_vsctl_check.rc == 0
+
+- name: Ensure OVSDB is listening on TCP:6640
+  become: true
+  shell: ss -tlpn | grep ':6640'
+  register: ovs_tcp_check
+  failed_when: ovs_tcp_check.rc != 0
+  changed_when: false
+  when: ovs_vsctl_check.rc == 0
+
+# --- DevStack Installation ---
+- name: Run DevStack stack.sh
   shell: ./stack.sh > /opt/stack/devstack-install.log 2>&1
   args:
     chdir: /opt/stack/devstack
     executable: /bin/bash
-  become: yes
+  become: true
   become_user: stack
   when: not devstack_marker.stat.exists
   register: devstack_result
   failed_when: devstack_result.rc != 0
 
 - name: Create marker file to indicate DevStack was installed
+  become: true
   file:
     path: /opt/stack/.devstack_installed
     state: touch
     owner: stack
-    group: wheel
+    group: stack
     mode: '0644'
   when: not devstack_marker.stat.exists

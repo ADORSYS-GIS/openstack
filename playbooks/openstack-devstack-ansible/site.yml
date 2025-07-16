@@ -11,5 +11,6 @@
     - setup-env
     - clone-devstack
     - configure-devstack
+    - fix-dns
     - run-devstack
     - post-install

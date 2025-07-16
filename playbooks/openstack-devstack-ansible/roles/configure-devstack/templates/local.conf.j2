@@ -167,7 +167,9 @@ enable_plugin magnum https://opendev.org/openstack/magnum
 enable_plugin magnum-ui https://opendev.org/openstack/magnum-ui
 MAGNUM_IMAGE_NAME={{ magnum_image_name | default('fedora-coreos-stable') }}
 MAGNUM_KUBECTL_VERSION={{ magnum_kubectl_version | default("v1.28.6") }}
+MAGNUM_KUBECTL_TAG={{ magnum_kubectl_version | default("v1.28.6") }}
 {% endif %}
+
 
 {% if enable_ironic | default(false) %}
 # Ironic - Bare Metal Provisioning
@@ -284,6 +286,7 @@ enable_service kuryr
 # Post-Config: Override Service INI Files
 # ==============================================================================
 
+{% if enable_nova | default(true) %}
 [[post-config|$NOVA_CONF]]
 [DEFAULT]
 force_config_drive = True
@@ -301,6 +304,7 @@ user_domain_name = Default
 region_name = RegionOne
 service_metadata_proxy = True
 metadata_proxy_shared_secret = {{ SERVICE_PASSWORD }}
+{% endif %}
 
 {% if enable_neutron | default(true) %}
 [[post-config|$NEUTRON_CONF]]
@@ -364,7 +368,7 @@ function check_api {
     while ! curl -fs "$url" >/dev/null; do
         sleep 2; count=$((count+2))
         if [ $count -ge $timeout ]; then echo " FAIL."; exit 1; fi
-        echo -n "."; 
+        echo -n ".";
     done
     echo " OK"
 }
