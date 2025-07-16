@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 ARCH=$(uname -m)
@@ -24,7 +24,7 @@ else
 fi
 
 # 3. Architecture-specific setup
-if [[ "$ARCH" == "x86_64" ]]; then
+if [ "$ARCH" = "x86_64" ]; then
     echo "[CI] Setting up virtualization for x86_64..."
 
     sudo apt-get install -y cpu-checker
@@ -52,7 +52,7 @@ if [[ "$ARCH" == "x86_64" ]]; then
         sudo usermod -aG kvm "$USER"
     fi
 
-elif [[ "$ARCH" == "aarch64" ]]; then
+elif [ "$ARCH" = "aarch64" ]; then
     echo "[CI] Setting up virtualization for ARM64..."
 
     sudo apt-get install -y \
