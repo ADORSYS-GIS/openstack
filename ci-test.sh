@@ -29,8 +29,8 @@ if [ "$ARCH" = "x86_64" ]; then
 
     sudo apt-get install -y cpu-checker
     if ! kvm-ok | grep -q 'can be used'; then
-        echo "[WARN] KVM not available. Falling back to VirtualBox."
-        PROVIDER="virtualbox"
+        echo "[WARN] KVM not available"
+     
     else
         # Install libvirt for x86_64
         echo "[CI] Installing libvirt and KVM packages..."
