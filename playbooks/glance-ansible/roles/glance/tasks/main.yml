@@ -80,7 +80,6 @@
     priv: 'keystone.*:ALL'
     host: localhost
     state: present
-    column_case_sensitive: false
     login_user: root
     login_password: "{{ mysql_root_pass }}"
 
@@ -91,7 +90,6 @@
     priv: 'keystone.*:ALL'
     host: '%'
     state: present
-    column_case_sensitive: false
     login_user: root
     login_password: "{{ mysql_root_pass }}"
 
@@ -155,7 +153,6 @@
     priv: "glance.*:ALL"
     host: localhost
     state: present
-    column_case_sensitive: false
     login_user: root
     login_password: "{{ mysql_root_pass }}"
 
@@ -166,7 +163,6 @@
     priv: "glance.*:ALL"
     host: "%"
     state: present
-    column_case_sensitive: false
     login_user: root
     login_password: "{{ mysql_root_pass }}"
 
