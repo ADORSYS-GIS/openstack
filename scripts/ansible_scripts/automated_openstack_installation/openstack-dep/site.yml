@@ -1,7 +1,9 @@
 ---
 
 - hosts: controllers:computes
-  become: yes
+  become: true
+  roles:
+    - prerequisites
   tasks:
     - name: Ensure OpenStack client is installed
       apt:
@@ -9,7 +11,7 @@
         state: present
 
 - hosts: controllers
-  become: yes
+  become: true
   roles:
     - database
     - keystone
@@ -19,7 +21,7 @@
     - nova
 
 - hosts: computes
-  become: yes
+  become: true
   tasks:
     - name: Ensure controller is in /etc/hosts
       lineinfile:
@@ -27,7 +29,16 @@
         line: "{{ hostvars[groups['controllers'][0]].ansible_host }} controller"
         state: present
 
+- hosts: controllers
+  become: true
+  tasks:
+    - name: Ensure controller is in /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ hostvars[groups['computes'][0]].ansible_host }} compute"
+        state: present
+
 - hosts: computes
-  become: yes
+  become: true
   roles:
     - nova-compute

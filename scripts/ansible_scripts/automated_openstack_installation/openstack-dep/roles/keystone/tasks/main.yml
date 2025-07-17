@@ -11,21 +11,53 @@
     owner: root
     group: keystone
     mode: 0640
+  become: true
+
+- name: Ensure keystone user and group exist
+  ansible.builtin.user:
+    name: keystone
+    system: yes
+    shell: /usr/sbin/nologin
+  become: true
+
+- name: Ensure /var/lib/keystone is owned by keystone
+  file:
+    path: /var/lib/keystone
+    owner: keystone
+    group: keystone
+    state: directory
+    recurse: yes
+  become: true
+
+- name: Ensure keystone user has passwordless sudo
+  copy:
+    dest: /etc/sudoers.d/keystone
+    content: "keystone ALL=(ALL) NOPASSWD:ALL\n"
+    owner: root
+    group: root
+    mode: 0440
+  become: true
 
 - name: Initialize Keystone DB
-  command: "keystone-manage db_sync"
+  command: keystone-manage --config-file /etc/keystone/keystone.conf db_sync
   args:
     creates: /var/lib/keystone/keystone.db
+  become: true
+  become_user: keystone
 
 - name: Initialize Fernet keys for Keystone
-  command: keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+  command: keystone-manage --config-file /etc/keystone/keystone.conf fernet_setup --keystone-user keystone --keystone-group keystone
   args:
     creates: /etc/keystone/fernet-keys/0
+  become: true
+  become_user: keystone
 
 - name: Initialize Credential keys for Keystone
-  command: keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
+  command: keystone-manage --config-file /etc/keystone/keystone.conf credential_setup --keystone-user keystone --keystone-group keystone
   args:
     creates: /etc/keystone/credential-keys/0
+  become: true
+  become_user: keystone
 
 - name: Bootstrap Keystone
   command: >
@@ -43,3 +75,42 @@
   set_fact:
     keystone_bootstrapped: true
   when: keystone_bootstrap is changed
+
+- name: Install Apache2 and WSGI module for Keystone
+  apt:
+    name:
+      - apache2
+      - libapache2-mod-wsgi-py3
+    state: present
+
+- name: Ensure ServerName is set in Apache config
+  lineinfile:
+    path: /etc/apache2/apache2.conf
+    line: "ServerName {{ controller_host | default('controller') }}"
+    state: present
+
+- name: Deploy Keystone WSGI Apache config
+  template:
+    src: wsgi-keystone.conf.j2
+    dest: /etc/apache2/sites-available/wsgi-keystone.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Enable Keystone site
+  command: a2ensite wsgi-keystone
+  args:
+    creates: /etc/apache2/sites-enabled/wsgi-keystone.conf
+
+- name: Enable required Apache modules
+  shell: |
+    a2enmod wsgi
+    a2enmod ssl
+  args:
+    executable: /bin/bash
+
+- name: Restart Apache2
+  service:
+    name: apache2
+    state: restarted
+    enabled: yes
