@@ -54,12 +54,6 @@
     mode: 0750
   become: true
 
-- name: Remove stale keystone-manage.log if exists
-  file:
-    path: /var/log/keystone/keystone-manage.log
-    state: absent
-  become: true
-
 - name: Ensure /var/log has correct permissions
   file:
     path: /var/log
@@ -67,19 +61,45 @@
     state: directory
   become: true
 
+- name: Ensure /var/lib has correct permissions
+  file:
+    path: /var/lib
+    mode: 0755
+    state: directory
+  become: true
+
+- name: Remove stale keystone-manage.log if exists
+  file:
+    path: /var/log/keystone/keystone-manage.log
+    state: absent
+  become: true
+
+- name: Remove stale keystone.db if exists and not owned by keystone
+  file:
+    path: /var/lib/keystone/keystone.db
+    state: absent
+  become: true
+
+- name: Ensure keystone user has a valid shell
+  user:
+    name: keystone
+    shell: /bin/bash
+  become: true
+
 - name: Initialize Keystone DB
-  command: "sudo -u keystone keystone-manage db_sync" 
+  command: "keystone-manage --debug db_sync" 
+  become_user: keystone
+  become: true
   args:
     creates: /var/lib/keystone/keystone.db
-  become: true
-  become_user: keystone
+
 
 - name: Initialize Fernet keys for Keystone
   command: keystone-manage --config-file /etc/keystone/keystone.conf fernet_setup --keystone-user keystone --keystone-group keystone
-  args:
-    creates: /etc/keystone/fernet-keys/0
   become: true
   become_user: keystone
+  args:
+    creates: /etc/keystone/fernet-keys/0
 
 - name: Initialize Credential keys for Keystone
   command: keystone-manage --config-file /etc/keystone/keystone.conf credential_setup --keystone-user keystone --keystone-group keystone

@@ -1,6 +1,21 @@
 #!/bin/bash
 set -e
 
+# Check if multipass is installed
+if ! command -v multipass >/dev/null 2>&1; then
+    echo "[ERROR] Multipass is not installed."
+    if [[ "$(uname)" == "Darwin" ]]; then
+        echo "To install Multipass on macOS, run:"
+        echo "  brew install --cask multipass"
+    elif [[ -f /etc/lsb-release ]] && grep -qi ubuntu /etc/lsb-release; then
+        echo "To install Multipass on Ubuntu, run:"
+        echo "  sudo snap install multipass"
+    else
+        echo "Please see https://multipass.run/ for installation instructions for your OS."
+    fi
+    exit 1
+fi
+
 # Configuration
 CONTROLLER_NAME="controller"
 COMPUTE_NAME="compute"
@@ -137,3 +152,26 @@ $ANSIBLE_CMD -i inventory.ini site.yml -vvv
 # Run openstack-neutron playbook
 cd ../openstack-neutron || exit 1
 $ANSIBLE_CMD -i inventory.ini site.yml -vvv 
+
+# At the end, print manual test and cleanup instructions
+cat <<EOF
+
+[INFO] OpenStack deployment script completed.
+
+To manually test your OpenStack installation:
+  1. SSH into the controller VM:
+     multipass shell controller
+  2. Source the OpenStack admin credentials (if created):
+     source /root/admin-openrc.sh
+  3. Run a test command, e.g.:
+     openstack project list
+     openstack user list
+     openstack service list
+
+To delete all Multipass VMs and free resources:
+  multipass list
+  multipass delete --all
+  multipass purge
+
+For more info, see: https://docs.openstack.org/ and https://multipass.run/
+EOF 

@@ -2,14 +2,14 @@
   apt:
     name: rabbitmq-server
     state: present
-  become: yes
+  become: true
 
 - name: Ensure RabbitMQ is started and enabled
   service:
     name: rabbitmq-server
     state: started
     enabled: yes
-  become: yes
+  become: true
 
 - name: Add OpenStack RabbitMQ user
   rabbitmq_user:
@@ -17,14 +17,14 @@
     password: "{{ rabbitmq_password }}"
     state: present
     force: yes
-  become: yes
+  become: true
 
 - name: Set OpenStack RabbitMQ user tags
   rabbitmq_user:
     user: "{{ rabbitmq_user }}"
     tags: administrator
     state: present
-  become: yes
+  become: true
 
 - name: Ensure OpenStack RabbitMQ user has permissions
   rabbitmq_user:
@@ -34,4 +34,4 @@
     read_priv: .*
     write_priv: .*
     state: present
-  become: yes
+  become: true

@@ -11,6 +11,16 @@
     state: started
     enabled: yes
 
+- name: Deploy custom MySQL configuration
+  template:
+    src: my.cnf.j2
+    dest: /etc/mysql/my.cnf
+    owner: root
+    group: root
+    mode: 0644
+  notify: Restart mysql
+  become: true
+
 - name: Create MySQL admin user for automation
   mysql_user:
     name: "{{ mysql_admin_user }}"
@@ -137,7 +147,7 @@
     login_user: "{{ mysql_admin_user }}"
     login_password: "{{ mysql_admin_password }}"
     login_host: localhost
-  become: yes
+  become: true
 
 - name: Ensure nova user has all privileges on nova_api database
   community.mysql.mysql_user:
@@ -151,7 +161,7 @@
     login_user: "{{ mysql_admin_user }}"
     login_password: "{{ mysql_admin_password }}"
     login_host: localhost
-  become: yes
+  become: true
 
 - name: Ensure nova user has all privileges on nova_cell0 database
   community.mysql.mysql_user:
@@ -165,7 +175,7 @@
     login_user: "{{ mysql_admin_user }}"
     login_password: "{{ mysql_admin_password }}"
     login_host: localhost
-  become: yes
+  become: true
 
 
 
