@@ -1,0 +1,168 @@
+[[local|localrc]]
+
+# ===================================
+# Credentials
+# ===================================
+ADMIN_PASSWORD={{ admin_password }}
+DATABASE_PASSWORD={{ database_password }}
+RABBIT_PASSWORD={{ rabbit_password }}
+SERVICE_PASSWORD={{ service_password }}
+SWIFT_HASH={{ swift_hash_suffix | default('devstack-suffix') }}
+# ===================================
+# System Configuration
+# ===================================
+export TERM=xterm
+RECLONE=yes
+OFFLINE=false
+USE_PYTHON3=true
+TIMEZONE={{ system_timezone | default('UTC') }}
+HOST_IP={{ host_ip }}
+
+# ===================================
+# Logging Configuration
+# ===================================
+ENABLE_LOGGING=True
+ENABLE_DEBUG_LOG_LEVEL=True
+ENABLE_VERBOSE_LOGGING=True
+VERBOSE=True
+DEBUG=True
+LOG_COLOR=True
+LOGFILE={{ log_dir }}/stack.sh.log
+LOGDIR={{ log_dir }}
+SCREEN_LOGDIR={{ log_dir }}/screen
+USE_SCREEN=True
+
+# ===================================
+# Network Configuration
+# ===================================
+FIXED_RANGE={{ fixed_range | default("10.0.0.0/24") }}
+FLOATING_RANGE={{ floating_range | default("172.24.4.0/24") }}
+PUBLIC_NETWORK_GATEWAY={{ public_network_gateway | default("172.24.4.1") }}
+PUBLIC_NETWORK_ALLOCATION_POOL_START={{ public_network_allocation_pool_start | default("172.24.4.10") }}
+PUBLIC_NETWORK_ALLOCATION_POOL_END={{ public_network_allocation_pool_end | default("172.24.4.254") }}
+
+PUBLIC_INTERFACE={{ public_interface | default(neutron_public_interface) }}
+NEUTRON_PUBLIC_INTERFACE={{ neutron_public_interface }}
+NEUTRON_PRIVATE_INTERFACE={{ neutron_private_interface }}
+Q_TUNNEL_INTERFACE={{ neutron_private_interface }}
+Q_TUNNEL_LOCAL_IP={{ local_ip }}
+
+# ===================================
+# Core Services
+# ===================================
+enable_service mysql
+enable_service rabbit
+enable_service etcd3
+enable_service key
+enable_service g-api
+enable_service g-reg              # optional
+enable_service n-api
+enable_service n-cpu
+enable_service n-cond
+enable_service n-sch
+enable_service n-novnc
+enable_service n-xvnc            # optional
+enable_service c-api
+enable_service c-vol
+enable_service placement-api
+enable_service placement-client
+enable_service horizon
+enable_service apache2
+enable_service keystone
+enable_service glance
+
+# ===================================
+# Storage Configuration
+# ===================================
+VOLUME_BACKING_FILE_SIZE={{ cinder_volume_size | default("20G") }}
+SWIFT_HASH_SUFFIX={{ swift_hash_suffix | default("devstack-suffix") }}
+SWIFT_REPLICAS={{ swift_replicas | default("1") }}
+enable_service s-proxy s-object s-container s-account
+
+# ===================================
+# Neutron Configuration (ML2 + OVS)
+# ===================================
+enable_service neutron
+enable_service neutron-api
+enable_service neutron-dhcp
+enable_service neutron-l3
+enable_service neutron-metadata
+enable_service neutron-qos
+enable_service neutron-segments
+enable_service neutron-sfc
+
+disable_service ovn
+disable_service ovn-northd
+disable_service ovn-controller
+disable_service ovn-sb
+disable_service ovn-nb
+disable_service ovn-metadata-agent
+
+enable_plugin neutron https://opendev.org/openstack/neutron
+Q_PLUGIN=ml2
+Q_AGENT=openvswitch
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch
+Q_ML2_PLUGIN_TYPE_DRIVERS=flat,vlan,vxlan
+Q_ML2_PLUGIN_EXT_DRIVERS=port_security,qos,trunk
+Q_ML2_TENANT_NETWORK_TYPE={{ neutron_network_type | default("vxlan") }}
+
+OVS_BRIDGE_MAPPINGS=physnet1:br-ex
+PHYSICAL_NETWORK=physnet1
+OVS_PHYSICAL_BRIDGE=br-ex
+
+NEUTRON_OVS_BRIDGE=br-int
+NEUTRON_OVS_BRIDGE_IFACES=$NEUTRON_PUBLIC_INTERFACE
+NEUTRON_OVS_BRIDGE_IFACES_EXTRA=$NEUTRON_PRIVATE_INTERFACE
+NEUTRON_OVS_BRIDGE_IFACES_EXTRA_OPTIONS="type=internal"
+
+Q_TUNNEL_TYPES=vxlan
+Q_TUNNELING=True
+Q_USE_PROVIDERNET_FOR_PUBLIC=True
+Q_USE_SECGROUP=True
+Q_L3_ENABLED=True
+
+NEUTRON_DHCP_AGENT_EXTRA_OPTS="--enable-metadata"
+NEUTRON_L3_AGENT_EXTRA_OPTS="--enable-metadata"
+NEUTRON_METADATA_AGENT_EXTRA_OPTS="--enable-metadata"
+
+# ===================================
+# Heat (Required for Magnum)
+# ===================================
+enable_service heat
+enable_service h-api
+enable_service h-api-cfn
+enable_service h-api-cw
+enable_service h-eng
+
+# ===================================
+# Magnum (Container Orchestration)
+# ===================================
+enable_plugin magnum https://opendev.org/openstack/magnum
+enable_service magnum
+enable_service magnum-api
+enable_service magnum-cond
+
+# ===================================
+# Barbican (Optional - TLS Certificates)
+# ===================================
+enable_plugin barbican https://opendev.org/openstack/barbican
+enable_service barbican-api
+enable_service barbican-keystone-listener
+enable_service barbican-worker
+enable_service barbican-retry
+
+# ===================================
+# Post-script: Download Kubernetes-compatible image
+# ===================================
+[[post-script|$TOP_DIR/tools/magnum-setup.sh]]
+args="k8s"
+
+# ===================================
+# Magnum config overrides
+# ===================================
+[[post-config|$MAGNUM_CONF]]
+[certificates]
+cert_manager_type = barbican
+
+[drivers]
+default_driver = kubernetes

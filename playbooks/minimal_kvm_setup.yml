@@ -1,0 +1,28 @@
+---
+- name: Install QEMU, KVM, and Libvirt on Ubuntu Server
+  hosts: all # This playbook is designed to run on all hosts in the inventory but can be limited to specific groups or hosts as needed
+  become: true
+  tasks:
+    - name: Install required packages
+      apt:
+        name:
+          - qemu-kvm
+          - libvirt-daemon-system
+          - libvirt-clients
+          - bridge-utils
+          - virtinst
+          - virt-manager
+        state: present
+        update_cache: true
+
+    - name: Ensure libvirtd service is running and enabled
+      systemd:
+        name: libvirtd
+        enabled: true
+        state: started
+
+    - name: Add current user to libvirt and kvm groups
+      user:
+        name: "{{ ansible_user }}"
+        groups: libvirt,kvm
+        append: yes

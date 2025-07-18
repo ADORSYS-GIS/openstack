@@ -1,0 +1,17 @@
+---
+- name: Ensure /etc/resolv.conf has valid DNS servers
+  become: true
+  copy:
+    dest: /etc/resolv.conf
+    content: |
+      nameserver 8.8.8.8
+      nameserver 1.1.1.1
+    owner: root
+    group: root
+    mode: '0644'
+  when: fix_devstack_dns | default(true)
+
+- name: Optionally lock resolv.conf to prevent overwrite
+  become: true
+  command: chattr +i /etc/resolv.conf
+  when: lock_resolv_conf | default(false)

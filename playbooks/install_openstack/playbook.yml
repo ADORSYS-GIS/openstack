@@ -1,0 +1,12 @@
+---
+- name: Install OpenStack via DevStack
+  hosts: all
+  become: yes
+
+  roles:
+    - prerequisites
+    - create-user
+    - setup-env
+    - clone-devstack
+    - run-devstack
+    - post-install

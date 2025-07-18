@@ -1,0 +1,8 @@
+---
+- name: Template local.conf
+  template:
+    src: local.conf.j2
+    dest: /opt/stack/devstack/local.conf
+    owner: stack
+    group: wheel
+    mode: '0644'

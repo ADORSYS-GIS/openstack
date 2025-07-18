@@ -1,0 +1,8 @@
+---
+# This file lists all role dependencies for the project
+# Currently, all roles are local to the project
+# Add external role dependencies here if needed in the future
+# Example:
+# - src: https://github.com/example/ansible-role-example
+#   version: master
+#   name: example-role

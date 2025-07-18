@@ -1,0 +1,60 @@
+# OpenStack release
+openstack_branch: "stable/2025.1"
+
+# General system
+stack_user: stack
+stack_home: /opt/stack
+devstack_repo: https://opendev.org/openstack/devstack.git
+devstack_dir: "{{ stack_home }}/devstack"
+devstack_marker_file: "{{ stack_home }}/.stack_installed"
+
+# Interface detection fallback
+default_interface: "{{ ansible_default_ipv4.interface }}"
+default_ip: "{{ ansible_default_ipv4.address }}"
+# public_network_gateway:
+# floating_ip_range:
+
+# Core services
+enable_keystone: true
+enable_glance: true
+enable_nova: true
+enable_neutron: true
+enable_cinder: true
+enable_placement: true
+enable_horizon: true
+enable_magnum: true
+magnum_kubectl_version: "v1.28.6"
+neutron_plugin: ml2  # or 'ovn' to enable OVN mode
+
+# Optional compute/storage/network services
+enable_swift: false
+enable_manila: false
+enable_glusterfs: false
+enable_heat: false
+enable_barbican: false
+enable_octavia: false
+enable_designate: false
+enable_trove: false
+enable_zaqar: false
+enable_masakari: false
+enable_blazar: false
+enable_ironic: false
+enable_senlin: false
+enable_sahara: false
+
+# Telemetry
+enable_ceilometer: false
+enable_gnocchi: false
+enable_aodh: false
+enable_panko: false
+
+# Security and workflow
+enable_congress: false
+enable_mistral: false
+
+# Custom services for future extensibility
+custom_services:
+  - name: tempest
+    enabled: false
+  - name: kuryr
+    enabled: false

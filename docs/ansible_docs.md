@@ -113,9 +113,9 @@ used for infrastructure automation and server management:
 
 Each tool has its specific strengths:
 
-| Tools     | Language    | Best Used For                                |
-|-----------|-------------|---------------------------------------------|
-| Chef      | Ruby        | Complex enterprise environments              |
-| SaltStack | YAML        | Large-scale deployments                     |
-| Pulumi    | Various     | Cloud infrastructure and resource management |
-| Puppet    | Puppet DSL  | Large-scale environments                    |
+| Tools     | Language   | Best Used For                                |
+| --------- | ---------- | -------------------------------------------- |
+| Chef      | Ruby       | Complex enterprise environments              |
+| SaltStack | YAML       | Large-scale deployments                      |
+| Pulumi    | Various    | Cloud infrastructure and resource management |
+| Puppet    | Puppet DSL | Large-scale environments                     |

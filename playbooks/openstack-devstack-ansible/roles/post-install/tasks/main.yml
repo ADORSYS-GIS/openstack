@@ -1,0 +1,12 @@
+---
+- name: Show final DevStack install summary
+  debug:
+    msg: |
+      DevStack installation complete.
+
+      Horizon URL     : http://{{ ansible_default_ipv4.address }}/dashboard
+      Admin Username  : admin
+      Admin Password  : {{ ADMIN_PASSWORD }}
+      User Password   : {{ ADMIN_PASSWORD }}
+
+      Check logs at: /opt/stack/devstack-install.log

@@ -1,0 +1,4 @@
+---
+- name: log_git_clone
+  debug:
+    msg: "Git clone result: {{ git_clone_result }}"

@@ -1,0 +1,42 @@
+---
+- name: Gather full Ansible facts
+  setup:
+
+- name: Assert minimum memory
+  assert:
+    that:
+      - ansible_memtotal_mb >= 6000
+    fail_msg: "Minimum 6GB RAM is required to run DevStack reliably"
+  when: ansible_memtotal_mb is defined
+
+- name: Assert minimum CPU cores
+  assert:
+    that:
+      - ansible_processor_vcpus >= 2
+    fail_msg: "At least 2 vCPUs are required"
+  when: ansible_processor_vcpus is defined
+
+- name: Detect active interfaces (fallback-capable)
+  set_fact:
+    active_interfaces: >-
+      {{ ansible_interfaces |
+         select('match', '^(en|eth|ens|eno|wl)') |
+         difference(['lo']) | list }}
+
+- name: Detect default interface and IP
+  set_fact:
+    detected_interface: "{{ ansible_default_ipv4.interface | default(active_interfaces[0] | default('unknown')) }}"
+    detected_ip: "{{ ansible_default_ipv4.address | default('0.0.0.0') }}"
+
+- name: Warn if default interface or IP is not reliably detected
+  debug:
+    msg: >-
+      {{ 'Warning: Default interface or IP not reliably detected.'
+         if detected_interface == 'unknown' or detected_ip == '0.0.0.0'
+         else 'Interface and IP successfully detected.' }}
+
+- name: Show interface detection results
+  debug:
+    msg:
+      - "Interface: {{ detected_interface }}"
+      - "IP Address: {{ detected_ip }}"

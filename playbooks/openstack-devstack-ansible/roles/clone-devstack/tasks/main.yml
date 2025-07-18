@@ -1,0 +1,15 @@
+---
+- name: Ensure /opt/stack/devstack is not already cloned
+  stat:
+    path: "{{ devstack_dir }}/.git"
+  register: devstack_git_dir_status
+
+- name: Clone DevStack repository
+  git:
+    repo: "{{ devstack_repo }}"
+    dest: "{{ devstack_dir }}"
+    version: "{{ openstack_branch }}"
+    force: no
+  become: yes
+  become_user: "{{ stack_user }}"
+  when: not devstack_git_dir_status.stat.exists
