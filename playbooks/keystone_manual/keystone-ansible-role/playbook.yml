@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: all # Here the host can be change depending on your inventory file 
   become: yes
 
 
