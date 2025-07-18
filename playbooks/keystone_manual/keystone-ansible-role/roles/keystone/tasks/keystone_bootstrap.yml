@@ -26,7 +26,7 @@
 - name: Populate Keystone database (db_sync)
   command: keystone-manage db_sync
   become: yes
-  # become_user: keystone  # Removed to avoid permission issues
+
 
 - name: Bootstrap Keystone service
   command: >
@@ -37,4 +37,3 @@
     --bootstrap-public-url {{ keystone_public_url }}
     --bootstrap-region-id {{ keystone_region }}
   become: yes
-  # become_user: keystone  # Removed to avoid permission issues
