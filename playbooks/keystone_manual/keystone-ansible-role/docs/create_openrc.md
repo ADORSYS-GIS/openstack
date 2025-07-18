@@ -55,12 +55,6 @@ After the playbook runs, log in as your user and run:
 source ~/openrc
 ```
 
-Now you can use OpenStack CLI commands, for example:
-
-```sh
-openstack server list
-```
-
 ## Why the OpenRC File Is Needed
 
 The OpenRC file contains environment variables needed to authenticate and interact with OpenStack services using the CLI. Sourcing this file in your shell session allows you to run OpenStack commands as a specific OpenStack user.
