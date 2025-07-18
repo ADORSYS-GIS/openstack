@@ -20,6 +20,13 @@
     shell: /usr/sbin/nologin
   become: true
 
+- name: Add ubuntu user to keystone group
+  user:
+    name: ubuntu
+    groups: keystone
+    append: yes
+  become: true
+
 - name: Ensure /var/lib/keystone is owned by keystone
   file:
     path: /var/lib/keystone
@@ -38,8 +45,30 @@
     mode: 0440
   become: true
 
+- name: Ensure /var/log/keystone exists and is owned by keystone
+  file:
+    path: /var/log/keystone
+    state: directory
+    owner: keystone
+    group: keystone
+    mode: 0750
+  become: true
+
+- name: Remove stale keystone-manage.log if exists
+  file:
+    path: /var/log/keystone/keystone-manage.log
+    state: absent
+  become: true
+
+- name: Ensure /var/log has correct permissions
+  file:
+    path: /var/log
+    mode: 0755
+    state: directory
+  become: true
+
 - name: Initialize Keystone DB
-  command: keystone-manage --config-file /etc/keystone/keystone.conf db_sync
+  command: "sudo -u keystone keystone-manage db_sync" 
   args:
     creates: /var/lib/keystone/keystone.db
   become: true
@@ -54,10 +83,10 @@
 
 - name: Initialize Credential keys for Keystone
   command: keystone-manage --config-file /etc/keystone/keystone.conf credential_setup --keystone-user keystone --keystone-group keystone
-  args:
-    creates: /etc/keystone/credential-keys/0
   become: true
   become_user: keystone
+  args:
+    creates: /etc/keystone/credential-keys/0
 
 - name: Bootstrap Keystone
   command: >
@@ -114,3 +143,4 @@
     name: apache2
     state: restarted
     enabled: yes
+
