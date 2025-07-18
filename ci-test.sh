@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 VM_NAME="openstack_default"
@@ -14,13 +14,13 @@ echo "[INFO] Operating System: $OS"
 
 echo "[CI] Installing system dependencies..."
 
-if [ "$OS" = "ubuntu" ] || [ "$OS" = "debian" ]; then
+if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]]; then
     sudo apt-get update -y
     sudo apt-get install -y curl gnupg2 software-properties-common
 
-    if [ "$ARCH" = "x86_64" ]; then
+    if [[ "$ARCH" == "x86_64" ]]; then
         QEMU_PKGS="qemu-system-x86 qemu-utils"
-    elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+    elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
         QEMU_PKGS="qemu-system-arm qemu-utils"
     else
         echo "[ERROR] Unsupported architecture: $ARCH"
@@ -31,8 +31,7 @@ if [ "$OS" = "ubuntu" ] || [ "$OS" = "debian" ]; then
         libvirt-daemon-system libvirt-clients bridge-utils virtinst \
         libvirt-dev libxslt1-dev libxml2-dev zlib1g-dev ruby-dev build-essential
 
-    if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
-        echo "[INFO] Verifying KVM support on ARM..."
+    if [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
         sudo apt-get install -y cpu-checker || true
         if command -v kvm-ok >/dev/null && ! kvm-ok 2>/dev/null | grep -q 'can be used'; then
             echo "[WARN] KVM not supported on this hardware."
@@ -42,9 +41,8 @@ if [ "$OS" = "ubuntu" ] || [ "$OS" = "debian" ]; then
     PROVIDER="libvirt"
     sudo systemctl enable --now libvirtd
 
-elif [ "$OS" = "rhel" ] || [ "$OS" = "centos" ] || [ "$OS" = "fedora" ]; then
+elif [[ "$OS" == "rhel" || "$OS" == "centos" || "$OS" == "fedora" ]]; then
     sudo dnf install -y curl
-
     sudo dnf install -y @virtualization libvirt libvirt-devel virt-install qemu-kvm \
         libxslt-devel libxml2-devel zlib-devel ruby-devel make gcc
 
@@ -93,24 +91,41 @@ else
 fi
 
 ######################################
-# 5. Handle stale domain conflicts
+# 5. Handle stale VM conflicts
 ######################################
 
 echo "[CI] Checking for existing VM conflicts..."
 if sudo virsh dominfo "$VM_NAME" > /dev/null 2>&1; then
-    echo "[CI] Existing VM '$VM_NAME' found. Removing..."
+    echo "[CI] Existing VM '$VM_NAME' found. Cleaning up..."
     sudo virsh destroy "$VM_NAME" > /dev/null 2>&1 || true
     sudo virsh undefine "$VM_NAME" --remove-all-storage > /dev/null 2>&1 || true
 fi
 
 ######################################
-# 6. Start VM
+# 6. Start VM and handle NFS mount errors
 ######################################
 
 echo "[CI] Starting Vagrant VM with provider: $PROVIDER..."
-if ! vagrant up --provider="$PROVIDER"; then
-    echo "[ERROR] Failed to bring up VM. Exiting."
-    exit 1
+if ! vagrant up --provider="$PROVIDER" 2>vagrant_error.log; then
+    echo "[ERROR] VM failed to start. Checking for NFS mount issues..."
+
+    if grep -q "requested NFS version on transport protocol is not supported" vagrant_error.log; then
+        echo "[INFO] NFS version/transport error detected. Retrying with fallback..."
+        echo "[ACTION] You may need to modify your Vagrantfile to use: nfs_version: 4 and protocol: tcp"
+        echo "[INFO] Example:"
+        echo "  config.vm.synced_folder '.', '/vagrant', type: 'nfs', nfs_version: 4, nfs_udp: false"
+
+        echo "[RETRYING] Attempting another 'vagrant up' after a brief delay..."
+        sleep 5
+        if ! vagrant up --provider="$PROVIDER"; then
+            echo "[FAIL] Retry also failed. Check your NFS server config or fallback to rsync/smb shared folder."
+            exit 1
+        fi
+    else
+        echo "[ERROR] Vagrant up failed for another reason:"
+        cat vagrant_error.log
+        exit 1
+    fi
 fi
 
 ######################################
@@ -120,8 +135,8 @@ fi
 echo "[CI] Retrieving VM IP address..."
 VM_IP=$(vagrant ssh -c "hostname -I | awk '{print \$1}'" 2>/dev/null | tr -d '\r')
 
-if [ -z "$VM_IP" ]; then
-    echo "[ERROR] Failed to retrieve VM IP. Aborting."
+if [[ -z "$VM_IP" ]]; then
+    echo "[ERROR] Could not retrieve VM IP."
     vagrant destroy -f
     exit 1
 fi
@@ -133,24 +148,20 @@ echo "[CI] VM IP: $VM_IP"
 ######################################
 
 echo "[CI] Checking Keystone API at $VM_IP..."
-if curl -sf --connect-timeout 5 "http://$VM_IP:5000/v3/" | grep -q "identity"; then
-    echo "✅ Keystone API is working."
-else
+if ! curl -sf --connect-timeout 5 "http://$VM_IP:5000/v3/" | grep -q "identity"; then
     echo "❌ Keystone API not responding. Attempting VM reboot..."
     vagrant reload
     sleep 10
-
-    # Retry IP and API
     VM_IP=$(vagrant ssh -c "hostname -I | awk '{print \$1}'" 2>/dev/null | tr -d '\r')
     echo "[RETRY] VM IP: $VM_IP"
 
-    if curl -sf --connect-timeout 5 "http://$VM_IP:5000/v3/" | grep -q "identity"; then
-        echo "✅ Keystone API is now responding."
-    else
-        echo "❌ Still no response from Keystone API. Destroying VM and exiting."
+    if ! curl -sf --connect-timeout 5 "http://$VM_IP:5000/v3/" | grep -q "identity"; then
+        echo "❌ Still no response. Destroying VM and exiting."
         vagrant destroy -f
         exit 1
     fi
+else
+    echo "✅ Keystone API is working."
 fi
 
 ######################################
