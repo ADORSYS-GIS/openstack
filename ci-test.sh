@@ -15,22 +15,30 @@ if [ "$OS" = "ubuntu" ] || [ "$OS" = "debian" ]; then
     sudo apt-get update -y
     sudo apt-get install -y curl gnupg2 software-properties-common
 
-    sudo apt-get install -y qemu qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virtinst \
-        libvirt-dev libxslt-dev libxml2-dev zlib1g-dev ruby-dev build-essential
-
-    if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
-        echo "[INFO] ARM architecture detected, verifying KVM support..."
-        sudo apt-get install -y cpu-checker
-        if ! kvm-ok 2>/dev/null | grep -q 'can be used'; then
-            echo "[WARN] KVM not supported."
-          
-        else
-            PROVIDER="libvirt"
-        fi
+    # Install correct QEMU package per arch
+    if [ "$ARCH" = "x86_64" ]; then
+        QEMU_PKGS="qemu-system-x86 qemu-utils"
+    elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+        QEMU_PKGS="qemu-system-arm qemu-utils"
     else
-        PROVIDER="libvirt"
+        echo "[ERROR] Unsupported architecture for QEMU: $ARCH"
+        exit 1
     fi
 
+   sudo apt-get install -y $QEMU_PKGS \
+    libvirt-daemon-system libvirt-clients bridge-utils virtinst \
+    libvirt-dev libxslt1-dev libxml2-dev zlib1g-dev ruby-dev build-essential
+
+    # Check for KVM if on ARM
+    if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+        echo "[INFO] ARM architecture detected, verifying KVM support..."
+        sudo apt-get install -y cpu-checker || true
+        if command -v kvm-ok >/dev/null && ! kvm-ok 2>/dev/null | grep -q 'can be used'; then
+            echo "[WARN] KVM not supported."
+        fi
+    fi
+
+    PROVIDER="libvirt"
     sudo systemctl enable --now libvirtd
 
 elif [ "$OS" = "rhel" ] || [ "$OS" = "centos" ] || [ "$OS" = "fedora" ]; then
