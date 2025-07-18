@@ -1,9 +1,5 @@
 [[local|localrc]]
 
-# --- Fallback Directory for ML2 Plugin Configs ---
-echo "Ensuring required DevStack configuration directories exist..."
-mkdir -p "{{ stack_home }}/etc/neutron/plugins/ml2"
-
 # ==============================================================================
 # Core DevStack Settings
 # ==============================================================================
@@ -29,7 +25,6 @@ RABBIT_PASSWORD={{ RABBIT_PASSWORD }}
 SERVICE_PASSWORD={{ SERVICE_PASSWORD }}
 SERVICE_TOKEN={{ service_token | default(SERVICE_PASSWORD) }}
 
-# Per-service separation
 KEYSTONE_PASSWORD={{ KEYSTONE_PASSWORD | default(SERVICE_PASSWORD) }}
 GLANCE_PASSWORD={{ GLANCE_PASSWORD | default(SERVICE_PASSWORD) }}
 NOVA_PASSWORD={{ NOVA_PASSWORD | default(SERVICE_PASSWORD) }}
@@ -47,6 +42,10 @@ NETWORK_GATEWAY={{ network_gateway | default("10.4.0.1") }}
 FLOATING_RANGE={{ floating_ip_range | default("172.24.4.0/24") }}
 PUBLIC_NETWORK_GATEWAY={{ public_network_gateway | default("172.24.4.1") }}
 MULTI_HOST=True
+
+# Region Fix (helps with 503s)
+REGION_NAME=RegionOne
+KEYSTONE_REGION_NAME=RegionOne
 
 # ==============================================================================
 # Core Services
@@ -71,10 +70,9 @@ VOLUME_BACKING_FILE_SIZE={{ cinder_volume_file_size | default("20G") }}
 # ==============================================================================
 {% if enable_neutron | default(true) %}
 disable_service n-net
-enable_service neutron q-svc
+enable_service neutron q-svc q-metering
 
 {% if neutron_plugin | default('ovs') == 'ovn' %}
-# --- OVN Backend ---
 enable_service q-ovn-metadata-agent ovn-controller ovn-northd
 disable_service q-agt q-dhcp q-l3 q-meta
 Q_AGENT=ovn
@@ -85,7 +83,6 @@ Q_ML2_TENANT_NETWORK_TYPE=geneve
 OVN_L3_MODE=True
 ENABLE_TENANT_VLANS=True
 {% else %}
-# --- ML2/OVS Backend ---
 enable_service ovsdb-server ovs-vswitchd
 enable_service q-agt q-dhcp q-l3 q-meta
 Q_PLUGIN=ml2
@@ -96,7 +93,6 @@ Q_ML2_TENANT_NETWORK_TYPE=vxlan
 Q_ML2_PLUGIN_EXT_DRIVERS=port_security
 OVS_BRIDGE_MAPPINGS="public:{{ public_bridge | default('br-ex') }}"
 PUBLIC_BRIDGE={{ public_bridge | default('br-ex') }}
-OVS_PHYSICAL_BRIDGE={{ public_bridge | default('br-ex') }}
 ENABLE_TENANT_VLANS=True
 {% endif %}
 {% endif %}
@@ -110,7 +106,6 @@ enable_plugin heat-dashboard https://opendev.org/openstack/heat-dashboard
 {% endif %}
 
 {% if enable_swift | default(false) %}
-# Swift - Object Storage
 enable_plugin swift https://opendev.org/openstack/swift
 enable_service s-proxy s-object s-container s-account
 SWIFT_HASH={{ swift_hash_path_suffix | default("$(od -t x8 -N 8 -A n /dev/urandom)") }}
@@ -119,50 +114,41 @@ SWIFT_DATA_DIR=$DEST/data/swift
 {% endif %}
 
 {% if enable_manila | default(false) %}
-# Manila - Shared File Systems
 enable_plugin manila https://opendev.org/openstack/manila
 enable_plugin manila-ui https://opendev.org/openstack/manila-ui
 enable_service manila m-api m-sch m-shr
-# Add other Manila settings as needed, e.g., default share backend
 {% endif %}
 
 {% if enable_octavia | default(false) %}
-# Octavia - Load Balancing
 enable_plugin octavia https://opendev.org/openstack/octavia
 enable_plugin octavia-dashboard https://opendev.org/openstack/octavia-dashboard
 enable_service octavia o-api o-hk o-hm o-cw
 {% endif %}
 
 {% if enable_barbican | default(false) %}
-# Barbican - Key Management
 enable_plugin barbican https://opendev.org/openstack/barbican
 enable_plugin barbican-dashboard https://opendev.org/openstack/barbican-dashboard
-# Barbican may require dogtag or other KMS backend for production
 {% endif %}
 
 {% if enable_designate | default(false) %}
-# Designate - DNSaaS
 enable_plugin designate https://opendev.org/openstack/designate
 enable_plugin designate-dashboard https://opendev.org/openstack/designate-dashboard
 enable_service designate designate-api designate-central designate-mdns designate-pool-manager designate-worker designate-zone-manager
 {% endif %}
 
 {% if enable_trove | default(false) %}
-# Trove - DBaaS
 enable_plugin trove https://opendev.org/openstack/trove
 enable_plugin trove-dashboard https://opendev.org/openstack/trove-dashboard
 enable_service tr-api tr-cond tr-taskmgr
 {% endif %}
 
 {% if enable_sahara | default(false) %}
-# Sahara - Data Processing
 enable_plugin sahara https://opendev.org/openstack/sahara
 enable_plugin sahara-dashboard https://opendev.org/openstack/sahara-dashboard
 enable_service sahara-api sahara-engine
 {% endif %}
 
 {% if enable_magnum | default(false) %}
-# Magnum - Container Orchestration Engine Provisioning
 enable_plugin magnum https://opendev.org/openstack/magnum
 enable_plugin magnum-ui https://opendev.org/openstack/magnum-ui
 MAGNUM_IMAGE_NAME={{ magnum_image_name | default('fedora-coreos-stable') }}
@@ -170,47 +156,35 @@ MAGNUM_KUBECTL_VERSION={{ magnum_kubectl_version | default("v1.28.6") }}
 MAGNUM_KUBECTL_TAG={{ magnum_kubectl_version | default("v1.28.6") }}
 {% endif %}
 
-
 {% if enable_ironic | default(false) %}
-# Ironic - Bare Metal Provisioning
 enable_plugin ironic https://opendev.org/openstack/ironic
 enable_plugin ironic-ui https://opendev.org/openstack/ironic-ui
 enable_service ir-api ir-cond
-# Basic Ironic settings, specific drivers may need more config
 IRONIC_DEFAULT_DEPLOY_INTERFACE=direct
 IRONIC_ENABLED_HARDWARE_TYPES=ipmi,redfish,idrac,ilo
 IRONIC_ENABLED_DEPLOY_INTERFACES=direct,ansible
 IRONIC_ENABLED_MANAGEMENT_INTERFACES=ipmitool,redfish,idrac,ilo
 IRONIC_ENABLED_POWER_INTERFACES=ipmitool,redfish,idrac,ilo
-# For DevStack testing with virtual nodes:
-# enable_plugin devstack-plugin-virtual-ironic https://opendev.org/openstack/devstack-plugin-virtual-ironic master
-# IRONIC_VM_COUNT=1 # Adjust as needed
-# IRONIC_VM_SSH_KEY=$(cat ~/.ssh/id_rsa.pub) # Ensure you have this key
 {% endif %}
 
 {% if enable_senlin | default(false) %}
-# Senlin - Clustering Service
 enable_plugin senlin https://opendev.org/openstack/senlin
 enable_plugin senlin-dashboard https://opendev.org/openstack/senlin-dashboard
 enable_service senlin senlin-api senlin-engine
 {% endif %}
 
 {% if enable_zaqar | default(false) %}
-# Zaqar - Messaging Service
 enable_plugin zaqar https://opendev.org/openstack/zaqar
-# Zaqar does not have a separate dashboard plugin usually integrated into Horizon
 enable_service zaqar-server
 {% endif %}
 
 {% if enable_blazar | default(false) %}
-# Blazar - Resource Reservation Service
 enable_plugin blazar https://opendev.org/openstack/blazar
 enable_plugin blazar-dashboard https://opendev.org/openstack/blazar-dashboard
 enable_service blazar blazar-api blazar-manager
 {% endif %}
 
 {% if enable_masakari | default(false) %}
-# Masakari - Instances High Availability Service
 enable_plugin masakari https://opendev.org/openstack/masakari
 enable_plugin masakari-dashboard https://opendev.org/openstack/masakari-dashboard
 enable_service masakari masakari-api masakari-engine
@@ -220,32 +194,24 @@ enable_service masakari masakari-api masakari-engine
 # Telemetry Services
 # ==============================================================================
 {% if enable_gnocchi | default(false) %}
-# Gnocchi - Telemetry (Metrics as a Service)
 enable_plugin gnocchi https://opendev.org/openstack/gnocchi
 enable_service gnocchi-api gnocchi-metricd
-# Gnocchi can use different storage backends, default is usually file or Swift
-# GNOCCHI_ARCHIVE_POLICY_FILE=$DEST/gnocchi/archive_policy.json
 {% endif %}
 
 {% if enable_ceilometer | default(false) %}
-# Ceilometer - Telemetry (Data Collection)
 enable_plugin ceilometer https://opendev.org/openstack/ceilometer
 enable_service ceilometer-acentral ceilometer-acompute ceilometer-anotification ceilometer-collector
-# Ceilometer can be used with Gnocchi or other backends
-# By default, DevStack might configure it with gnocchi if gnocchi is also enabled
 {% if enable_gnocchi | default(false) %}
 CEILOMETER_PIPELINE_PUBLISHERS=gnocchi://
 {% endif %}
 {% endif %}
 
 {% if enable_aodh | default(false) %}
-# Aodh - Telemetry (Alarming as a Service)
 enable_plugin aodh https://opendev.org/openstack/aodh
 enable_service aodh-api aodh-evaluator aodh-notifier aodh-listener
 {% endif %}
 
 {% if enable_panko | default(false) %}
-# Panko - Telemetry (Event Storage as a Service)
 enable_plugin panko https://opendev.org/openstack/panko
 enable_service panko-api
 {% endif %}
@@ -254,22 +220,16 @@ enable_service panko-api
 # Security and Workflow Services
 # ==============================================================================
 {% if enable_congress | default(false) %}
-# Congress - Governance as a Service
 enable_plugin congress https://opendev.org/openstack/congress
 enable_plugin congress-dashboard https://opendev.org/openstack/congress-dashboard
 enable_service congress-api congress-policy-engine
 {% endif %}
 
 {% if enable_mistral | default(false) %}
-# Mistral - Workflow Service
 enable_plugin mistral https://opendev.org/openstack/mistral
-# Mistral dashboard is usually part of Horizon
 enable_service mistral-api mistral-engine mistral-executor
 {% endif %}
 
-# ==============================================================================
-# Custom Services (User Defined)
-# ==============================================================================
 {% if custom_services is defined %}
 {% for svc in custom_services %}
 {% if svc.name == 'tempest' and svc.enabled %}
@@ -283,8 +243,14 @@ enable_service kuryr
 {% endif %}
 
 # ==============================================================================
-# Post-Config: Override Service INI Files
+# Post-Config Overrides
 # ==============================================================================
+{% if enable_keystone | default(true) %}
+[[post-config|$KEYSTONE_CONF]]
+[DEFAULT]
+public_endpoint = http://{{ default_ip }}:5000/
+admin_endpoint = http://{{ default_ip }}:5000/
+{% endif %}
 
 {% if enable_nova | default(true) %}
 [[post-config|$NOVA_CONF]]
@@ -356,11 +322,15 @@ enable_ipset = True
 {% endif %}
 
 # ==============================================================================
-# Post-Stack Health Checks
+# Post-Extra: Health Checks, Network Delays
 # ==============================================================================
 [[post-extra]]
 #!/bin/bash
-echo "[[post-extra]] Running health checks..."
+echo "Creating ML2 config directory if missing..."
+mkdir -p "{{ stack_home }}/etc/neutron/plugins/ml2"
+
+echo "Waiting for Keystone to stabilize..."
+sleep 10
 
 function check_api {
     local svc="$1"; local url="$2"; local timeout=180; local count=0
@@ -378,14 +348,13 @@ function check_api {
 {% if enable_nova | default(true) %} check_api "Nova" "http://{{ default_ip }}:8774" {% endif %}
 {% if enable_neutron | default(true) %} check_api "Neutron" "http://{{ default_ip }}:9696" {% endif %}
 
-# OpenStack CLI sanity
 echo "Testing CLI authentication..."
 source "{{ stack_home }}/openrc" admin admin
 if ! openstack endpoint list > /dev/null; then
     echo "FAIL: CLI endpoint list failed"; exit 1
 fi
-# Ensure OVSDB is bound to TCP before neutron-ovs-cleanup runs
-echo "Waiting for OVSDB to be ready..."
+
+echo "Ensuring OVSDB is ready..."
 for i in {1..10}; do
   if sudo ovs-vsctl show &>/dev/null; then
     echo "OVSDB is ready."
@@ -395,5 +364,4 @@ for i in {1..10}; do
   sleep 3
 done
 
-# Force OVS to listen on TCP:6640 if not already set
 sudo ovs-vsctl set-manager ptcp:6640:127.0.0.1 || true

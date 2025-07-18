@@ -1,63 +1,130 @@
+---
 - name: Ensure apt cache is up to date
-  apt:
+  ansible.builtin.apt:
     update_cache: yes
     cache_valid_time: 3600
 
-- name: Install required base packages
-  apt:
-    name:
-      - git
-      - python3
-      - python3-pip
-      - python3-venv
-      - python3-dev
-      - python3-setuptools
-      - python3-wheel
-      - sudo
-      - net-tools
-      - curl
-      - wget
-      - vim
-      - dnsutils
-      - lvm2
-      - thin-provisioning-tools
-      - software-properties-common
-      - build-essential
-      - jq
-      - libffi-dev
-      - libssl-dev
-      - libxml2-dev
-      - libxslt1-dev
-      - libjpeg8-dev
-      - zlib1g-dev
-      - libmysqlclient-dev
-      - libpq-dev
-      - libsqlite3-dev
-      - libvirt-dev
-      - libvirt-daemon-system
-      - qemu-kvm
-      - qemu-utils
-      - libguestfs-tools
-      - openvswitch-switch
-      - openvswitch-common
-      - bridge-utils
-      - ntp
-      - ntpdate
+- name: Install PyMySQL
+  pip:
+    name: PyMySQL
     state: present
   become: yes
+
+- name: Install mysqlclient
+  pip:
+    name: mysqlclient
+    state: present
+  become: yes
+
+- name: Install required base packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - git
+    - python3
+    - python3-pip
+    - python3-venv
+    - python3-dev
+    - python3-setuptools
+    - python3-wheel
+    - sudo
+    - net-tools
+    - curl
+    - wget
+    - vim
+    - dnsutils
+    - lvm2
+    - thin-provisioning-tools
+    - software-properties-common
+    - build-essential
+    - jq
+    - libffi-dev
+    - libssl-dev
+    - libxml2-dev
+    - libxslt1-dev
+    - libjpeg8-dev
+    - zlib1g-dev
+    - libmysqlclient-dev
+    - libpq-dev
+    - libsqlite3-dev
+    - libvirt-dev
+    - libvirt-daemon-system
+    - qemu-kvm
+    - qemu-utils
+    - libguestfs-tools
+    - openvswitch-switch
+    - openvswitch-common
+    - bridge-utils
+    - ntp
+    - ntpdate
   register: package_install
   retries: 3
   delay: 5
   until: package_install is success
 
+- name: Ensure MySQL root password is set for automatic installation
+  ansible.builtin.debconf:
+    name: mysql-server
+    question: "mysql-server/root_password"
+    value: "{{ DATABASE_PASSWORD }}"
+    vtype: "string"
+  become: yes
+
+- name: Ensure MySQL root password is set for automatic installation (again)
+  ansible.builtin.debconf:
+    name: mysql-server
+    question: "mysql-server/root_password_again"
+    value: "{{ DATABASE_PASSWORD }}"
+    vtype: "string"
+  become: yes
+
+- name: Install MySQL Server
+  ansible.builtin.apt:
+    name: mysql-server
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Install RabbitMQ
+  ansible.builtin.apt:
+    name: rabbitmq-server
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Set MySQL root user authentication method to mysql_native_password
+  community.mysql.mysql_user:
+    name: root
+    host: localhost
+    password: "{{ DATABASE_PASSWORD }}"
+    login_user: root
+    login_password: "{{ DATABASE_PASSWORD }}"
+    state: present
+  become: yes
+
 - name: Create Python virtual environment for DevStack
-  command: python3 -m venv /opt/stack/venv
-  args:
+  ansible.builtin.command:
+    cmd: python3 -m venv /opt/stack/venv
     creates: /opt/stack/venv
   become: yes
 
+- name: Ensure MySQL service is running
+  ansible.builtin.service:
+    name: mysql
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Ensure RabbitMQ service is running
+  ansible.builtin.service:
+    name: rabbitmq-server
+    state: started
+    enabled: yes
+  become: yes
+
 - name: Install Python packages inside virtual environment
-  pip:
+  ansible.builtin.pip:
     name:
       - netaddr
       - shade
@@ -70,6 +137,6 @@
   become: yes
 
 - name: Ensure 'wheel' group exists
-  group:
+  ansible.builtin.group:
     name: wheel
     state: present
