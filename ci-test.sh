@@ -84,9 +84,46 @@ else
     echo "[CI] vagrant-libvirt already installed."
 fi
 
+# Ensure no stale Vagrant or libvirt VM exists
+echo "[CI] Checking for stale 'openstack_default' domain..."
+VM_EXISTS=$(sudo virsh list --all | grep -i openstack_default)
+
+if [ -n "$VM_EXISTS" ]; then
+    echo "[WARN] 'openstack_default' exists in libvirt. Destroying..."
+    sudo virsh destroy openstack_default 2>/dev/null || true
+    sudo virsh undefine openstack_default --remove-all-storage 2>/dev/null || true
+fi
+
+# Clean .vagrant if exists
+if [ -d ".vagrant" ]; then
+    echo "[WARN] Cleaning stale Vagrant metadata..."
+    rm -rf .vagrant
+fi
+
 # 6. Start VM
 echo "[CI] Starting Vagrant VM with provider: $PROVIDER"
-vagrant up --provider="$PROVIDER"
+
+# Run vagrant up and check for failure
+if ! vagrant up --provider="$PROVIDER"; then
+    echo "[ERROR] VM failed to start. Analyzing output..."
+
+    if vagrant up --provider="$PROVIDER" 2>&1 | grep -q "requested NFS version or transport protocol is not supported"; then
+        echo "[WARN] NFS mount failed due to unsupported version/protocol."
+        echo "[INFO] Switching synced_folder method to rsync..."
+
+        # Backup original Vagrantfile
+        cp Vagrantfile Vagrantfile.bak
+
+        # Replace or adjust synced_folder in Vagrantfile to use rsync
+        sed -i 's|type: "nfs"|type: "rsync"|' Vagrantfile
+
+        echo "[INFO] Retrying vagrant up with rsync..."
+        vagrant up --provider="$PROVIDER"
+    else
+        echo "[ERROR] Unknown VM startup error. Exiting."
+        exit 1
+    fi
+fi
 
 # 7. Get IP address
 VM_IP=$(vagrant ssh -c "hostname -I | awk '{print \$1}'" | tr -d '\r')
@@ -102,5 +139,12 @@ fi
 echo "✅ Keystone API is working."
 
 # 9. Cleanup
-echo "[CI] Cleaning up Vagrant VM..."
+echo "[CI] Destroying Vagrant VM..."
 vagrant destroy -f
+
+# Additional cleanup to remove 'openstack_default' domain if it still exists after destroy
+if sudo virsh list --all | grep -q "openstack_default"; then
+    echo "[WARN] 'openstack_default' still exists in libvirt after Vagrant destroy. Cleaning up..."
+    sudo virsh destroy openstack_default 2>/dev/null || true
+    sudo virsh undefine openstack_default --remove-all-storage 2>/dev/null || true
+fi
