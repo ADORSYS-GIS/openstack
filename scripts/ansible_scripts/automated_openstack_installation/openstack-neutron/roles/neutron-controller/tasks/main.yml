@@ -69,7 +69,7 @@
   command: >
     neutron-db-manage --config-file /etc/neutron/neutron.conf
     --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head
-  become: yes
+  become: true
 
 - name: Ensure OpenStack config directory exists
   file:
@@ -115,40 +115,66 @@
 
 # this one is using openstack commands from ansible galaxy to create a neutron service in keystone.
 
-- name: Register Neutron service in Keystone
-  openstack.cloud.catalog_service:
-    cloud: "{{ lookup('env', 'OS_CLOUD') }}"
-    name: network
-    service_type: network
-    description: "OpenStack Networking Service"
-    state: present
+- name: Register Neutron service in Keystone using OpenStack CLI
+  shell: |
+    openstack service create --name network --description "OpenStack Networking Service" network || true
+  environment:
+    OS_AUTH_URL: "http://{{ controller_host }}:5000/v3"
+    OS_USERNAME: "{{ admin_user }}"
+    OS_PASSWORD: "{{ admin_password }}"
+    OS_PROJECT_NAME: "{{ openstack_service_project }}"
+    OS_USER_DOMAIN_NAME: "Default"
+    OS_PROJECT_DOMAIN_NAME: "Default"
+    OS_REGION_NAME: "RegionOne"
+    OS_INTERFACE: "public"
+    OS_IDENTITY_API_VERSION: "3"
+  register: neutron_service_create
+  changed_when: "'already exists' not in neutron_service_create.stdout"
 
-- name: Create public endpoint
-  openstack.cloud.endpoint:
-    cloud: "{{ lookup('env', 'OS_CLOUD') }}"
-    service: network
-    interface: public
-    endpoint_interface: public
-    url: "http://{{ ansible_fqdn }}:9696"
-    region: RegionOne
-    state: present
+- name: Create public endpoint for Neutron
+  shell: |
+    openstack endpoint create --region RegionOne network public http://{{ ansible_fqdn }}:9696 || true
+  environment:
+    OS_AUTH_URL: "http://{{ controller_host }}:5000/v3"
+    OS_USERNAME: "{{ admin_user }}"
+    OS_PASSWORD: "{{ admin_password }}"
+    OS_PROJECT_NAME: "{{ openstack_service_project }}"
+    OS_USER_DOMAIN_NAME: "Default"
+    OS_PROJECT_DOMAIN_NAME: "Default"
+    OS_REGION_NAME: "RegionOne"
+    OS_INTERFACE: "public"
+    OS_IDENTITY_API_VERSION: "3"
+  register: neutron_endpoint_create
+  changed_when: "'already exists' not in neutron_endpoint_create.stdout"
 
-- name: Create internal endpoint
-  openstack.cloud.endpoint:
-    cloud: "{{ lookup('env', 'OS_CLOUD') }}"
-    service: network
-    interface: internal
-    endpoint_interface: internal
-    url: "http://{{ ansible_fqdn }}:9696"
-    region: RegionOne
-    state: present
+- name: Create internal endpoint for Neutron
+  shell: |
+    openstack endpoint create --region RegionOne network internal http://{{ ansible_fqdn }}:9696 || true
+  environment:
+    OS_AUTH_URL: "http://{{ controller_host }}:5000/v3"
+    OS_USERNAME: "{{ admin_user }}"
+    OS_PASSWORD: "{{ admin_password }}"
+    OS_PROJECT_NAME: "{{ openstack_service_project }}"
+    OS_USER_DOMAIN_NAME: "Default"
+    OS_PROJECT_DOMAIN_NAME: "Default"
+    OS_REGION_NAME: "RegionOne"
+    OS_INTERFACE: "public"
+    OS_IDENTITY_API_VERSION: "3"
+  register: neutron_internal_endpoint_create
+  changed_when: "'already exists' not in neutron_internal_endpoint_create.stdout"
 
-- name: Create admin endpoint
-  openstack.cloud.endpoint:
-    cloud: "{{ lookup('env', 'OS_CLOUD') }}"
-    service: network
-    interface: admin
-    endpoint_interface: admin
-    url: "http://{{ ansible_fqdn }}:9696"
-    region: RegionOne
-    state: present
+- name: Create admin endpoint for Neutron
+  shell: |
+    openstack endpoint create --region RegionOne network admin http://{{ ansible_fqdn }}:9696 || true
+  environment:
+    OS_AUTH_URL: "http://{{ controller_host }}:5000/v3"
+    OS_USERNAME: "{{ admin_user }}"
+    OS_PASSWORD: "{{ admin_password }}"
+    OS_PROJECT_NAME: "{{ openstack_service_project }}"
+    OS_USER_DOMAIN_NAME: "Default"
+    OS_PROJECT_DOMAIN_NAME: "Default"
+    OS_REGION_NAME: "RegionOne"
+    OS_INTERFACE: "public"
+    OS_IDENTITY_API_VERSION: "3"
+  register: neutron_admin_endpoint_create
+  changed_when: "'already exists' not in neutron_admin_endpoint_create.stdout"

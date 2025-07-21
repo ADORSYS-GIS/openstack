@@ -31,11 +31,17 @@
     creates: /var/lib/nova/cell0_mapped
   when: "'controllers' in group_names"
 
-- name: Create cell1
+- name: Check if cell1 already exists
+  command: nova-manage cell_v2 list_cells
+  register: cell_list
+  changed_when: false
+  failed_when: false
+
+- name: Create cell1 if it does not exist
   command: nova-manage cell_v2 create_cell --name=cell1
   args:
     creates: /var/lib/nova/cell1_created
-  when: "'controllers' in group_names"
+  when: cell_list.stdout is not search('cell1')
 
 
 - name: Sync Nova DB
