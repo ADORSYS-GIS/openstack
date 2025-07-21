@@ -5,11 +5,26 @@
     state: present
   when: ansible_os_family == "Debian"
 
+- name: Ensure MySQL socket directory exists
+  file:
+    path: /var/run/mysqld
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: 0755
+
+
 - name: Ensure MySQL is running
   service:
     name: mysql
     state: started
     enabled: yes
+
+- name: Wait for MySQL socket to be available
+  wait_for:
+    path: /var/lib/mysql/mysql.sock
+    state: present
+    timeout: 30
 
 - name: Deploy custom MySQL configuration
   template:
@@ -29,11 +44,11 @@
     priv: "*.*:ALL,GRANT"
     state: present
     login_user: root
-    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_unix_socket: /var/lib/mysql/mysql.sock
 
 - name: Set MySQL root password (MariaDB < 10.4)
   shell: |
-    mysql -u root -S /var/run/mysqld/mysqld.sock -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('{{ mysql_root_password }}'); FLUSH PRIVILEGES;"
+    mysql -u root -S /var/lib/mysql/mysql.sock -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('{{ mysql_root_password }}'); FLUSH PRIVILEGES;"
   args:
     executable: /bin/bash
   when: ansible_os_family == "Debian"
@@ -149,6 +164,20 @@
     login_host: localhost
   become: true
 
+- name: Ensure nova user has all privileges on nova database (localhost)
+  community.mysql.mysql_user:
+    name: nova
+    host: "localhost"
+    password: "{{ nova_db_password }}"
+    priv: "nova.*:ALL"
+    state: present
+    append_privs: yes
+    update_password: always
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost
+  become: true
+
 - name: Ensure nova user has all privileges on nova_api database
   community.mysql.mysql_user:
     name: nova
@@ -163,10 +192,38 @@
     login_host: localhost
   become: true
 
+- name: Ensure nova user has all privileges on nova_api database (localhost)
+  community.mysql.mysql_user:
+    name: nova
+    host: "localhost"
+    password: "{{ nova_db_password }}"
+    priv: "nova_api.*:ALL"
+    state: present
+    append_privs: yes
+    update_password: always
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost
+  become: true
+
 - name: Ensure nova user has all privileges on nova_cell0 database
   community.mysql.mysql_user:
     name: nova
     host: "%"
+    password: "{{ nova_db_password }}"
+    priv: "nova_cell0.*:ALL"
+    state: present
+    append_privs: yes
+    update_password: always
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost
+  become: true
+
+- name: Ensure nova user has all privileges on nova_cell0 database (localhost)
+  community.mysql.mysql_user:
+    name: nova
+    host: "localhost"
     password: "{{ nova_db_password }}"
     priv: "nova_cell0.*:ALL"
     state: present

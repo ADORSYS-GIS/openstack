@@ -139,6 +139,19 @@
     line: "ServerName {{ controller_host | default('controller') }}"
     state: present
 
+- name: Disable conflicting keystone site if it exists
+  command: a2dissite keystone
+  args:
+    removes: /etc/apache2/sites-enabled/keystone.conf
+  ignore_errors: true
+
+- name: Remove old keystone site config if it exists
+  file:
+    path: /etc/apache2/sites-available/keystone.conf
+    state: absent
+  ignore_errors: true
+
+
 - name: Deploy Keystone WSGI Apache config
   template:
     src: wsgi-keystone.conf.j2
@@ -158,6 +171,15 @@
     a2enmod ssl
   args:
     executable: /bin/bash
+
+- name: Ensure Apache listens on port 5000
+  lineinfile:
+    path: /etc/apache2/ports.conf
+    regexp: '^Listen 5000'
+    line: 'Listen 5000'
+    state: present
+    insertafter: '^#.*Listen'
+  notify: Restart apache2
 
 - name: Restart Apache2
   service:
