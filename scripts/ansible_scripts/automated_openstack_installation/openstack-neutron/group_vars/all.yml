@@ -41,6 +41,7 @@ tenant_network_types: vxlan
 vni_ranges: 1:1000
 enable_security_group: true
 enable_ipset: true
+enable_ssl: false
 metadata_secret: "MetadataSecretPass"
 
 # Package configuration

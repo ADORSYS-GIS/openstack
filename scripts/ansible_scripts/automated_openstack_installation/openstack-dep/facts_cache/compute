@@ -33,17 +33,17 @@
     "ansible_date_time": {
         "date": "2025-07-21",
         "day": "21",
-        "epoch": "1753101153",
-        "epoch_int": "1753101153",
-        "hour": "13",
-        "iso8601": "2025-07-21T12:32:33Z",
-        "iso8601_basic": "20250721T133233420588",
-        "iso8601_basic_short": "20250721T133233",
-        "iso8601_micro": "2025-07-21T12:32:33.420588Z",
-        "minute": "32",
+        "epoch": "1753109889",
+        "epoch_int": "1753109889",
+        "hour": "15",
+        "iso8601": "2025-07-21T14:58:09Z",
+        "iso8601_basic": "20250721T155809591552",
+        "iso8601_basic_short": "20250721T155809",
+        "iso8601_micro": "2025-07-21T14:58:09.591552Z",
+        "minute": "58",
         "month": "07",
-        "second": "33",
-        "time": "13:32:33",
+        "second": "09",
+        "time": "15:58:09",
         "tz": "WAT",
         "tz_dst": "WAT",
         "tz_offset": "+0100",
@@ -580,7 +580,7 @@
         "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
         "PWD": "/home/ubuntu",
         "SHELL": "/bin/bash",
-        "SUDO_COMMAND": "/bin/sh -c echo BECOME-SUCCESS-xbljmaimheygskzrrfyfjyzosmwslrno ; /usr/bin/python3.12 /home/ubuntu/.ansible/tmp/ansible-tmp-1753101150.414237-40605-97379524367825/AnsiballZ_setup.py",
+        "SUDO_COMMAND": "/bin/sh -c echo BECOME-SUCCESS-blbnqbeujjghjiigzinohgriealbxfyt ; /usr/bin/python3.12 /home/ubuntu/.ansible/tmp/ansible-tmp-1753109885.987026-51052-146245309262073/AnsiballZ_setup.py",
         "SUDO_GID": "1000",
         "SUDO_UID": "1000",
         "SUDO_USER": "ubuntu",
@@ -657,9 +657,9 @@
     "ansible_hostname": "compute",
     "ansible_hostnqn": "nqn.2014-08.org.nvmexpress:uuid:54389256-f1dd-4f9e-adfa-9f83e2966bad",
     "ansible_interfaces": [
+        "virbr0",
         "ens3",
-        "lo",
-        "virbr0"
+        "lo"
     ],
     "ansible_is_chroot": false,
     "ansible_iscsi_iqn": "",
@@ -756,9 +756,9 @@
         "type": "loopback"
     },
     "ansible_loadavg": {
-        "15m": 0.8291015625,
-        "1m": 1.14990234375,
-        "5m": 0.96484375
+        "15m": 1.01953125,
+        "1m": 1.9501953125,
+        "5m": 1.08740234375
     },
     "ansible_local": {},
     "ansible_locally_reachable_ips": {
@@ -788,16 +788,16 @@
     },
     "ansible_machine": "x86_64",
     "ansible_machine_id": "7ad9b5da55e94c1785d04003716a4934",
-    "ansible_memfree_mb": 1724,
+    "ansible_memfree_mb": 1557,
     "ansible_memory_mb": {
         "nocache": {
-            "free": 3439,
-            "used": 471
+            "free": 3395,
+            "used": 515
         },
         "real": {
-            "free": 1724,
+            "free": 1557,
             "total": 3910,
-            "used": 2186
+            "used": 2353
         },
         "swap": {
             "cached": 0,
@@ -809,20 +809,20 @@
     "ansible_memtotal_mb": 3910,
     "ansible_mounts": [
         {
-            "block_available": 3903397,
+            "block_available": 3874358,
             "block_size": 4096,
             "block_total": 4805312,
-            "block_used": 901915,
+            "block_used": 930954,
             "device": "/dev/sda1",
             "dump": 0,
             "fstype": "ext4",
-            "inode_available": 2326670,
+            "inode_available": 2319019,
             "inode_total": 2490368,
-            "inode_used": 163698,
+            "inode_used": 171349,
             "mount": "/",
             "options": "rw,relatime,discard,errors=remount-ro,commit=30",
             "passno": 0,
-            "size_available": 15988314112,
+            "size_available": 15869370368,
             "size_total": 19682557952,
             "uuid": "e4cd6da8-09cb-4378-9577-e2053726667f"
         },
@@ -935,7 +935,7 @@
         "features": "+PAM +AUDIT +SELINUX +APPARMOR +IMA +SMACK +SECCOMP +GCRYPT -GNUTLS +OPENSSL +ACL +BLKID +CURL +ELFUTILS +FIDO2 +IDN2 -IDN +IPTC +KMOD +LIBCRYPTSETUP +LIBFDISK +PCRE2 -PWQUALITY +P11KIT +QRENCODE +TPM2 +BZIP2 +LZ4 +XZ +ZLIB +ZSTD -BPF_FRAMEWORK -XKBCOMMON +UTMP +SYSVINIT default-hierarchy=unified",
         "version": 255
     },
-    "ansible_uptime_seconds": 14311,
+    "ansible_uptime_seconds": 22788,
     "ansible_user_dir": "/root",
     "ansible_user_gecos": "root",
     "ansible_user_gid": 0,

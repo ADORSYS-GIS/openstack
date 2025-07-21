@@ -29,6 +29,16 @@
     login_password: "{{ mysql_admin_password }}"
     login_host: "{{ neutron_db_host }}"
 
+- name: Configure neutron.conf
+  template:
+    src: neutron.conf.j2
+    dest: /etc/neutron/neutron.conf
+    owner: root
+    group: neutron
+    mode: "0640"
+  notify: Restart neutron-server
+  when: inventory_hostname in groups["controllers"]
+
 - name: Configure ML2 plugin
   template:
     src: ml2_conf.ini.j2
@@ -37,6 +47,7 @@
     group: neutron
     mode: "0640"
   notify: Restart neutron-server
+  when: inventory_hostname in groups["controllers"]
 
 - name: Configure L3 agent
   template:
@@ -46,6 +57,7 @@
     group: neutron
     mode: "0640"
   notify: Restart neutron-l3-agent
+  when: inventory_hostname in groups["controllers"]
 
 - name: Configure DHCP agent
   template:
@@ -55,6 +67,7 @@
     group: neutron
     mode: "0640"
   notify: Restart neutron-dhcp-agent
+  when: inventory_hostname in groups["controllers"]
 
 - name: Configure metadata agent
   template:
@@ -64,6 +77,7 @@
     group: neutron
     mode: "0640"
   notify: Restart neutron-metadata-agent
+  when: inventory_hostname in groups["controllers"]
 
 - name: Populate Neutron database
   command: >
