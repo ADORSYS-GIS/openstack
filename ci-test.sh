@@ -1,5 +1,4 @@
 #!/bin/sh
-set -e
 
 # 1. Detect architecture and OS
 ARCH=$(uname -m)
