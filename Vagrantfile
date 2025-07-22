@@ -29,7 +29,7 @@ config.vm.synced_folder ".", "/vagrant", type: "rsync"
     ansible.become = true
     ansible.extra_vars = {
       ansible_python_interpreter: "/usr/bin/python3"
-    }I I was
+    }
   end
 
   # Optional: Install rsync inside VM (in case it's not there)
