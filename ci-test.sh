@@ -98,7 +98,6 @@ if [ -d ".vagrant" ]; then
     echo "[WARN] Cleaning stale Vagrant metadata..."
     rm -rf .vagrant
 fi
-
 # 6. Start VM
 echo "[CI] Starting Vagrant VM with provider: $PROVIDER"
 
@@ -118,9 +117,12 @@ if echo "$VM_OUTPUT" | grep -q "requested NFS version or transport protocol is n
 
     echo "[INFO] Retrying vagrant up with rsync..."
     vagrant up --provider="$PROVIDER"
-elif echo "$VM_OUTPUT" | grep -q "failed"; then
-    echo "[ERROR] VM failed to start. See output above."
-    exit 1
+else
+    # Only check for a real provisioning failure
+    if echo "$VM_OUTPUT" | grep -q "VM boot failed\|error while running provisioner\|A fatal error occurred"; then
+        echo "[ERROR] VM provisioning failed."
+        exit 1
+    fi
 fi
 
 
