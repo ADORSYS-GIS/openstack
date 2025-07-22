@@ -18,7 +18,7 @@ Vagrant.configure("2") do |config|
   config.vm.network "private_network", type: "dhcp"
 
   # Sync your project directory to /vagrant inside the VM
-  config.vm.synced_folder ".", "/vagrant"
+config.vm.synced_folder ".", "/vagrant", type: "rsync"
 
   # Fix for stale domain issue (clean up on reload)
   config.vm.hostname = "openstack-keystone"
@@ -29,17 +29,13 @@ Vagrant.configure("2") do |config|
     ansible.become = true
     ansible.extra_vars = {
       ansible_python_interpreter: "/usr/bin/python3"
-    }
+    }I I was
   end
 
-  # Workaround: shell provisioner to ensure domain name isn't stale post-setup
-  config.vm.provision "shell", run: "always", inline: <<-SHELL
-    echo "[CI] Checking for stale domain and fixing libvirt state..."
-    if virsh domstate openstack_default &>/dev/null; then
-      if ! virsh dominfo openstack_default | grep -q "running"; then
-        echo "[CI] Removing stale domain..."
-        virsh undefine openstack_default --remove-all-storage --nvram || true
-      fi
-    fi
+  # Optional: Install rsync inside VM (in case it's not there)
+  config.vm.provision "shell", inline: <<-SHELL
+    echo "[CI] Installing rsync in guest..."
+    sudo apt-get update -y
+    sudo apt-get install -y rsync
   SHELL
-end
+en
