@@ -17,8 +17,8 @@ Vagrant.configure("2") do |config|
   # Network: private network for easier SSH and API access
   config.vm.network "private_network", type: "dhcp"
 
-  # Sync your project directory to /vagrant inside the VM
-config.vm.synced_folder ".", "/vagrant", type: "rsync"
+  # Sync your project directory to /vagrant inside the VM using rsync
+  config.vm.synced_folder ".", "/vagrant", type: "rsync"
 
   # Fix for stale domain issue (clean up on reload)
   config.vm.hostname = "openstack-keystone"
@@ -38,4 +38,4 @@ config.vm.synced_folder ".", "/vagrant", type: "rsync"
     sudo apt-get update -y
     sudo apt-get install -y rsync
   SHELL
-en
+end
