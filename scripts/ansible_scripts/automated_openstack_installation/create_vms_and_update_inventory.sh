@@ -28,9 +28,41 @@ COMPUTE_DISK=20G
 SSH_KEY=~/.ssh/id_ed25519
 SSH_PUB=~/.ssh/id_ed25519.pub
 
+
+# check if ifconfig is installed 
+
+ensure_ifconfig_installed() {
+    if command -v ifconfig >/dev/null 2>&1; then
+        echo "[INFO] ifconfig is already installed."
+        return 0
+    fi
+
+    echo "[INFO] ifconfig not found. Installing net-tools for Ubuntu..."
+
+    # Check if the OS is Ubuntu
+    if [ -f /etc/lsb-release ] && grep -qi "ubuntu" /etc/lsb-release; then
+        sudo apt update
+        sudo apt install -y net-tools
+    else
+        echo "[ERROR] This script only supports Ubuntu for automatic net-tools installation."
+        return 1
+    fi
+
+    # Verify installation
+    if command -v ifconfig >/dev/null 2>&1; then
+        echo "[INFO] ifconfig successfully installed."
+    else
+        echo "[ERROR] Installation failed. Please install net-tools manually."
+        return 1
+    fi
+}
+
+ensure_ifconfig_installed
 #### Bridge networking for multipass vms is not supported for mac
 
- BRIDGE_NAME="mpbr0"
+BRIDGE_NAME="mpbr0"
+
+
 
 OS="$(uname)"
 
@@ -109,6 +141,15 @@ echo "Waiting for VMs to obtain IP addresses..."
 CONTROLLER_IP="$(multipass info $CONTROLLER_NAME | awk '/IPv4/ {print $2; exit}')"
 COMPUTE_IP="$(multipass info $COMPUTE_NAME | awk '/IPv4/ {print $2; exit}')"
 
+# check if the IP is
+if [ -z "$CONTROLLER_IP" ] || [ -z "$COMPUTE_IP" ]; then
+    echo "[ERROR] One or both VMs failed to obtain IP addresses."
+    multipass info $CONTROLLER_NAME
+    multipass info $COMPUTE_NAME
+    exit 1
+fi
+
+
 # 4. Setup SSH on VMs and copy public key
 for VM in $CONTROLLER_NAME $COMPUTE_NAME; do
     multipass exec $VM -- bash -c "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
@@ -175,3 +216,6 @@ To delete all Multipass VMs and free resources:
 
 For more info, see: https://docs.openstack.org/ and https://multipass.run/
 EOF 
+
+
+### install net-tools 

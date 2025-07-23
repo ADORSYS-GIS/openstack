@@ -147,21 +147,21 @@
 
 - name: Create public endpoint for Neutron
   shell: |
-    openstack endpoint create --region OS_REGION_NAME network public http://{{ ansible_fqdn }}:9696 || true
+    openstack endpoint create --region "{{ OS_REGION_NAME }}"" network public http://{{ ansible_fqdn }}:9696 || true
   environment: "{{ openstack_env }}"
   register: neutron_endpoint_create
   changed_when: "'already exists' not in neutron_endpoint_create.stdout"
 
 - name: Create internal endpoint for Neutron
   shell: |
-    openstack endpoint create --region OS_REGION_NAME network internal http://{{ ansible_fqdn }}:9696 || true
+    openstack endpoint create --region "{{ OS_REGION_NAME }}"" network internal http://{{ ansible_fqdn }}:9696 || true
   environment: "{{ openstack_env }}"
   register: neutron_internal_endpoint_create
   changed_when: "'already exists' not in neutron_internal_endpoint_create.stdout"
 
 - name: Create admin endpoint for Neutron
   shell: |
-    openstack endpoint create --region OS_REGION_NAME network admin http://{{ ansible_fqdn }}:9696 || true
+    openstack endpoint create --region "{{ OS_REGION_NAME }}"" network admin http://{{ ansible_fqdn }}:9696 || true
   environment: "{{ openstack_env }}"
   register: neutron_admin_endpoint_create
   changed_when: "'already exists' not in neutron_admin_endpoint_create.stdout"
