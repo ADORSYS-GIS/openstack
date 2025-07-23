@@ -22,6 +22,7 @@
       - net-tools
       # - ntp
       # - chrony
+      - libapache2-mod-wsgi-py3 
       - software-properties-common
       - apt-transport-https
       - ca-certificates

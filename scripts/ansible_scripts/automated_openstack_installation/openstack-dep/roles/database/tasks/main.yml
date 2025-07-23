@@ -20,11 +20,17 @@
     state: started
     enabled: yes
 
-- name: Wait for MySQL socket to be available
-  wait_for:
-    path: /var/lib/mysql/mysql.sock
+- name: Get MySQL socket path from database
+  shell: sudo mysql -N -e "SHOW VARIABLES LIKE 'socket';" | awk '{print $2}'
+  register: mysql_socket_path
+  changed_when: false
+
+- name: Wait for MySQL socket to appear
+  ansible.builtin.wait_for:
+    path: "{{ mysql_socket_path.stdout }}"
     state: present
-    timeout: 30
+    timeout: 60
+
 
 - name: Deploy custom MySQL configuration
   template:
@@ -44,11 +50,11 @@
     priv: "*.*:ALL,GRANT"
     state: present
     login_user: root
-    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_unix_socket: "{{ mysql_socket_path.stdout }}"
 
-- name: Set MySQL root password (MariaDB < 10.4)
+- name: Set MySQL root password (MariaDB < 10.4) using detected socket
   shell: |
-    mysql -u root -S /var/lib/mysql/mysql.sock -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('{{ mysql_root_password }}'); FLUSH PRIVILEGES;"
+    mysql -u root -S {{ mysql_socket_path.stdout }} -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('{{ mysql_root_password }}'); FLUSH PRIVILEGES;"
   args:
     executable: /bin/bash
   when: ansible_os_family == "Debian"

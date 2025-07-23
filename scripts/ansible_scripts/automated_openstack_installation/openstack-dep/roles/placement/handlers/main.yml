@@ -1,5 +1,6 @@
 ---
-- name: Restart placement-api
+- name: Restart apache2
   service:
-    name: placement-api
+    name: apache2
     state: restarted
+  become: true

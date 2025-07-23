@@ -1,8 +1,11 @@
+
+
+
+
 [database]
 connection = mysql+pymysql://{{ keystone_db_name }}:{{ keystone_db_password }}@{{ controller_host }}/{{ keystone_db_name }}
+connection_recycle_time = 600
+
 
 [token]
 provider = fernet
-
-[DEFAULT]
-log_dir = /var/log/keystone

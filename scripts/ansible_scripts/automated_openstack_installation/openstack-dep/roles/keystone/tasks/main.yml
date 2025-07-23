@@ -68,11 +68,7 @@
     state: directory
   become: true
 
-- name: Remove stale keystone-manage.log if exists
-  file:
-    path: /var/log/keystone/keystone-manage.log
-    state: absent
-  become: true
+
 
 - name: Remove stale keystone.db if exists and not owned by keystone
   file:
@@ -86,12 +82,23 @@
     shell: /bin/bash
   become: true
 
-- name: Initialize Keystone DB
-  command: "keystone-manage --debug db_sync" 
-  become_user: keystone
+- name: Remove stale keystone-manage.log if exists
+  file:
+    path: /var/log/keystone/keystone-manage.log
+    state: absent
   become: true
+
+- name: Initialize Keystone DB
+  command: "keystone-manage --debug  --config-file /etc/keystone/keystone.conf db_sync" 
+  become: true
+  register: keystone_db_sync
+  ignore_errors: false
   args:
     creates: /var/lib/keystone/keystone.db
+  
+- debug:
+    var: keystone_db_sync
+  
 
 
 - name: Initialize Fernet keys for Keystone
@@ -100,6 +107,7 @@
   become_user: keystone
   args:
     creates: /etc/keystone/fernet-keys/0
+
 
 - name: Initialize Credential keys for Keystone
   command: keystone-manage --config-file /etc/keystone/keystone.conf credential_setup --keystone-user keystone --keystone-group keystone

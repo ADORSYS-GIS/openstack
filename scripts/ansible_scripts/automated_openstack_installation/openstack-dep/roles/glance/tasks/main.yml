@@ -16,3 +16,32 @@
   command: "glance-manage db_sync"
   args:
     creates: /var/lib/glance/glance.sqlite
+
+
+- name: Register Glance service in Keystone
+  shell: |
+    openstack service create --name image --description "OpenStack Image Service" image || true
+  environment: "{{ openstack_env }}"
+  register: glance_service_create
+  changed_when: "'already exists' not in glance_service_create.stdout"
+
+- name: Create public endpoint for Glance
+  shell: |
+    openstack endpoint create --region {{ OS_REGION_NAME }} image public http://{{ ansible_fqdn }}:9292 || true
+  environment: "{{ openstack_env }}"
+  register: glance_public_endpoint_create
+  changed_when: "'already exists' not in glance_public_endpoint_create.stdout"
+
+- name: Create internal endpoint for Glance
+  shell: |
+    openstack endpoint create --region {{ OS_REGION_NAME }} image internal http://{{ ansible_fqdn }}:9292 || true
+  environment: "{{ openstack_env }}"
+  register: glance_internal_endpoint_create
+  changed_when: "'already exists' not in glance_internal_endpoint_create.stdout"
+
+- name: Create admin endpoint for Glance
+  shell: |
+    openstack endpoint create --region {{ OS_REGION_NAME }} image admin http://{{ ansible_fqdn }}:9292 || true
+  environment: "{{ openstack_env }}"
+  register: glance_admin_endpoint_create
+  changed_when: "'already exists' not in glance_admin_endpoint_create.stdout"

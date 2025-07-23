@@ -49,3 +49,32 @@
   args:
     creates: /var/lib/nova/db_synced
   when: "'controllers' in group_names"
+
+
+- name: Register Nova Compute service in Keystone
+  shell: |
+    openstack service create --name nova --description "OpenStack Compute Service" compute || true
+  environment: "{{ openstack_env }}"
+  register: nova_compute_service_create
+  changed_when: "'already exists' not in nova_compute_service_create.stdout"
+
+- name: Create public endpoint for Nova Compute
+  shell: |
+    openstack endpoint create --region {{ OS_REGION_NAME }} compute public http://{{ ansible_fqdn }}:8774/v2.1 || true # Note the /v2.1 API version
+  environment: "{{ openstack_env }}"
+  register: nova_compute_public_endpoint_create
+  changed_when: "'already exists' not in nova_compute_public_endpoint_create.stdout"
+
+- name: Create internal endpoint for Nova Compute
+  shell: |
+    openstack endpoint create --region {{ OS_REGION_NAME }} compute internal http://{{ ansible_fqdn }}:8774/v2.1 || true
+  environment: "{{ openstack_env }}"
+  register: nova_compute_internal_endpoint_create
+  changed_when: "'already exists' not in nova_compute_internal_endpoint_create.stdout"
+
+- name: Create admin endpoint for Nova Compute
+  shell: |
+    openstack endpoint create --region {{ OS_REGION_NAME }} compute admin http://{{ ansible_fqdn }}:8774/v2.1 || true
+  environment: "{{ openstack_env }}"
+  register: nova_compute_admin_endpoint_create
+  changed_when: "'already exists' not in nova_compute_admin_endpoint_create.stdout"

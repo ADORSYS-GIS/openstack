@@ -31,6 +31,11 @@ glance_db_name: glance
 nova_db_name: nova
 neutron_db_name: neutron
 
+# Admin user and password
+admin_user: "admin"
+admin_password: "KeystoneAdminPass"
+admin_project: "admin"
+
 # Endpoints
 controller_host: "{{ groups['controllers'][0] }}"
 keystone_admin_url: "http://{{ controller_host }}:5000/v3"
@@ -39,7 +44,20 @@ keystone_public_url: "http://{{ controller_host }}:5000/v3"
 glance_api_url: "http://{{ controller_host }}:9292"
 nova_api_url: "http://{{ controller_host }}:8774/v2.1"
 region_name: RegionOne
-
+OS_REGION_NAME: RegionOne
 # OpenStack service project
-openstack_service_project: service
+openstack_service_project: admin
+
+# openstack env
+openstack_env:
+  OS_AUTH_URL: "http://{{ controller_host }}:5000/v3"
+  OS_USERNAME: "{{ admin_user }}"
+  OS_PASSWORD: "{{ admin_password }}"
+  OS_PROJECT_NAME: "{{ openstack_service_project }}"
+  OS_USER_DOMAIN_NAME: "Default"
+  OS_PROJECT_DOMAIN_NAME: "Default"
+  OS_REGION_NAME: "RegionOne"
+  OS_INTERFACE: "public"
+  OS_IDENTITY_API_VERSION: "3"
+
 

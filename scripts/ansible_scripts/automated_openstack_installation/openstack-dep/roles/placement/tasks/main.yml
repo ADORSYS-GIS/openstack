@@ -1,9 +1,19 @@
 ---
 - name: Install Placement API
   apt:
-    name: placement-api
+    name: 
+      - placement-api
+      - python3-placement
     state: present
-  become: yes
+    update_cache: yes
+  become: true
+
+- name: Enable Apache2 WSGI module
+  apache2_module:
+    name: wsgi
+    state: present
+  become: true
+  notify: Restart apache2
 
 - name: Configure Placement
   template:
@@ -12,17 +22,70 @@
     owner: root
     group: placement
     mode: 0640
-  notify: Restart placement-api
+  notify: Restart apache2
+
+- name: Configure Placement API WSGI for Apache2
+  template:
+    src: placement-api.conf.j2
+    dest: /etc/apache2/sites-available/placement-api.conf
+    owner: root
+    group: root
+    mode: 0644
+  become: true
+  notify: Restart apache2
+
+- name: Enable Placement API site in Apache2
+  command: a2ensite placement-api
+  args:
+    creates: /etc/apache2/sites-enabled/placement-api.conf
+  become: true
+  notify: Restart apache2
+
+- name: Ensure Apache2 is started and enabled
+  service:
+    name: apache2
+    state: started
+    enabled: yes
+  become: true
 
 - name: Ensure Placement API is started and enabled
   service:
     name: apache2
     state: started
     enabled: yes
-  become: yes
+  become: true
 
 - name: Sync Placement database
   command: placement-manage db sync
-  become: yes
+  become: true
   args:
     creates: /var/lib/placement/db_synced 
+
+
+- name: Register Placement service in Keystone
+  shell: |
+    openstack service create --name placement --description "OpenStack Placement API" placement || true
+  environment: "{{ openstack_env }}"
+  register: placement_service_create
+  changed_when: "'already exists' not in placement_service_create.stdout"
+
+- name: Create public endpoint for Placement
+  shell: |
+    openstack endpoint create --region {{ OS_REGION_NAME }} placement public http://{{ ansible_fqdn }}:8778 || true
+  environment: "{{ openstack_env }}"
+  register: placement_public_endpoint_create
+  changed_when: "'already exists' not in placement_public_endpoint_create.stdout"
+
+- name: Create internal endpoint for Placement
+  shell: |
+    openstack endpoint create --region {{ OS_REGION_NAME }} placement internal http://{{ ansible_fqdn }}:8778 || true
+  environment: "{{ openstack_env }}"
+  register: placement_internal_endpoint_create
+  changed_when: "'already exists' not in placement_internal_endpoint_create.stdout"
+
+- name: Create admin endpoint for Placement
+  shell: |
+    openstack endpoint create --region {{ OS_REGION_NAME }} placement admin http://{{ ansible_fqdn }}:8778 || true
+  environment: "{{ openstack_env }}"
+  register: placement_admin_endpoint_create
+  changed_when: "'already exists' not in placement_admin_endpoint_create.stdout"
