@@ -14,28 +14,17 @@ if [ "$OS" = "ubuntu" ] || [ "$OS" = "debian" ]; then
     sudo apt-get update -y
     sudo apt-get install -y curl gnupg2 software-properties-common
 
-    # Install correct QEMU package per arch
-    if [ "$ARCH" = "x86_64" ]; then
-        QEMU_PKGS="qemu-system-x86 qemu-utils"
-    elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
-        QEMU_PKGS="qemu-system-arm qemu-utils"
-    else
-        echo "[ERROR] Unsupported architecture for QEMU: $ARCH"
-        exit 1
-    fi
-
-   sudo apt-get install -y $QEMU_PKGS \
-    libvirt-daemon-system libvirt-clients bridge-utils virtinst \
-    libvirt-dev libxslt1-dev libxml2-dev zlib1g-dev ruby-dev build-essential
-
-    # Check for KVM if on ARM
-    if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
-        echo "[INFO] ARM architecture detected, verifying KVM support..."
-        sudo apt-get install -y cpu-checker || true
-        if command -v kvm-ok >/dev/null && ! kvm-ok 2>/dev/null | grep -q 'can be used'; then
-            echo "[WARN] KVM not supported."
-        fi
-    fi
+    # Install comprehensive QEMU packages for multi-architecture support
+    # This ensures that an x86_64 host can emulate ARM and vice-versa.
+    echo "[INFO] Installing QEMU system emulators for multi-architecture support..."
+    sudo apt-get install -y \
+        qemu-system-x86 \
+        qemu-system-arm \
+        qemu-system-aarch64 \
+        qemu-utils \
+        libvirt-daemon-system libvirt-clients bridge-utils virtinst \
+        libvirt-dev libxslt1-dev libxml2-dev zlib1g-dev ruby-dev build-essential \
+        cpu-checker # Install cpu-checker unconditionally for KVM check
 
     PROVIDER="libvirt"
     sudo systemctl enable --now libvirtd
@@ -43,7 +32,10 @@ if [ "$OS" = "ubuntu" ] || [ "$OS" = "debian" ]; then
 elif [ "$OS" = "rhel" ] || [ "$OS" = "centos" ] || [ "$OS" = "fedora" ]; then
     sudo dnf install -y curl
 
-    sudo dnf install -y @virtualization libvirt libvirt-devel virt-install qemu-kvm \
+    # Install comprehensive QEMU packages for multi-architecture support
+    echo "[INFO] Installing QEMU system emulators for multi-architecture support..."
+    sudo dnf install -y @virtualization libvirt libvirt-devel virt-install \
+        qemu-kvm qemu-system-x86 qemu-system-arm qemu-system-aarch64 \
         libxslt-devel libxml2-devel zlib-devel ruby-devel make gcc
 
     PROVIDER="libvirt"
@@ -51,6 +43,22 @@ elif [ "$OS" = "rhel" ] || [ "$OS" = "centos" ] || [ "$OS" = "fedora" ]; then
 else
     echo "[ERROR] Unsupported OS: $OS"
     exit 1
+fi
+
+# Universal KVM check (relevant for any host architecture that might use KVM)
+echo "[INFO] Verifying KVM support for host architecture ($ARCH)..."
+if command -v kvm-ok >/dev/null 2>&1; then
+    if ! kvm-ok 2>/dev/null | grep -q 'can be used'; then
+        echo "[WARN] KVM acceleration is NOT enabled on this host ($ARCH)."
+        echo "[WARN] Virtual machines will run in emulation mode and will be significantly slower."
+        echo "[WARN] Please ensure virtualization is enabled in your system's BIOS/UEFI settings."
+    else
+        echo "✅ KVM acceleration can be used on this host ($ARCH)."
+    fi
+else
+    echo "[INFO] 'kvm-ok' command not found or not applicable for this OS/environment."
+    echo "[INFO] If on RHEL/CentOS/Fedora, KVM status can often be inferred by /dev/kvm existence and 'qemu-kvm' package."
+    echo "[INFO] You can manually check for 'vmx' (Intel) or 'svm' (AMD) flags in /proc/cpuinfo: grep -E --color=auto 'vmx|svm' /proc/cpuinfo"
 fi
 
 # 3. Install Vagrant if missing
