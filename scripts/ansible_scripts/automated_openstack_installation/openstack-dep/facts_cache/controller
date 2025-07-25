@@ -1,11 +1,11 @@
 {
     "_ansible_facts_gathered": true,
     "ansible_all_ipv4_addresses": [
-        "192.168.82.17"
+        "192.168.82.19"
     ],
     "ansible_all_ipv6_addresses": [
-        "fd3e:53a5:be6f:b6b:5054:ff:fe0f:1527",
-        "fe80::5054:ff:fe0f:1527"
+        "fd3e:53a5:be6f:b6b:5054:ff:fe9b:dfb3",
+        "fe80::5054:ff:fe9b:dfb3"
     ],
     "ansible_apparmor": {
         "status": "enabled"
@@ -24,40 +24,40 @@
     "ansible_chassis_vendor": "QEMU",
     "ansible_chassis_version": "pc-i440fx-8.2",
     "ansible_cmdline": {
-        "BOOT_IMAGE": "/vmlinuz-6.8.0-64-generic",
+        "BOOT_IMAGE": "/vmlinuz-6.8.0-63-generic",
         "console": "ttyS0",
         "ro": true,
-        "root": "UUID=e4cd6da8-09cb-4378-9577-e2053726667f"
+        "root": "LABEL=cloudimg-rootfs"
     },
     "ansible_date_time": {
-        "date": "2025-07-23",
-        "day": "23",
-        "epoch": "1753286272",
-        "epoch_int": "1753286272",
-        "hour": "16",
-        "iso8601": "2025-07-23T15:57:52Z",
-        "iso8601_basic": "20250723T165752288832",
-        "iso8601_basic_short": "20250723T165752",
-        "iso8601_micro": "2025-07-23T15:57:52.288832Z",
-        "minute": "57",
+        "date": "2025-07-24",
+        "day": "24",
+        "epoch": "1753343463",
+        "epoch_int": "1753343463",
+        "hour": "08",
+        "iso8601": "2025-07-24T07:51:03Z",
+        "iso8601_basic": "20250724T085103343210",
+        "iso8601_basic_short": "20250724T085103",
+        "iso8601_micro": "2025-07-24T07:51:03.343210Z",
+        "minute": "51",
         "month": "07",
-        "second": "52",
-        "time": "16:57:52",
+        "second": "03",
+        "time": "08:51:03",
         "tz": "WAT",
         "tz_dst": "WAT",
         "tz_offset": "+0100",
-        "weekday": "Wednesday",
-        "weekday_number": "3",
+        "weekday": "Thursday",
+        "weekday_number": "4",
         "weeknumber": "29",
         "year": "2025"
     },
     "ansible_default_ipv4": {
-        "address": "192.168.82.17",
+        "address": "192.168.82.19",
         "alias": "ens3",
         "broadcast": "",
         "gateway": "192.168.82.1",
         "interface": "ens3",
-        "macaddress": "52:54:00:0f:15:27",
+        "macaddress": "52:54:00:9b:df:b3",
         "mtu": 1500,
         "netmask": "255.255.255.0",
         "network": "192.168.82.0",
@@ -65,10 +65,10 @@
         "type": "ether"
     },
     "ansible_default_ipv6": {
-        "address": "fd3e:53a5:be6f:b6b:5054:ff:fe0f:1527",
+        "address": "fd3e:53a5:be6f:b6b:5054:ff:fe9b:dfb3",
         "gateway": "fe80::acbc:32ff:fe5d:b64",
         "interface": "ens3",
-        "macaddress": "52:54:00:0f:15:27",
+        "macaddress": "52:54:00:9b:df:b3",
         "mtu": 1500,
         "prefix": "64",
         "scope": "global",
@@ -555,7 +555,7 @@
         },
         "hw_timestamp_filters": [],
         "ipv4": {
-            "address": "192.168.82.17",
+            "address": "192.168.82.19",
             "broadcast": "",
             "netmask": "255.255.255.0",
             "network": "192.168.82.0",
@@ -563,17 +563,17 @@
         },
         "ipv6": [
             {
-                "address": "fd3e:53a5:be6f:b6b:5054:ff:fe0f:1527",
+                "address": "fd3e:53a5:be6f:b6b:5054:ff:fe9b:dfb3",
                 "prefix": "64",
                 "scope": "global"
             },
             {
-                "address": "fe80::5054:ff:fe0f:1527",
+                "address": "fe80::5054:ff:fe9b:dfb3",
                 "prefix": "64",
                 "scope": "link"
             }
         ],
-        "macaddress": "52:54:00:0f:15:27",
+        "macaddress": "52:54:00:9b:df:b3",
         "mtu": 1500,
         "pciid": "virtio0",
         "promisc": false,
@@ -589,7 +589,7 @@
         "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
         "PWD": "/home/ubuntu",
         "SHELL": "/bin/bash",
-        "SUDO_COMMAND": "/bin/sh -c echo BECOME-SUCCESS-nguuvliqzjyzhsdpvyzcsoscwrcrobjz ; /usr/bin/python3.12 /home/ubuntu/.ansible/tmp/ansible-tmp-1753286268.183788-1648-140158423899292/AnsiballZ_setup.py",
+        "SUDO_COMMAND": "/bin/sh -c echo BECOME-SUCCESS-dwrqxuarfhlfrrqynuqfrrjhodjaxnhv ; /usr/bin/python3.12 /home/ubuntu/.ansible/tmp/ansible-tmp-1753343459.0683851-17597-239745922176790/AnsiballZ_setup.py",
         "SUDO_GID": "1000",
         "SUDO_UID": "1000",
         "SUDO_USER": "ubuntu",
@@ -664,15 +664,15 @@
     "ansible_form_factor": "Other",
     "ansible_fqdn": "controller",
     "ansible_hostname": "controller",
-    "ansible_hostnqn": "nqn.2014-08.org.nvmexpress:uuid:0e26c2f8-83fc-49f9-89e3-a82fdc76fe11",
+    "ansible_hostnqn": "",
     "ansible_interfaces": [
         "ens3",
         "lo"
     ],
     "ansible_is_chroot": false,
     "ansible_iscsi_iqn": "",
-    "ansible_kernel": "6.8.0-64-generic",
-    "ansible_kernel_version": "#67-Ubuntu SMP PREEMPT_DYNAMIC Sun Jun 15 20:23:31 UTC 2025",
+    "ansible_kernel": "6.8.0-63-generic",
+    "ansible_kernel_version": "#66-Ubuntu SMP PREEMPT_DYNAMIC Fri Jun 13 20:25:30 UTC 2025",
     "ansible_lo": {
         "active": true,
         "device": "lo",
@@ -764,21 +764,21 @@
         "type": "loopback"
     },
     "ansible_loadavg": {
-        "15m": 0.61328125,
-        "1m": 3.982421875,
-        "5m": 1.6494140625
+        "15m": 0.12451171875,
+        "1m": 0.2275390625,
+        "5m": 0.0732421875
     },
     "ansible_local": {},
     "ansible_locally_reachable_ips": {
         "ipv4": [
             "127.0.0.0/8",
             "127.0.0.1",
-            "192.168.82.17"
+            "192.168.82.19"
         ],
         "ipv6": [
             "::1",
-            "fd3e:53a5:be6f:b6b:5054:ff:fe0f:1527",
-            "fe80::5054:ff:fe0f:1527"
+            "fd3e:53a5:be6f:b6b:5054:ff:fe9b:dfb3",
+            "fe80::5054:ff:fe9b:dfb3"
         ]
     },
     "ansible_lsb": {
@@ -794,17 +794,17 @@
         "vgs": {}
     },
     "ansible_machine": "x86_64",
-    "ansible_machine_id": "f0dd08a71707418bbdc1affd4d31dec8",
-    "ansible_memfree_mb": 2531,
+    "ansible_machine_id": "17a9a4c47ff141f0aae93a0d97dc732a",
+    "ansible_memfree_mb": 1682,
     "ansible_memory_mb": {
         "nocache": {
-            "free": 2953,
-            "used": 957
+            "free": 3418,
+            "used": 492
         },
         "real": {
-            "free": 2531,
+            "free": 1682,
             "total": 3910,
-            "used": 1379
+            "used": 2228
         },
         "swap": {
             "cached": 0,
@@ -816,20 +816,20 @@
     "ansible_memtotal_mb": 3910,
     "ansible_mounts": [
         {
-            "block_available": 3810226,
+            "block_available": 3992123,
             "block_size": 4096,
             "block_total": 4805312,
-            "block_used": 995086,
+            "block_used": 813189,
             "device": "/dev/sda1",
             "dump": 0,
             "fstype": "ext4",
-            "inode_available": 2323823,
+            "inode_available": 2350858,
             "inode_total": 2490368,
-            "inode_used": 166545,
+            "inode_used": 139510,
             "mount": "/",
             "options": "rw,relatime,discard,errors=remount-ro,commit=30",
             "passno": 0,
-            "size_available": 15606685696,
+            "size_available": 16351735808,
             "size_total": 19682557952,
             "uuid": "e4cd6da8-09cb-4378-9577-e2053726667f"
         },
@@ -874,13 +874,13 @@
     "ansible_os_family": "Debian",
     "ansible_pkg_mgr": "apt",
     "ansible_proc_cmdline": {
-        "BOOT_IMAGE": "/vmlinuz-6.8.0-64-generic",
+        "BOOT_IMAGE": "/vmlinuz-6.8.0-63-generic",
         "console": [
             "tty1",
             "ttyS0"
         ],
         "ro": true,
-        "root": "UUID=e4cd6da8-09cb-4378-9577-e2053726667f"
+        "root": "LABEL=cloudimg-rootfs"
     },
     "ansible_processor": [
         "0",
@@ -926,11 +926,11 @@
     },
     "ansible_selinux_python_present": true,
     "ansible_service_mgr": "systemd",
-    "ansible_ssh_host_key_ecdsa_public": "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBIHSkmTg/Q7J4nF/eYtuDP8bm3D6Eipu/nUhxlvq2F5m4J9mm5El824zBLjDjy55XGdfIP0ASy7NKhou5y8sUWE=",
+    "ansible_ssh_host_key_ecdsa_public": "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGGg+Is6506xwem+HY/ysoi4QQGEFQzK/kH0j3eYG/439zYRqG2kLlCQXuRSGDJOQj/U7atcJBSfOo3Zq/Uyzxw=",
     "ansible_ssh_host_key_ecdsa_public_keytype": "ecdsa-sha2-nistp256",
-    "ansible_ssh_host_key_ed25519_public": "AAAAC3NzaC1lZDI1NTE5AAAAIIxTWE+JR/ua+CkaP+QSGH2FoaqSXIBH6h3R7N1yPdt9",
+    "ansible_ssh_host_key_ed25519_public": "AAAAC3NzaC1lZDI1NTE5AAAAIG+WldUGLpwnIc3r5blZ2ye2kkjZdUQWJiCOisJHSG58",
     "ansible_ssh_host_key_ed25519_public_keytype": "ssh-ed25519",
-    "ansible_ssh_host_key_rsa_public": "AAAAB3NzaC1yc2EAAAADAQABAAABgQC6DO9GnG9GNTHGruzo9bTomEqZRFjvdFp3/Ifud+qA9jDEXkzX/esOj+OSz4NV7Uf8jx+JYn3ratx1fwFOT+QQZBv6i94kar2a6rjZ5AOiA5x1su+79kMJvrPETWVqLQGYdDj359wd9XMfCXb30NyCdziapGcq/hlrUubh5uuVXfiF7qfZ6LmVYV+uXyJi5P5GsTTBQQL0RfkRf2Ei76959I0pwoIPv/wRb1tzUBK/YwUzwNWfaF7qY6p2BkY1QGxEbYPay2cE46iC2Tked8LcVUAksiNZbYj7iSeXUxmdAnjcM4RUHgVfp2kFTdY61bzqDwDg0N6aK+BvlfNZYN5bZ9OKBJVG3UftQcldjLocBSffLDtGbBwfP1cjV5wVrIQVN1vX1yFSRAhx/65VfQGj8Mqlf2MGC+xs2QUOJUCtcUKeGQkz6KzaVU5TVl/OM7dEYoqqVQ7N1VwjkqFrNh+PnYgbT5Se25/t6bloTCoBnZ46/pXNKNxga178KXgtoTE=",
+    "ansible_ssh_host_key_rsa_public": "AAAAB3NzaC1yc2EAAAADAQABAAABgQC0t3oIaA9+UOL5LhqgK4N8Ia9j7aJY2+gNPtKoXsMxbc73cUlz3snF99Xi8Zgmt47o66yXZmSgJLiNuzEMMxSkh6bdXuCeOuI/J5jL5PB1dioT+MD3senKt2Aa/++JFNwglVSJTctdcD3Be/ZeqJewFgPw9ZWzo7mAnEOG00ppU46IOjk2jm47Hg+stsLwSbuqwkCHBM+RhYF81wffjKLXqLrj+kJHab9ucrQDmNq3jSN2nw2V1lhg+zdnl8/VXkiVDOx/d7cMHv4WSKlvVGZhOyBriaHQyi8ESbJAmtBySoua9iS+OHdzw68Lc0rAkxuisqM7OXOlkml0Yvxz64GXVn3Y5ttmRBI6S9Qak7sTY4z/VOdzwK4nC7I7oc2WpWHZqMn0Im7Quj7yYdkyolBUdFCqVeivGRYWRb5cWqrlmJ5g7/EXEvskAgUlaTx8hZaAMEJ/zo1eRSbyn36Yb0lXbxB0aFbUMpdAbsQpOpQszhlDECHFNx8ghQoylZtR18U=",
     "ansible_ssh_host_key_rsa_public_keytype": "ssh-rsa",
     "ansible_swapfree_mb": 0,
     "ansible_swaptotal_mb": 0,
@@ -942,7 +942,7 @@
         "features": "+PAM +AUDIT +SELINUX +APPARMOR +IMA +SMACK +SECCOMP +GCRYPT -GNUTLS +OPENSSL +ACL +BLKID +CURL +ELFUTILS +FIDO2 +IDN2 -IDN +IPTC +KMOD +LIBCRYPTSETUP +LIBFDISK +PCRE2 -PWQUALITY +P11KIT +QRENCODE +TPM2 +BZIP2 +LZ4 +XZ +ZLIB +ZSTD -BPF_FRAMEWORK -XKBCOMMON +UTMP +SYSVINIT default-hierarchy=unified",
         "version": 255
     },
-    "ansible_uptime_seconds": 146,
+    "ansible_uptime_seconds": 5451,
     "ansible_user_dir": "/root",
     "ansible_user_gecos": "root",
     "ansible_user_gid": 0,

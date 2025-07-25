@@ -7,6 +7,9 @@ firewall_driver = nova.virt.firewall.NoopFirewallDriver
 compute_driver = libvirt.LibvirtDriver
 log_dir = /var/log/nova
 
+[api]
+auth_strategy = keystone
+
 [api_database]
 connection = mysql+pymysql://nova:{{ nova_db_password }}@{{ controller_host }}/nova_api
 

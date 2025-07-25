@@ -9,17 +9,7 @@
       apt:
         name: python3-openstackclient
         state: present
-
-- hosts: controllers
-  become: true
-  roles:
-    - database
-    - keystone
-    - glance
-    - rabbitmq-server
-    - placement
-    - nova
-
+        
 - hosts: computes
   become: true
   tasks:
@@ -37,6 +27,17 @@
         path: /etc/hosts
         line: "{{ hostvars[groups['computes'][0]].ansible_host }} compute"
         state: present
+
+- hosts: controllers
+  become: true
+  roles:
+    - database
+    - keystone
+    - glance
+    - rabbitmq-server
+    - placement
+    - nova
+
 
 - hosts: computes
   become: true

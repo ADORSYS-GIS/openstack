@@ -132,36 +132,27 @@
 - name: Register Neutron service in Keystone using OpenStack CLI
   shell: |
     openstack service create --name network --description "OpenStack Networking Service" network || true
-  environment:
-    OS_AUTH_URL: "http://{{ controller_host }}:5000/v3"
-    OS_USERNAME: "{{ admin_user }}"
-    OS_PASSWORD: "{{ admin_password }}"
-    OS_PROJECT_NAME: "{{ openstack_service_project }}"
-    OS_USER_DOMAIN_NAME: "Default"
-    OS_PROJECT_DOMAIN_NAME: "Default"
-    OS_REGION_NAME: "RegionOne"
-    OS_INTERFACE: "public"
-    OS_IDENTITY_API_VERSION: "3"
+  environment: "{{ openstack_env }}"
   register: neutron_service_create
   changed_when: "'already exists' not in neutron_service_create.stdout"
 
 - name: Create public endpoint for Neutron
   shell: |
-    openstack endpoint create --region "{{ OS_REGION_NAME }}"" network public http://{{ ansible_fqdn }}:9696 || true
+    openstack endpoint create --region {{ OS_REGION_NAME }} network public http://{{ ansible_fqdn }}:9696 || true
   environment: "{{ openstack_env }}"
   register: neutron_endpoint_create
   changed_when: "'already exists' not in neutron_endpoint_create.stdout"
 
 - name: Create internal endpoint for Neutron
   shell: |
-    openstack endpoint create --region "{{ OS_REGION_NAME }}"" network internal http://{{ ansible_fqdn }}:9696 || true
+    openstack endpoint create --region {{ OS_REGION_NAME }} network internal http://{{ ansible_fqdn }}:9696 || true
   environment: "{{ openstack_env }}"
   register: neutron_internal_endpoint_create
   changed_when: "'already exists' not in neutron_internal_endpoint_create.stdout"
 
 - name: Create admin endpoint for Neutron
   shell: |
-    openstack endpoint create --region "{{ OS_REGION_NAME }}"" network admin http://{{ ansible_fqdn }}:9696 || true
+    openstack endpoint create --region {{ OS_REGION_NAME }} network admin http://{{ ansible_fqdn }}:9696 || true
   environment: "{{ openstack_env }}"
   register: neutron_admin_endpoint_create
   changed_when: "'already exists' not in neutron_admin_endpoint_create.stdout"

@@ -25,8 +25,8 @@ CONTROLLER_DISK=20G
 COMPUTE_CPUS=2
 COMPUTE_MEM=4G
 COMPUTE_DISK=20G
-SSH_KEY=~/.ssh/id_ed25519
-SSH_PUB=~/.ssh/id_ed25519.pub
+SSH_KEY=$HOME/.ssh/id_ed25519
+SSH_PUB=$HOME/.ssh/id_ed25519.pub
 
 
 # check if ifconfig is installed 
@@ -86,6 +86,14 @@ fi
 # 1. Generate SSH key if not exists
 if [ ! -f "$SSH_KEY" ]; then
     ssh-keygen -t ed25519 -N "" -f "$SSH_KEY"
+fi
+
+# Ensure correct permissions on SSH key
+echo "[INFO] Ensuring correct permissions on SSH directory and public key..."
+mkdir -p "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
+if [ -f "$SSH_PUB" ]; then
+    chmod 644 "$SSH_PUB"
 fi
 
 # Ensure Ansible is installed or set up a virtual environment
