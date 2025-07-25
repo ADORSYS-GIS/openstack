@@ -160,13 +160,23 @@ fi
 
 # 4. Setup SSH on VMs and copy public key
 for VM in $CONTROLLER_NAME $COMPUTE_NAME; do
-    multipass exec $VM -- bash -c "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
-    multipass exec $VM -- bash -c "touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
-    multipass transfer $SSH_PUB $VM:/tmp/host_id_ed25519.pub
-    multipass exec $VM -- bash -c "cat /tmp/host_id_ed25519.pub >> ~/.ssh/authorized_keys && rm /tmp/host_id_ed25519.pub"
+    echo "[INFO] Mounting $HOME on $VM to copy SSH key..."
+    multipass mount "$HOME" "$VM:/mnt/host_home"
+
+    echo "[INFO] Setting up SSH access for $VM..."
+    multipass exec "$VM" -- bash -c ' \
+        mkdir -p ~/.ssh && \
+        chmod 700 ~/.ssh && \
+        touch ~/.ssh/authorized_keys && \
+        chmod 600 ~/.ssh/authorized_keys && \
+        cat /mnt/host_home/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys'
+
+    echo "[INFO] Unmounting $HOME from $VM..."
+    multipass umount "$VM:/mnt/host_home"
 done
 
 echo "SSH key setup complete."
+
 
 # 5. Update inventory files
 update_inventory() {
