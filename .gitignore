@@ -441,3 +441,4 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
+scripts/ansible_scripts/automated_openstack_installation/key.txt
