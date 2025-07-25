@@ -59,15 +59,7 @@
     executable: /bin/bash
   when: ansible_os_family == "Debian"
 
-- name: Ensure MySQL listens on all interfaces
-  lineinfile:
-    path: /etc/mysql/mariadb.conf.d/50-server.cnf
-    regexp: '^bind-address'
-    line: 'bind-address = 0.0.0.0'
-    state: present
-    backup: yes
-  notify: Restart mysql
-  when: ansible_os_family == "Debian"
+
 
 # - name: Remove nova@localhost if it exists
 #   community.mysql.mysql_user:

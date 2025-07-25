@@ -10,6 +10,8 @@ placement_db_password: "PlacementDBPass"
 mysql_admin_user: "admin"
 mysql_admin_password: "password"
 
+mysql_bind_address: "0.0.0.0"
+
 # RabbitMQ configuration
 rabbitmq_user: openstack
 rabbitmq_password: "RabbitPass123"
