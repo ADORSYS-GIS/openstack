@@ -10,6 +10,10 @@
       - crudini
     state: present
     update_cache: true
+- name: Ensure PyMySQL is installed in the virtualenv
+  pip:
+    name: PyMySQL
+    virtualenv: /home/ubuntu/project/openstack/playbooks/glance-ansible/venv
 
 - name: Ensure MariaDB is started and enabled
   systemd:

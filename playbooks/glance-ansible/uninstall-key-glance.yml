@@ -1,0 +1,82 @@
+---
+- name: Uninstall Keystone and Glance
+  hosts: all
+  become: true
+  tasks:
+
+    - name: Stop Keystone and Glance services
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      loop:
+        - apache2
+        - keystone
+        - glance-api
+        - glance-registry
+      ignore_errors: yes
+
+    - name: Purge Keystone and Glance packages
+      apt:
+        name:
+          - keystone
+          - glance
+          - python3-keystone
+          - python3-glance
+          - python3-keystonemiddleware
+          - python3-glance-store
+          - apache2
+          - libapache2-mod-wsgi-py3
+        state: absent
+        purge: yes
+        autoremove: yes
+        update_cache: yes
+
+    - name: Remove Keystone and Glance configuration directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/keystone
+        - /etc/glance
+        - /var/lib/keystone
+        - /var/lib/glance
+        - /var/log/keystone
+        - /var/log/glance
+
+    - name: Drop Keystone and Glance MySQL databases (optional)
+      mysql_db:
+        name: "{{ item }}"
+        state: absent
+        login_user: root
+        login_password: "newpassword"
+      loop:
+        - keystone
+        - glance
+
+    - name: Drop Keystone and Glance MySQL users (optional)
+      mysql_user:
+        name: "{{ item }}"
+        host: "localhost"
+        state: absent
+        login_user: root
+        login_password: "newpassword"
+      loop:
+        - keystone
+        - glance
+
+    - name: Remove Keystone and Glance environment scripts
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /root/keystonerc
+        - /root/admin-openrc
+        - /root/glancerc
+        - /etc/profile.d/keystone.sh
+
+    - name: Clear Keystone and Glance from systemd journal logs (optional)
+      shell: |
+        journalctl --rotate
+        journalctl --vacuum-time=1s
+      when: ansible_facts['os_family'] == 'Debian'
