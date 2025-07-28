@@ -42,6 +42,18 @@
   notify: Restart mysql
   become: true
 
+ # This is the new task to add
+- name: Ensure MariaDB listens on all interfaces
+  lineinfile:
+    path: /etc/mysql/mariadb.conf.d/50-server.cnf
+    regexp: '^bind-address\s*='
+    line: 'bind-address = 0.0.0.0'
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart mysql
+  become: true
+
 - name: Create MySQL admin user for automation
   mysql_user:
     name: "{{ mysql_admin_user }}"

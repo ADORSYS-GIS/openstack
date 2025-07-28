@@ -19,7 +19,7 @@ innodb_file_per_table = 1
 innodb_buffer_pool_size = 1G
 innodb_log_file_size = 256M
 innodb_flush_log_at_trx_commit = 1
-innodb_lock_wait_timeout = 600
+innodb_lock_wait_timeout = 300
 
 # Logging
 log-error = {{ mysql_log_error | default('/var/log/mysql/error.log') }}
