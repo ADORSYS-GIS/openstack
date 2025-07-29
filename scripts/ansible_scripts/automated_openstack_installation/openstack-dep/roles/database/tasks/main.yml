@@ -42,7 +42,7 @@
   notify: Restart mysql
   become: true
 
- # This is the new task to add
+
 - name: Ensure MariaDB listens on all interfaces
   lineinfile:
     path: /etc/mysql/mariadb.conf.d/50-server.cnf
@@ -70,49 +70,6 @@
   args:
     executable: /bin/bash
   when: ansible_os_family == "Debian"
-
-
-
-# - name: Remove nova@localhost if it exists
-#   community.mysql.mysql_user:
-#     name: nova
-#     host: "localhost"
-#     state: absent
-#     login_user: "{{ mysql_admin_user }}"
-#     login_password: "{{ mysql_admin_password }}"
-#     login_host: localhost
-
-# - name: Delete nova databases if they exist
-#   community.mysql.mysql_db:
-#     name: "{{ item }}"
-#     state: absent
-#     login_user: "{{ mysql_admin_user }}"
-#     login_password: "{{ mysql_admin_password }}"
-#     login_host: localhost
-#   loop:
-#     - nova
-#     - nova_api
-#     - nova_cell0
-
-# - name: Delete nova user for all hosts if exists
-#   community.mysql.mysql_user:
-#     name: nova
-#     host: "%"
-#     state: absent
-#     login_user: "{{ mysql_admin_user }}"
-#     login_password: "{{ mysql_admin_password }}"
-#     login_host: localhost
-
-# - name: Delete nova user for localhost if exists
-#   community.mysql.mysql_user:
-#     name: nova
-#     host: "localhost"
-#     state: absent
-#     login_user: "{{ mysql_admin_user }}"
-#     login_password: "{{ mysql_admin_password }}"
-#     login_host: localhost
-
-
 
 - name: Create OpenStack databases
   mysql_db:

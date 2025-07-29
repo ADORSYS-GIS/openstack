@@ -134,6 +134,60 @@
     keystone_bootstrapped: true
   when: keystone_bootstrap is changed
 
+- name: Create Service Project
+  openstack.cloud.project:
+    name: service
+    domain: default
+    description: "Service Project"
+    state: present
+  environment:
+    OS_AUTH_URL: "{{ keystone_admin_url }}"
+    OS_USERNAME: "admin"
+    OS_PASSWORD: "{{ keystone_admin_password }}"
+    OS_PROJECT_NAME: "admin"
+    OS_PROJECT_DOMAIN_NAME: "default"
+    OS_USER_DOMAIN_NAME: "default"
+    OS_IDENTITY_API_VERSION: 3
+
+- name: Create Service Users
+  openstack.cloud.user:
+    name: "{{ item.name }}"
+    password: "{{ item.password }}"
+    domain: default
+    state: present
+  loop:
+    - { name: 'neutron', password: '{{ neutron_password }}' }
+    - { name: 'nova', password: '{{ nova_password }}' }
+    - { name: 'glance', password: '{{ glance_password }}' }
+    - { name: 'placement', password: '{{ placement_password }}' }
+  environment:
+    OS_AUTH_URL: "{{ keystone_admin_url }}"
+    OS_USERNAME: "admin"
+    OS_PASSWORD: "{{ keystone_admin_password }}"
+    OS_PROJECT_NAME: "admin"
+    OS_PROJECT_DOMAIN_NAME: "default"
+    OS_USER_DOMAIN_NAME: "default"
+    OS_IDENTITY_API_VERSION: 3
+
+- name: Assign Admin Role to Service Users
+  openstack.cloud.role_assignment:
+    user: "{{ item.name }}"
+    project: service
+    role: admin
+    state: present
+  loop:
+    - { name: 'neutron' }
+    - { name: 'nova' }
+    - { name: 'glance' }
+  environment:
+    OS_AUTH_URL: "{{ keystone_admin_url }}"
+    OS_USERNAME: "admin"
+    OS_PASSWORD: "{{ keystone_admin_password }}"
+    OS_PROJECT_NAME: "admin"
+    OS_PROJECT_DOMAIN_NAME: "default"
+    OS_USER_DOMAIN_NAME: "default"
+    OS_IDENTITY_API_VERSION: 3
+
 - name: Install Apache2 and WSGI module for Keystone
   apt:
     name:
@@ -194,4 +248,3 @@
     name: apache2
     state: restarted
     enabled: yes
-
