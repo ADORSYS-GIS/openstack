@@ -14,8 +14,7 @@
   tasks:
     - name: Check Neutron agents
       command: openstack network agent list
-      environment:
-        OS_CLOUD: mycloud
+      environment: "{{ openstack_env }}"
       register: agent_list
       changed_when: false
     - debug:

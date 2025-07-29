@@ -127,32 +127,21 @@
     create: yes
     state: present
 
-# this one is using openstack commands from ansible galaxy to create a neutron service in keystone.
-
-- name: Register Neutron service in Keystone using OpenStack CLI
-  shell: |
-    openstack service create --name network --description "OpenStack Networking Service" network || true
+- name: Check if Neutron service exists
+  shell: openstack service show network
   environment: "{{ openstack_env }}"
-  register: neutron_service_create
-  changed_when: "'already exists' not in neutron_service_create.stdout"
+  register: neutron_service_check
+  ignore_errors: true
 
-- name: Create public endpoint for Neutron
-  shell: |
-    openstack endpoint create --region {{ OS_REGION_NAME }} network public http://{{ ansible_fqdn }}:9696 || true
+- name: Create Neutron service
+  shell: openstack service create --name network --description "OpenStack Networking Service" network
   environment: "{{ openstack_env }}"
-  register: neutron_endpoint_create
-  changed_when: "'already exists' not in neutron_endpoint_create.stdout"
+  when: neutron_service_check.rc != 0
 
-- name: Create internal endpoint for Neutron
+- name: Create Neutron endpoints
   shell: |
-    openstack endpoint create --region {{ OS_REGION_NAME }} network internal http://{{ ansible_fqdn }}:9696 || true
+    openstack endpoint create --region {{ OS_REGION_NAME }} network public http://{{ ansible_fqdn }}:9696
+    openstack endpoint create --region {{ OS_REGION_NAME }} network internal http://{{ ansible_fqdn }}:9696
+    openstack endpoint create --region {{ OS_REGION_NAME }} network admin http://{{ ansible_fqdn }}:9696
   environment: "{{ openstack_env }}"
-  register: neutron_internal_endpoint_create
-  changed_when: "'already exists' not in neutron_internal_endpoint_create.stdout"
-
-- name: Create admin endpoint for Neutron
-  shell: |
-    openstack endpoint create --region {{ OS_REGION_NAME }} network admin http://{{ ansible_fqdn }}:9696 || true
-  environment: "{{ openstack_env }}"
-  register: neutron_admin_endpoint_create
-  changed_when: "'already exists' not in neutron_admin_endpoint_create.stdout"
+  when: neutron_service_check.rc != 0

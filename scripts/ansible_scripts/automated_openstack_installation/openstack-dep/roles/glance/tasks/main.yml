@@ -11,37 +11,28 @@
     owner: root
     group: glance
     mode: 0640
+  notify: Restart glance-api
 
-- name: Initialize Glance DB
-  command: "glance-manage db_sync"
-  args:
-    creates: /var/lib/glance/glance.sqlite
+- name: Populate Glance database
+  command: glance-manage db_sync
+  become: true
+  become_user: glance
 
-
-- name: Register Glance service in Keystone
-  shell: |
-    openstack service create --name image --description "OpenStack Image Service" image || true
+- name: Check if Glance service exists
+  shell: openstack service show image
   environment: "{{ openstack_env }}"
-  register: glance_service_create
-  changed_when: "'already exists' not in glance_service_create.stdout"
+  register: glance_service_check
+  ignore_errors: true
 
-- name: Create public endpoint for Glance
-  shell: |
-    openstack endpoint create --region {{ OS_REGION_NAME }} image public http://{{ ansible_fqdn }}:9292 || true
+- name: Create Glance service
+  shell: openstack service create --name image --description "OpenStack Image Service" image
   environment: "{{ openstack_env }}"
-  register: glance_public_endpoint_create
-  changed_when: "'already exists' not in glance_public_endpoint_create.stdout"
+  when: glance_service_check.rc != 0
 
-- name: Create internal endpoint for Glance
+- name: Create Glance endpoints
   shell: |
-    openstack endpoint create --region {{ OS_REGION_NAME }} image internal http://{{ ansible_fqdn }}:9292 || true
+    openstack endpoint create --region RegionOne image public http://{{ controller_host }}:9292
+    openstack endpoint create --region RegionOne image internal http://{{ controller_host }}:9292
+    openstack endpoint create --region RegionOne image admin http://{{ controller_host }}:9292
   environment: "{{ openstack_env }}"
-  register: glance_internal_endpoint_create
-  changed_when: "'already exists' not in glance_internal_endpoint_create.stdout"
-
-- name: Create admin endpoint for Glance
-  shell: |
-    openstack endpoint create --region {{ OS_REGION_NAME }} image admin http://{{ ansible_fqdn }}:9292 || true
-  environment: "{{ openstack_env }}"
-  register: glance_admin_endpoint_create
-  changed_when: "'already exists' not in glance_admin_endpoint_create.stdout"
+  when: glance_service_check.rc != 0

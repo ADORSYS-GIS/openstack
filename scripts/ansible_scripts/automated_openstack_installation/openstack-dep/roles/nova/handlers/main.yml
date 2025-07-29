@@ -1,10 +1,5 @@
 ---
-- name: Restart nova services
+- name: Restart nova-api
   service:
-    name: "{{ item }}"
+    name: apache2
     state: restarted
-  loop:
-    - nova-api
-    - nova-scheduler
-    - nova-conductor
-    - nova-novncproxy

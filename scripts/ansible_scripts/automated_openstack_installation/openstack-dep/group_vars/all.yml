@@ -48,14 +48,14 @@ nova_api_url: "http://{{ controller_host }}:8774/v2.1"
 region_name: RegionOne
 OS_REGION_NAME: RegionOne
 # OpenStack service project
-openstack_service_project: admin
+openstack_service_project: service
 
 # openstack env
 openstack_env:
   OS_AUTH_URL: "http://{{ controller_host }}:5000/v3"
   OS_USERNAME: "{{ admin_user }}"
   OS_PASSWORD: "{{ admin_password }}"
-  OS_PROJECT_NAME: "{{ openstack_service_project }}"
+  OS_PROJECT_NAME: "{{ admin_project }}"
   OS_USER_DOMAIN_NAME: "Default"
   OS_PROJECT_DOMAIN_NAME: "Default"
   OS_REGION_NAME: "RegionOne"

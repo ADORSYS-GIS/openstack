@@ -1,13 +1,8 @@
 ---
-- name: Install Nova controller packages
+- name: Install Nova packages
   apt:
-    name:
-      - nova-api
-      - nova-conductor
-      - nova-novncproxy
-      - nova-scheduler
+    name: nova-api
     state: present
-  when: "'controllers' in group_names"
 
 - name: Configure Nova
   template:
@@ -16,65 +11,32 @@
     owner: root
     group: nova
     mode: 0640
-  notify: Restart nova services
+  notify: Restart nova-api
 
+- name: Populate Nova databases
+  command: "{{ item }}"
+  loop:
+    - nova-manage api_db sync
+    - nova-manage cell_v2 map_cell0
+    - nova-manage db sync
+  become: true
+  become_user: nova
 
-- name: Sync Nova API DB
-  command: nova-manage api_db sync
-  args:
-    creates: /var/lib/nova/api_db_synced
-  when: "'controllers' in group_names"
-  
-- name: Map cell0
-  command: nova-manage cell_v2 map_cell0
-  args:
-    creates: /var/lib/nova/cell0_mapped
-  when: "'controllers' in group_names"
-
-- name: Check if cell1 already exists
-  command: nova-manage cell_v2 list_cells
-  register: cell_list
-  changed_when: false
-  failed_when: false
-
-- name: Create cell1 if it does not exist
-  command: nova-manage cell_v2 create_cell --name=cell1
-  args:
-    creates: /var/lib/nova/cell1_created
-  when: cell_list.stdout is not search('cell1')
-
-
-- name: Sync Nova DB
-  command: nova-manage db sync
-  args:
-    creates: /var/lib/nova/db_synced
-  when: "'controllers' in group_names"
-
-
-- name: Register Nova Compute service in Keystone
-  shell: |
-    openstack service create --name nova --description "OpenStack Compute Service" compute || true
+- name: Check if Nova service exists
+  shell: openstack service show compute
   environment: "{{ openstack_env }}"
-  register: nova_compute_service_create
-  changed_when: "'already exists' not in nova_compute_service_create.stdout"
+  register: nova_service_check
+  ignore_errors: true
 
-- name: Create public endpoint for Nova Compute
-  shell: |
-    openstack endpoint create --region {{ OS_REGION_NAME }} compute public http://{{ ansible_fqdn }}:8774/v2.1 || true # Note the /v2.1 API version
+- name: Create Nova service
+  shell: openstack service create --name nova --description "OpenStack Compute Service" compute
   environment: "{{ openstack_env }}"
-  register: nova_compute_public_endpoint_create
-  changed_when: "'already exists' not in nova_compute_public_endpoint_create.stdout"
+  when: nova_service_check.rc != 0
 
-- name: Create internal endpoint for Nova Compute
+- name: Create Nova endpoints
   shell: |
-    openstack endpoint create --region {{ OS_REGION_NAME }} compute internal http://{{ ansible_fqdn }}:8774/v2.1 || true
+    openstack endpoint create --region RegionOne compute public http://{{ controller_host }}:8774/v2.1
+    openstack endpoint create --region RegionOne compute internal http://{{ controller_host }}:8774/v2.1
+    openstack endpoint create --region RegionOne compute admin http://{{ controller_host }}:8774/v2.1
   environment: "{{ openstack_env }}"
-  register: nova_compute_internal_endpoint_create
-  changed_when: "'already exists' not in nova_compute_internal_endpoint_create.stdout"
-
-- name: Create admin endpoint for Nova Compute
-  shell: |
-    openstack endpoint create --region {{ OS_REGION_NAME }} compute admin http://{{ ansible_fqdn }}:8774/v2.1 || true
-  environment: "{{ openstack_env }}"
-  register: nova_compute_admin_endpoint_create
-  changed_when: "'already exists' not in nova_compute_admin_endpoint_create.stdout"
+  when: nova_service_check.rc != 0
