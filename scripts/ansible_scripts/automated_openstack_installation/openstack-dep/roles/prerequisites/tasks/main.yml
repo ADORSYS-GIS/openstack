@@ -1,0 +1,68 @@
+---
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+
+- name: Install base system packages
+  ansible.builtin.package:
+    name:
+      - python3-pip
+      - python3-venv
+      - python3-dev
+      - build-essential
+      - libssl-dev
+      - libffi-dev
+      - python3-pymysql
+      - git
+      - curl
+      - wget
+      - net-tools
+      # - ntp
+      # - chrony
+      - libapache2-mod-wsgi-py3 
+      - software-properties-common
+      - apt-transport-https
+      - ca-certificates
+      - lvm2
+      - thin-provisioning-tools
+      - bridge-utils
+      - vlan
+      - ifupdown
+    state: present
+
+# - name: Ensure NTP service is running
+#   service:
+#     name: chrony
+#     state: started
+#     enabled: yes
+
+- name: Enable IP forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    state: present
+    reload: yes
+
+- name: Ensure br_netfilter module is loaded
+  modprobe:
+    name: br_netfilter
+    state: present
+
+- name: Set kernel parameters for networking
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: '1'
+    state: present
+    reload: yes 
+
+- name: Ensure default VM user has passwordless sudo
+  copy:
+    dest: /etc/sudoers.d/ubuntu
+    content: "ubuntu ALL=(ALL) NOPASSWD:ALL\n"
+    owner: root
+    group: root
+    mode: 0440
+  become: true 

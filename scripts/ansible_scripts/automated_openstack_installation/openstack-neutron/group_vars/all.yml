@@ -1,0 +1,76 @@
+---
+# Database configuration
+neutron_db_name: neutron
+neutron_db_user: neutron
+neutron_db_host: "{{ groups['controllers'][0] }}"
+neutron_db_password: "NeutronPass"
+nova_db_password: "NovaDBPass"
+mysql_root_password: "password"
+
+# service passwords
+placement_service_password: "PlacementServicePass"
+nova_service_password: "NovaServicePass"
+
+# MySQL admin user and password
+mysql_admin_user: "admin"
+mysql_admin_password: "password"
+
+# Admin user and password
+admin_user: "admin"
+admin_password: "KeystoneAdminPass"
+admin_project: "admin"
+
+# RabbitMQ configuration
+rabbitmq_user: openstack
+rabbitmq_password: "RabbitPass123"
+rabbitmq_host: "{{ groups['controllers'][0] }}"
+compute_host: "{{ groups['computes'][0] }}"
+controller_host: "{{ groups['controllers'][0] }}"
+
+# Keystone configuration
+keystone_admin_url: "http://{{ groups['controllers'][0] }}:5000/v3"
+keystone_internal_url: "http://{{ groups['controllers'][0] }}:5000/v3"
+neutron_keystone_user: neutron
+neutron_keystone_password: "KeystonePass"
+service_project: service
+OS_REGION_NAME: RegionOne
+region_name: RegionOne
+
+# Network configuration
+overlay_interface: "{{ ansible_default_ipv4.interface }}"
+tenant_network_types: vxlan
+vni_ranges: 1:1000
+enable_security_group: true
+enable_ipset: true
+enable_ssl: false
+metadata_secret: "MetadataSecretPass"
+
+# Package configuration
+neutron_ubuntu_packages:
+  - neutron-server
+  - neutron-plugin-ml2
+  - neutron-linuxbridge-agent
+  - neutron-l3-agent
+  - neutron-dhcp-agent
+  - neutron-metadata-agent
+# In case we are using a centos distribution
+neutron_centos_packages:
+  - openstack-neutron
+  - openstack-neutron-ml2
+  - openstack-neutron-linuxbridge
+  - ebtables
+
+# OpenStack service project
+openstack_service_project: service
+
+# openstack authentication environment
+openstack_env:
+  OS_AUTH_URL: "http://{{ controller_host }}:5000/v3"
+  OS_USERNAME: "{{ admin_user }}"
+  OS_PASSWORD: "{{ admin_password }}"
+  OS_PROJECT_NAME: "{{ admin_project }}"
+  OS_USER_DOMAIN_NAME: "Default"
+  OS_PROJECT_DOMAIN_NAME: "Default"
+  OS_REGION_NAME: "RegionOne"
+  OS_INTERFACE: "public"
+  OS_IDENTITY_API_VERSION: "3"

@@ -1,0 +1,18 @@
+---
+# Handlers for prerequisites role
+
+- name: restart ntp
+  systemd:
+    name: ntp
+    state: restarted
+  become: yes 
+
+- name: restart libvirtd
+  service:
+    name: libvirtd
+    state: restarted
+  become: yes
+
+- name: reload sysctl
+  command: sysctl -p
+  become: yes 

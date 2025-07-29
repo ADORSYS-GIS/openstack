@@ -1,0 +1,20 @@
+# templates/placement-api.conf.j2
+
+Listen 8778
+
+<VirtualHost *:8778>
+    WSGIDaemonProcess placement-api processes=2 threads=1 user=placement group=placement display-name=%{GROUP} python-path=/usr/lib/python3/dist-packages
+    WSGIProcessGroup placement-api
+    WSGIScriptAlias / /usr/bin/placement-api
+    WSGIApplicationGroup %{GLOBAL}
+    WSGIPassAuthorization On
+    ErrorLogFormat "%{cu}t %M"
+    ErrorLog /var/log/apache2/placement-api.log
+    CustomLog /var/log/apache2/placement-api_access.log combined
+
+    <Directory /usr/bin>
+        WSGIProcessGroup placement-api
+        WSGIApplicationGroup %{GLOBAL}
+        Require all granted
+    </Directory>
+</VirtualHost>

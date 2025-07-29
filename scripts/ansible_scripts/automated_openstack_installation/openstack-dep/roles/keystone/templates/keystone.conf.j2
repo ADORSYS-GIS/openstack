@@ -1,0 +1,11 @@
+
+
+
+
+[database]
+connection = mysql+pymysql://{{ keystone_db_name }}:{{ keystone_db_password }}@{{ controller_host }}/{{ keystone_db_name }}
+connection_recycle_time = 300
+
+
+[token]
+provider = fernet

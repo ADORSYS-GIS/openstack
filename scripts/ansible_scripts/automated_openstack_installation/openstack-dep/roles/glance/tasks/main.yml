@@ -1,0 +1,38 @@
+---
+- name: Install Glance packages
+  apt:
+    name: glance
+    state: present
+
+- name: Configure Glance
+  template:
+    src: glance-api.conf.j2
+    dest: /etc/glance/glance-api.conf
+    owner: root
+    group: glance
+    mode: 0640
+  notify: Restart glance-api
+
+- name: Populate Glance database
+  command: glance-manage db_sync
+  become: true
+  become_user: glance
+
+- name: Check if Glance service exists
+  shell: openstack service show image
+  environment: "{{ openstack_env }}"
+  register: glance_service_check
+  ignore_errors: true
+
+- name: Create Glance service
+  shell: openstack service create --name image --description "OpenStack Image Service" image
+  environment: "{{ openstack_env }}"
+  when: glance_service_check.rc != 0
+
+- name: Create Glance endpoints
+  shell: |
+    openstack endpoint create --region RegionOne image public http://{{ controller_host }}:9292
+    openstack endpoint create --region RegionOne image internal http://{{ controller_host }}:9292
+    openstack endpoint create --region RegionOne image admin http://{{ controller_host }}:9292
+  environment: "{{ openstack_env }}"
+  when: glance_service_check.rc != 0

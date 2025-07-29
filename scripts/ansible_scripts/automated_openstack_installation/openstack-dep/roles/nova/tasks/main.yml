@@ -1,0 +1,42 @@
+---
+- name: Install Nova packages
+  apt:
+    name: nova-api
+    state: present
+
+- name: Configure Nova
+  template:
+    src: nova.conf.j2
+    dest: /etc/nova/nova.conf
+    owner: root
+    group: nova
+    mode: 0640
+  notify: Restart nova-api
+
+- name: Populate Nova databases
+  command: "{{ item }}"
+  loop:
+    - nova-manage api_db sync
+    - nova-manage cell_v2 map_cell0
+    - nova-manage db sync
+  become: true
+  become_user: nova
+
+- name: Check if Nova service exists
+  shell: openstack service show compute
+  environment: "{{ openstack_env }}"
+  register: nova_service_check
+  ignore_errors: true
+
+- name: Create Nova service
+  shell: openstack service create --name nova --description "OpenStack Compute Service" compute
+  environment: "{{ openstack_env }}"
+  when: nova_service_check.rc != 0
+
+- name: Create Nova endpoints
+  shell: |
+    openstack endpoint create --region RegionOne compute public http://{{ controller_host }}:8774/v2.1
+    openstack endpoint create --region RegionOne compute internal http://{{ controller_host }}:8774/v2.1
+    openstack endpoint create --region RegionOne compute admin http://{{ controller_host }}:8774/v2.1
+  environment: "{{ openstack_env }}"
+  when: nova_service_check.rc != 0

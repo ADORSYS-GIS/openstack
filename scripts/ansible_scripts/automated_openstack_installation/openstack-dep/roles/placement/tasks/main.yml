@@ -1,0 +1,38 @@
+---
+- name: Install Placement packages
+  apt:
+    name: placement-api
+    state: present
+
+- name: Configure Placement
+  template:
+    src: placement.conf.j2
+    dest: /etc/placement/placement.conf
+    owner: root
+    group: placement
+    mode: 0640
+  notify: Restart placement-api
+
+- name: Populate Placement database
+  command: placement-manage db sync
+  become: true
+  become_user: placement
+
+- name: Check if Placement service exists
+  shell: openstack service show placement
+  environment: "{{ openstack_env }}"
+  register: placement_service_check
+  ignore_errors: true
+
+- name: Create Placement service
+  shell: openstack service create --name placement --description "OpenStack Placement API" placement
+  environment: "{{ openstack_env }}"
+  when: placement_service_check.rc != 0
+
+- name: Create Placement endpoints
+  shell: |
+    openstack endpoint create --region RegionOne placement public http://{{ controller_host }}:8778
+    openstack endpoint create --region RegionOne placement internal http://{{ controller_host }}:8778
+    openstack endpoint create --region RegionOne placement admin http://{{ controller_host }}:8778
+  environment: "{{ openstack_env }}"
+  when: placement_service_check.rc != 0

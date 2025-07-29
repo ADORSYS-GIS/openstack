@@ -1,0 +1,220 @@
+---
+- name: Install MariaDB server
+  apt:
+    name: mariadb-server
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Ensure MySQL socket directory exists
+  file:
+    path: /var/run/mysqld
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: 0755
+
+- name: Ensure MySQL is running
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Get MySQL socket path from database
+  shell: sudo mysql -N -e "SHOW VARIABLES LIKE 'socket';" | awk '{print $2}'
+  register: mysql_socket_path
+  changed_when: false
+
+- name: Wait for MySQL socket to appear
+  ansible.builtin.wait_for:
+    path: "{{ mysql_socket_path.stdout }}"
+    state: present
+    timeout: 60
+
+- name: Deploy custom MySQL configuration
+  template:
+    src: my.cnf.j2
+    dest: /etc/mysql/my.cnf
+    owner: root
+    group: root
+    mode: 0644
+  notify: Restart mysql
+  become: true
+
+- name: Deploy MariaDB server configuration from template
+  template:
+    src: 50-server.cnf.j2
+    dest: /etc/mysql/mariadb.conf.d/50-server.cnf
+    owner: root
+    group: root
+    mode: 0644
+  notify: Restart mysql
+  become: true
+
+- name: Restart mysql
+  service:
+    name: mysql
+    state: restarted
+  become: true
+
+- name: Create MySQL admin user for automation
+  mysql_user:
+    name: "{{ mysql_admin_user }}"
+    password: "{{ mysql_admin_password }}"
+    host: "localhost"
+    priv: "*.*:ALL,GRANT"
+    state: present
+    login_user: root
+    login_unix_socket: "{{ mysql_socket_path.stdout }}"
+
+- name: Set MySQL root password (MariaDB < 10.4) using detected socket
+  shell: |
+    mysql -u root -S {{ mysql_socket_path.stdout }} -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('{{ mysql_root_password }}'); FLUSH PRIVILEGES;"
+  args:
+    executable: /bin/bash
+  when: ansible_os_family == "Debian"
+
+- name: Create OpenStack databases
+  mysql_db:
+    name: "{{ item }}"
+    state: present
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost
+  loop:
+    - keystone
+    - glance
+    - nova
+    - neutron
+    - placement
+    - nova_api
+    - nova_cell0
+
+- name: Create OpenStack DB users
+  mysql_user:
+    name: "{{ item.user }}"
+    password: "{{ item.password }}"
+    priv: "{{ item.db }}.*:ALL"
+    host: "%"
+    state: present
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+  loop:
+    - { user: 'keystone', password: '{{ keystone_db_password }}', db: 'keystone' }
+    - { user: 'glance', password: '{{ glance_db_password }}', db: 'glance' }
+    - { user: 'nova', password: '{{ nova_db_password }}', db: 'nova' }
+    - { user: 'neutron', password: '{{ neutron_db_password }}', db: 'neutron' }
+    - { user: 'placement', password: '{{ placement_service_password }}', db: 'placement'}
+
+- name: Ensure nova user exists for all hosts
+  community.mysql.mysql_user:
+    name: nova
+    password: "{{ nova_db_password }}"
+    host: "%"
+    state: present
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost
+
+- name: Ensure nova user has all privileges on nova database
+  community.mysql.mysql_user:
+    name: nova
+    host: "%"
+    password: "{{ nova_db_password }}"
+    priv: "nova.*:ALL"
+    state: present
+    append_privs: yes
+    update_password: always
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost
+  become: true
+
+- name: Ensure nova user has all privileges on nova database (localhost)
+  community.mysql.mysql_user:
+    name: nova
+    host: "localhost"
+    password: "{{ nova_db_password }}"
+    priv: "nova.*:ALL"
+    state: present
+    append_privs: yes
+    update_password: always
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost
+  become: true
+
+- name: Ensure nova user has all privileges on nova_api database
+  community.mysql.mysql_user:
+    name: nova
+    host: "%"
+    password: "{{ nova_db_password }}"
+    priv: "nova_api.*:ALL"
+    state: present
+    append_privs: yes
+    update_password: always
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost
+  become: true
+
+- name: Ensure nova user has all privileges on nova_api database (localhost)
+  community.mysql.mysql_user:
+    name: nova
+    host: "localhost"
+    password: "{{ nova_db_password }}"
+    priv: "nova_api.*:ALL"
+    state: present
+    append_privs: yes
+    update_password: always
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost
+  become: true
+
+- name: Ensure nova user has all privileges on nova_cell0 database
+  community.mysql.mysql_user:
+    name: nova
+    host: "%"
+    password: "{{ nova_db_password }}"
+    priv: "nova_cell0.*:ALL"
+    state: present
+    append_privs: yes
+    update_password: always
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost
+  become: true
+
+- name: Ensure nova user has all privileges on nova_cell0 database (localhost)
+  community.mysql.mysql_user:
+    name: nova
+    host: "localhost"
+    password: "{{ nova_db_password }}"
+    priv: "nova_cell0.*:ALL"
+    state: present
+    append_privs: yes
+    update_password: always
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost
+  become: true
+
+- name: Ensure nova user exists for localhost
+  community.mysql.mysql_user:
+    name: nova
+    password: "{{ nova_db_password }}"
+    host: "localhost"
+    state: present
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: localhost
+
+- name: Flush MySQL privileges
+  mysql_user:
+    name: nova
+    host: "%"
+    state: present
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    check_implicit_admin: yes
+    priv: "*.*:USAGE"

@@ -1,0 +1,14 @@
+#!/bin/bash
+# To use an OpenStack cloud you need to authenticate against keystone, which
+# returns a Token and Service Catalog. The catalog contains the endpoints
+# for all services the user/tenant has access to - including nova, glance,
+# cinder, swift, heat, etc.
+
+export OS_PROJECT_DOMAIN_NAME=default
+export OS_USER_DOMAIN_NAME=default
+export OS_PROJECT_NAME=admin
+export OS_USERNAME=admin
+export OS_PASSWORD={{ keystone_admin_password }}
+export OS_AUTH_URL={{ keystone_public_url }}
+export OS_IDENTITY_API_VERSION=3
+export OS_IMAGE_API_VERSION=2

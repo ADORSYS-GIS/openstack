@@ -1,0 +1,147 @@
+---
+# Seting up and installing required packages on the controller node.
+- name: Include common tasks
+  include_role:
+    name: common
+    tasks_from: main
+
+- name: Install controller packages
+  apt:
+    name: "{{ neutron_ubuntu_packages if ansible_os_family == 'Debian' else neutron_centos_packages }}"
+    state: present
+
+- name: Create Neutron database
+  community.mysql.mysql_db:
+    name: "{{ neutron_db_name }}"
+    state: present
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: "{{ neutron_db_host }}"
+
+- name: Create Neutron database user
+  community.mysql.mysql_user:
+    name: "{{ neutron_db_user }}"
+    password: "{{ neutron_db_password }}"
+    host: "%"
+    priv: "{{ neutron_db_name }}.*:ALL"
+    state: present
+    login_user: "{{ mysql_admin_user }}"
+    login_password: "{{ mysql_admin_password }}"
+    login_host: "{{ neutron_db_host }}"
+
+- name: Configure neutron.conf
+  template:
+    src: neutron.conf.j2
+    dest: /etc/neutron/neutron.conf
+    owner: root
+    group: neutron
+    mode: "0640"
+  notify: Restart neutron-server
+  when: inventory_hostname in groups["controllers"]
+
+- name: Configure ML2 plugin
+  template:
+    src: ml2_conf.ini.j2
+    dest: /etc/neutron/plugins/ml2/ml2_conf.ini
+    owner: root
+    group: neutron
+    mode: "0640"
+  notify: Restart neutron-server
+  when: inventory_hostname in groups["controllers"]
+
+- name: Configure L3 agent
+  template:
+    src: l3_agent.ini.j2
+    dest: /etc/neutron/l3_agent.ini
+    owner: root
+    group: neutron
+    mode: "0640"
+  notify: Restart neutron-l3-agent
+  when: inventory_hostname in groups["controllers"]
+
+- name: Configure DHCP agent
+  template:
+    src: dhcp_agent.ini.j2
+    dest: /etc/neutron/dhcp_agent.ini
+    owner: root
+    group: neutron
+    mode: "0640"
+  notify: Restart neutron-dhcp-agent
+  when: inventory_hostname in groups["controllers"]
+
+- name: Configure metadata agent
+  template:
+    src: metadata_agent.ini.j2
+    dest: /etc/neutron/metadata_agent.ini
+    owner: root
+    group: neutron
+    mode: "0640"
+  notify: Restart neutron-metadata-agent
+  when: inventory_hostname in groups["controllers"]
+
+- name: Populate Neutron database
+  command: >
+    neutron-db-manage --config-file /etc/neutron/neutron.conf
+    --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head
+  become: true
+
+- name: Ensure OpenStack config directory exists
+  file:
+    path: "/root/.config/openstack"
+    state: directory
+    mode: '0700'
+    owner: root
+    group: root
+
+- name: Create clouds.yaml for OpenStack admin
+  copy:
+    dest: "/root/.config/openstack/clouds.yaml"
+    content: |
+      clouds:
+        mycloud:
+          auth:
+            auth_url: "http://{{ neutron_db_host }}:5000/v3"
+            username: "{{ admin_user }}"  
+            password: "{{ admin_password }}"
+            project_name: "{{ openstack_service_project }}"
+            user_domain_name: Default
+            project_domain_name: Default
+          region_name: RegionOne
+          interface: public
+          identity_api_version: 3
+    mode: '0600'
+    owner: root
+    group: root
+
+- name: Ensure OS_CLOUD is exported for root user
+  lineinfile:
+    path: "/root/.bashrc"
+    line: 'export OS_CLOUD=mycloud'
+    create: yes
+    state: present
+
+- name: Ensure OS_CLOUD is exported for root user (zsh)
+  lineinfile:
+    path: "/root/.zshrc"
+    line: 'export OS_CLOUD=mycloud'
+    create: yes
+    state: present
+
+- name: Check if Neutron service exists
+  shell: openstack service show network
+  environment: "{{ openstack_env }}"
+  register: neutron_service_check
+  ignore_errors: true
+
+- name: Create Neutron service
+  shell: openstack service create --name network --description "OpenStack Networking Service" network
+  environment: "{{ openstack_env }}"
+  when: neutron_service_check.rc != 0
+
+- name: Create Neutron endpoints
+  shell: |
+    openstack endpoint create --region {{ OS_REGION_NAME }} network public http://{{ ansible_fqdn }}:9696
+    openstack endpoint create --region {{ OS_REGION_NAME }} network internal http://{{ ansible_fqdn }}:9696
+    openstack endpoint create --region {{ OS_REGION_NAME }} network admin http://{{ ansible_fqdn }}:9696
+  environment: "{{ openstack_env }}"
+  when: neutron_service_check.rc != 0

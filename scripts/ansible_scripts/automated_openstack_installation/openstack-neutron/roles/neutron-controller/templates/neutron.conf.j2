@@ -1,0 +1,46 @@
+[DEFAULT]
+core_plugin = ml2
+service_plugins = router
+allow_overlapping_ips = True
+transport_url = rabbit://{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ rabbitmq_host }}:5672/
+auth_strategy = keystone
+notify_nova_on_port_status_changes = True
+notify_nova_on_port_data_changes = True
+log_dir = /var/log/neutron
+
+[database]
+connection = mysql+pymysql://{{ neutron_db_user }}:{{ neutron_db_password }}@{{ neutron_db_host }}/{{ neutron_db_name }}
+
+[keystone_authtoken]
+www_authenticate_uri = {{ keystone_admin_url }}
+auth_url = {{ keystone_internal_url }}
+memcached_servers = {{ neutron_db_host }}:11211
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = {{ openstack_service_project }}
+username = {{ neutron_keystone_user }}
+password = {{ neutron_keystone_password }}
+
+[nova]
+auth_url = {{ keystone_admin_url }}
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+region_name = {{ region_name }}
+project_name = service
+username = nova
+password = {{ nova_service_password }}
+
+[oslo_concurrency]
+lock_path = /var/lib/neutron/tmp
+
+{% if enable_ssl %}
+[ssl]
+cert_file = /etc/neutron/ssl/cert.pem
+key_file = /etc/neutron/ssl/key.pem
+ca_file = /etc/neutron/ssl/cacert.pem
+{% endif %}
+
+[experimental]
+linuxbridge = True

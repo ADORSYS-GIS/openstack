@@ -1,0 +1,254 @@
+---
+- name: Install Keystone packages
+  apt:
+    name: keystone
+    state: present
+
+- name: Configure Keystone
+  template:
+    src: keystone.conf.j2
+    dest: /etc/keystone/keystone.conf
+    owner: root
+    group: keystone
+    mode: 0640
+  become: true
+
+- name: Ensure keystone user and group exist
+  ansible.builtin.user:
+    name: keystone
+    system: yes
+    shell: /usr/sbin/nologin
+  become: true
+
+- name: Add ubuntu user to keystone group
+  user:
+    name: ubuntu
+    groups: keystone
+    append: yes
+  become: true
+
+- name: Ensure /var/lib/keystone is owned by keystone
+  file:
+    path: /var/lib/keystone
+    owner: keystone
+    group: keystone
+    state: directory
+    recurse: yes
+  become: true
+
+- name: Ensure keystone user has passwordless sudo
+  copy:
+    dest: /etc/sudoers.d/keystone
+    content: "keystone ALL=(ALL) NOPASSWD:ALL\n"
+    owner: root
+    group: root
+    mode: 0440
+  become: true
+
+- name: Ensure /var/log/keystone exists and is owned by keystone
+  file:
+    path: /var/log/keystone
+    state: directory
+    owner: keystone
+    group: keystone
+    mode: 0750
+  become: true
+
+- name: Ensure /var/log has correct permissions
+  file:
+    path: /var/log
+    mode: 0755
+    state: directory
+  become: true
+
+- name: Ensure /var/lib has correct permissions
+  file:
+    path: /var/lib
+    mode: 0755
+    state: directory
+  become: true
+
+- name: Remove stale keystone.db if exists and not owned by keystone
+  file:
+    path: /var/lib/keystone/keystone.db
+    state: absent
+  become: true
+
+- name: Ensure keystone user has a valid shell
+  user:
+    name: keystone
+    shell: /bin/bash
+  become: true
+
+- name: Remove stale keystone-manage.log if exists
+  file:
+    path: /var/log/keystone/keystone-manage.log
+    state: absent
+  become: true
+
+- name: Initialize Keystone DB
+  command: "keystone-manage --debug  --config-file /etc/keystone/keystone.conf db_sync"
+  become: true
+  register: keystone_db_sync
+  ignore_errors: false
+  args:
+    creates: /var/lib/keystone/keystone.db
+
+- debug:
+    var: keystone_db_sync
+
+- name: Initialize Fernet keys for Keystone
+  command: keystone-manage --config-file /etc/keystone/keystone.conf fernet_setup --keystone-user keystone --keystone-group keystone
+  become: true
+  become_user: keystone
+  args:
+    creates: /etc/keystone/fernet-keys/0
+
+- name: Initialize Credential keys for Keystone
+  command: keystone-manage --config-file /etc/keystone/keystone.conf credential_setup --keystone-user keystone --keystone-group keystone
+  become: true
+  become_user: keystone
+  args:
+    creates: /etc/keystone/credential-keys/0
+
+- name: Bootstrap Keystone
+  command: >
+    keystone-manage bootstrap
+    --bootstrap-password {{ keystone_admin_password }}
+    --bootstrap-admin-url {{ keystone_admin_url }}
+    --bootstrap-internal-url {{ keystone_internal_url }}
+    --bootstrap-public-url {{ keystone_public_url }}
+    --bootstrap-region-id {{ region_name }}
+  when: not keystone_bootstrapped | default(false)
+  register: keystone_bootstrap
+  changed_when: keystone_bootstrap.rc == 0
+
+- name: Set Keystone bootstrapped fact
+  set_fact:
+    keystone_bootstrapped: true
+  when: keystone_bootstrap is changed
+
+- name: Install Apache2 and WSGI module for Keystone
+  apt:
+    name:
+      - apache2
+      - libapache2-mod-wsgi-py3
+    state: present
+
+- name: Ensure ServerName is set in Apache config
+  lineinfile:
+    path: /etc/apache2/apache2.conf
+    line: "ServerName {{ controller_host | default('controller') }}"
+    state: present
+
+- name: Disable conflicting keystone site if it exists
+  command: a2dissite keystone
+  args:
+    removes: /etc/apache2/sites-enabled/keystone.conf
+  ignore_errors: true
+
+- name: Remove old keystone site config if it exists
+  file:
+    path: /etc/apache2/sites-available/keystone.conf
+    state: absent
+  ignore_errors: true
+
+- name: Deploy Keystone WSGI Apache config
+  template:
+    src: wsgi-keystone.conf.j2
+    dest: /etc/apache2/sites-available/wsgi-keystone.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Enable Keystone site
+  command: a2ensite wsgi-keystone
+  args:
+    creates: /etc/apache2/sites-enabled/wsgi-keystone.conf
+
+- name: Enable required Apache modules
+  shell: |
+    a2enmod wsgi
+    a2enmod ssl
+  args:
+    executable: /bin/bash
+
+- name: Ensure Apache listens on port 5000
+  lineinfile:
+    path: /etc/apache2/ports.conf
+    regexp: '^Listen 5000'
+    line: 'Listen 5000'
+    state: present
+    insertafter: '^#.*Listen'
+  notify: Restart apache2
+
+- name: Restart Apache2
+  service:
+    name: apache2
+    state: restarted
+    enabled: yes
+
+
+- name: Define OpenStack Auth Environment
+  set_fact:
+    openstack_auth_env:
+      OS_AUTH_URL: "{{ keystone_admin_url }}"
+      OS_USERNAME: "admin"
+      OS_PASSWORD: "{{ keystone_admin_password }}"
+      OS_PROJECT_NAME: "admin"
+      OS_PROJECT_DOMAIN_NAME: "default"
+      OS_USER_DOMAIN_NAME: "default"
+      OS_IDENTITY_API_VERSION: 3
+
+- name: Create the service project
+  shell: openstack project create --domain default --description "Service Project" service
+  environment: "{{ openstack_auth_env }}"
+  register: create_service_project
+  changed_when: create_service_project.rc == 0
+  failed_when: "create_service_project.rc != 0 and '(HTTP 409)' not in create_service_project.stderr"
+
+- name: Create service users
+  shell: "openstack user create --domain default --password '{{ item.password }}' {{ item.name }}"
+  environment: "{{ openstack_auth_env }}"
+  loop:
+    - { name: 'neutron', password: '{{ neutron_keystone_password }}' }
+    - { name: 'nova', password: '{{ nova_service_password }}' }
+    - { name: 'glance', password: '{{ glance_service_password }}' }
+  register: create_service_users
+  changed_when: item.rc == 0
+  ignore_errors: true
+
+- name: Verify user creation
+  fail:
+    msg: "Failed to create user {{ item.item.name }}: {{ item.stderr }}"
+  when: "item.rc != 0 and '(HTTP 409)' not in item.stderr"
+  loop: "{{ create_service_users.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+
+- name: Assign admin role to service users in service project
+  shell: "openstack role add --project service --user {{ item.name }} admin"
+  environment: "{{ openstack_auth_env }}"
+  loop:
+    - { name: 'neutron' }
+    - { name: 'nova' }
+    - { name: 'glance' }
+  register: assign_service_roles
+  changed_when: item.rc == 0
+  ignore_errors: true
+
+- name: Verify role assignment
+  fail:
+    msg: "Failed to assign role to user {{ item.item.name }}: {{ item.stderr }}"
+  when: "item.rc != 0 and '(HTTP 409)' not in item.stderr"
+  loop: "{{ assign_service_roles.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+
+- name: Create admin-openrc.sh file
+  template:
+    src: admin-openrc.sh.j2
+    dest: /root/admin-openrc.sh
+    owner: root
+    group: root
+    mode: 0600

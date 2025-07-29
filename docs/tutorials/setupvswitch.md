@@ -121,7 +121,7 @@ Now we'll configure the VLAN tags. VLAN uses the 802.1Q standard, adding a 12-bi
 
 ### Network Interface Configuration
 
-Now we'll configure static IPs for each VM:
+Now we'll configure static IP addresses for each VM:
 
 1. For VLAN0 (test-vm1 and test-vm2):
 

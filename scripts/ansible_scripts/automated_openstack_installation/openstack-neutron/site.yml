@@ -1,0 +1,21 @@
+---
+- name: Configure Neutron on controllers
+  hosts: controllers
+  roles:
+    - neutron-controller
+
+- name: Configure Neutron on compute nodes
+  hosts: computes
+  roles:
+    - neutron-compute
+
+- name: Verify Neutron installation
+  hosts: controllers
+  tasks:
+    - name: Check Neutron agents
+      command: openstack network agent list
+      environment: "{{ openstack_env }}"
+      register: agent_list
+      changed_when: false
+    - debug:
+        var: agent_list.stdout_lines
