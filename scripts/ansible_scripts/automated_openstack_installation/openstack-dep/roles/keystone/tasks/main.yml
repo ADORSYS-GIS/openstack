@@ -188,7 +188,11 @@
     state: restarted
     enabled: yes
 
-
+- name: Wait for Keystone API to be available
+  local_action:
+    module: shell
+    cmd: "until nc -z {{ controller_host }} 5000; do echo 'Waiting for Keystone API...'; sleep 2; done"
+  become: false
 
 - name: Define OpenStack Auth Environment
   set_fact:
@@ -245,3 +249,11 @@
   loop: "{{ assign_service_roles.results }}"
   loop_control:
     label: "{{ item.item.name }}"
+
+- name: Create admin-openrc.sh file
+  template:
+    src: admin-openrc.sh.j2
+    dest: /root/admin-openrc.sh
+    owner: root
+    group: root
+    mode: 0600
