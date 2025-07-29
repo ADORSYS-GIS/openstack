@@ -188,11 +188,6 @@
     state: restarted
     enabled: yes
 
-- name: Wait for Keystone API to be available
-  local_action:
-    module: shell
-    cmd: "until nc -z {{ controller_host }} 5000; do echo 'Waiting for Keystone API...'; sleep 2; done"
-  become: false
 
 - name: Define OpenStack Auth Environment
   set_fact:
