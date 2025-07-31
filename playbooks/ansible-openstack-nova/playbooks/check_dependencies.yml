@@ -1,0 +1,38 @@
+---
+# This playbook installs and configures all minimal OpenStack dependencies required for Nova.
+
+- name: Common setup for all OpenStack nodes
+  hosts: openstack_nodes
+  become: yes
+  roles:
+    - common
+
+- name: Install and configure MariaDB
+  hosts: controllers
+  become: yes
+  roles:
+    - mariadb
+
+- name: Install and configure RabbitMQ
+  hosts: controllers
+  become: yes
+  roles:
+    - rabbitmq
+
+- name: Install and configure Keystone (minimal)
+  hosts: controllers
+  become: yes
+  roles:
+    - keystone_minimal
+
+- name: Install and configure Glance (minimal)
+  hosts: controllers
+  become: yes
+  roles:
+    - glance_minimal
+
+- name: Install and configure Placement (minimal)
+  hosts: controllers
+  become: yes
+  roles:
+    - placement_minimal

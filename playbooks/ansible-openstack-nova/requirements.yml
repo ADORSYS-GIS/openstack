@@ -1,0 +1,10 @@
+---
+# requirements.yml
+# This file lists the Ansible collections required by this project.
+# It ensures that all necessary modules are available when running the playbooks.
+
+collections:
+  - name: community.general
+    version: ">=5.0.0"
+  - name: community.mysql
+    version: ">=3.0.0"

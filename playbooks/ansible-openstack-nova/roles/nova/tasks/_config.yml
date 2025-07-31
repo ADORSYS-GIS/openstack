@@ -1,0 +1,44 @@
+---
+# Tasks for configuring Nova (nova.conf) on both controller and compute nodes.
+
+- name: Ensure /etc/nova directory exists
+  ansible.builtin.file:
+    path: /etc/nova
+    state: directory
+    owner: nova
+    group: nova
+    mode: '0755'
+
+- name: Configure Nova (nova.conf)
+  ansible.builtin.template:
+    src: nova.conf.j2
+    dest: /etc/nova/nova.conf
+    owner: nova
+    group: nova
+    mode: '0640'
+  notify:
+    - Restart nova-api
+    - Restart nova-scheduler
+    - Restart nova-conductor
+    - Restart nova-novncproxy
+    - Restart nova-compute
+
+- name: Populate the Nova API database (on controller)
+  ansible.builtin.command: su -s /bin/sh -c "nova-manage api_db sync" nova
+  args:
+    creates: /var/lib/nova/nova_api.sqlite # Prevent re-running if DB is already synced
+  become: yes
+  become_user: nova
+  register: nova_api_db_sync_result
+  changed_when: "'No changes to make' not in nova_api_db_sync_result.stderr"
+  when: inventory_hostname in groups['controllers']
+
+- name: Populate the Nova database (on controller)
+  ansible.builtin.command: su -s /bin/sh -c "nova-manage db sync" nova
+  args:
+    creates: /var/lib/nova/nova.sqlite # Prevent re-running if DB is already synced
+  become: yes
+  become_user: nova
+  register: nova_db_sync_result
+  changed_when: "'No changes to make' not in nova_db_sync_result.stderr"
+  when: inventory_hostname in groups['controllers']

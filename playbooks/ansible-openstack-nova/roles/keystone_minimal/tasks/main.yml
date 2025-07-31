@@ -1,0 +1,97 @@
+---
+- name: Install Keystone packages
+  ansible.builtin.apt:
+    name:
+      - keystone
+      - python3-openstackclient # Ensure openstack client is available on controller
+    state: present
+  notify: Restart apache2 # Keystone often runs as WSGI under Apache
+
+- name: Configure Keystone (keystone.conf)
+  ansible.builtin.template:
+    src: keystone.conf.j2
+    dest: /etc/keystone/keystone.conf
+    owner: keystone
+    group: keystone
+    mode: '0640'
+  notify: Restart apache2
+
+- name: Create Keystone database
+  community.mysql.mysql_db:
+    name: "{{ keystone_db_name }}"
+    state: present
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: Grant privileges to Keystone database user
+  community.mysql.mysql_user:
+    name: "{{ openstack_db_user }}"
+    password: "{{ openstack_db_password }}"
+    host: "%"
+    priv: "{{ keystone_db_name }}.*:ALL"
+    state: present
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: Populate the Keystone database
+  ansible.builtin.command: su -s /bin/sh -c "keystone-manage db_sync" keystone
+  args:
+    creates: /var/lib/keystone/keystone.sqlite # Prevent re-running if DB is already synced
+  become: yes
+  become_user: keystone
+  register: keystone_db_sync_result
+  changed_when: "'No changes to make' not in keystone_db_sync_result.stderr"
+
+- name: Initialize Fernet keys
+  ansible.builtin.command: keystone-manage fernet_setup --keystone-user keystone --config-dir /etc/keystone/
+  args:
+    creates: /etc/keystone/fernet-keys/0
+  become: yes
+  become_user: keystone
+
+- name: Initialize Barbican keys (for token encryption)
+  ansible.builtin.command: keystone-manage credential_setup --keystone-user keystone --config-dir /etc/keystone/
+  args:
+    creates: /etc/keystone/credential-keys/0
+  become: yes
+  become_user: keystone
+
+- name: Bootstrap Keystone (create service, endpoint, admin project, user, role)
+  ansible.builtin.command: >
+    keystone-manage bootstrap --bootstrap-password {{ openstack_admin_password }}
+    --bootstrap-admin-url {{ keystone_admin_url }}
+    --bootstrap-public-url {{ keystone_public_url }}
+    --bootstrap-internal-url {{ keystone_internal_url }}
+    --bootstrap-region-id {{ openstack_region_name }}
+  args:
+    creates: /etc/keystone/bootstrap_complete # A simple marker file
+  become: yes
+  become_user: keystone
+  environment:
+    OS_CLOUD: "" # Ensure no existing cloud env vars interfere
+
+- name: Ensure Apache2 is installed and running (for WSGI)
+  ansible.builtin.apt:
+    name: apache2
+    state: present
+
+- name: Configure Apache2 for Keystone WSGI
+  ansible.builtin.lineinfile:
+    path: /etc/apache2/apache2.conf
+    regexp: '^ServerName'
+    line: "ServerName {{ inventory_hostname }}"
+    state: present
+  notify: Restart apache2
+
+- name: Enable Keystone WSGI in Apache2
+  ansible.builtin.file:
+    src: /usr/share/keystone/wsgi-keystone.conf
+    dest: /etc/apache2/conf-enabled/wsgi-keystone.conf
+    state: link
+  notify: Restart apache2
+
+- name: Create admin-openrc.sh file on controller
+  ansible.builtin.template:
+    src: admin-openrc.sh.j2
+    dest: /root/admin-openrc.sh
+    owner: root
+    group: root
+    mode: '0600'

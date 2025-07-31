@@ -1,0 +1,34 @@
+# Minimal Placement API configuration for OpenStack
+
+[DEFAULT]
+# The verbose option will make the log output more verbose.
+# verbose = true
+
+# The debug option will make the log output really verbose.
+# debug = true
+
+# Connection string for the database.
+# For Placement, the database connection is typically defined directly.
+connection = {{ database_connection_base }}/{{ placement_db_name }}
+
+[api]
+# The host and port for the Placement API to listen on.
+# This should match the public/internal/admin endpoint URLs.
+# bind_host = 0.0.0.0 # Not explicitly needed if running under WSGI
+# bind_port = 8778 # Not explicitly needed if running under WSGI
+
+[keystone_authtoken]
+# The URL to the Keystone authentication server.
+www_authenticate_uri = {{ keystone_public_url }}
+auth_url = {{ keystone_admin_url }}
+memcached_servers = localhost:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = placement
+password = {{ placement_user_password }}
+
+[oslo_middleware]
+# Enable parsing of proxy headers.
+enable_proxy_headers_parsing = true

@@ -1,0 +1,61 @@
+---
+# Tasks for installing and configuring Nova components on the controller node.
+
+- name: Install Nova controller packages
+  ansible.builtin.apt:
+    name:
+      - nova-api
+      - nova-scheduler
+      - nova-conductor
+      - nova-novncproxy
+      - nova-consoleproxy # For VNC console support
+    state: present
+  notify:
+    - Restart nova-api
+    - Restart nova-scheduler
+    - Restart nova-conductor
+    - Restart nova-novncproxy
+    - Restart nova-consoleproxy # ADDED: Notification for nova-consoleproxy restart
+
+- name: Ensure Nova API service is running and enabled
+  ansible.builtin.service:
+    name: nova-api
+    state: started
+    enabled: yes
+
+- name: Ensure Nova Scheduler service is running and enabled
+  ansible.builtin.service:
+    name: nova-scheduler
+    state: started
+    enabled: yes
+
+- name: Ensure Nova Conductor service is running and enabled
+  ansible.builtin.service:
+    name: nova-conductor
+    state: started
+    enabled: yes
+
+- name: Ensure Nova NoVNC Proxy service is running and enabled
+  ansible.builtin.service:
+    name: nova-novncproxy
+    state: started
+    enabled: yes
+
+- name: Ensure Nova Console Proxy service is running and enabled
+  ansible.builtin.service:
+    name: nova-consoleproxy
+    state: started
+    enabled: yes
+
+- name: Enable Nova API WSGI in Apache2
+  ansible.builtin.file:
+    src: /usr/share/nova/wsgi-api.conf
+    dest: /etc/apache2/conf-enabled/wsgi-nova-api.conf
+    state: link
+  notify: Restart apache2
+
+- name: Ensure Apache2 is running for Nova API WSGI
+  ansible.builtin.service:
+    name: apache2
+    state: started
+    enabled: yes

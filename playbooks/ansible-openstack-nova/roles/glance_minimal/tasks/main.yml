@@ -1,0 +1,98 @@
+---
+- name: Install Glance packages
+  ansible.builtin.apt:
+    name:
+      - glance
+    state: present
+  notify:
+    - Restart glance-api
+    - Restart glance-registry
+
+- name: Create Glance database
+  community.mysql.mysql_db:
+    name: "{{ glance_db_name }}"
+    state: present
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: Grant privileges to Glance database user
+  community.mysql.mysql_user:
+    name: "{{ openstack_db_user }}"
+    password: "{{ openstack_db_password }}"
+    host: "%"
+    priv: "{{ glance_db_name }}.*:ALL"
+    state: present
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: Populate the Glance database
+  ansible.builtin.command: su -s /bin/sh -c "glance-manage db_sync" glance
+  args:
+    creates: /var/lib/glance/glance.sqlite # Prevent re-running if DB is already synced
+  become: yes
+  become_user: glance
+  register: glance_db_sync_result
+  changed_when: "'No changes to make' not in glance_db_sync_result.stderr"
+
+- name: Create Glance service user in Keystone
+  community.general.openstack.openstack_user:
+    cloud: "{{ openstack_cloud_config }}"
+    state: present
+    name: glance
+    password: "{{ glance_user_password }}"
+    domain: Default
+  environment:
+    OS_CLOUD: "" # Ensure no existing cloud env vars interfere
+
+- name: Create Glance service in Keystone
+  community.general.openstack.openstack_service:
+    cloud: "{{ openstack_cloud_config }}"
+    state: present
+    name: glance
+    type: image
+    description: "OpenStack Image service"
+  environment:
+    OS_CLOUD: ""
+
+- name: Create Glance endpoints in Keystone
+  community.general.openstack.openstack_endpoint:
+    cloud: "{{ openstack_cloud_config }}"
+    state: present
+    service: image
+    endpoint_interface: "{{ item.interface }}"
+    url: "{{ item.url }}"
+    region: "{{ openstack_region_name }}"
+  loop:
+    - { interface: 'public', url: "{{ glance_api_url }}" }
+    - { interface: 'internal', url: "{{ glance_api_url }}" }
+    - { interface: 'admin', url: "{{ glance_api_url }}" }
+  environment:
+    OS_CLOUD: ""
+
+- name: Configure Glance API (glance-api.conf)
+  ansible.builtin.template:
+    src: glance-api.conf.j2
+    dest: /etc/glance/glance-api.conf
+    owner: glance
+    group: glance
+    mode: '0640'
+  notify: Restart glance-api
+
+- name: Configure Glance Registry (glance-registry.conf)
+  ansible.builtin.template:
+    src: glance-registry.conf.j2
+    dest: /etc/glance/glance-registry.conf
+    owner: glance
+    group: glance
+    mode: '0640'
+  notify: Restart glance-registry
+
+- name: Ensure Glance API service is running and enabled
+  ansible.builtin.service:
+    name: glance-api
+    state: started
+    enabled: yes
+
+- name: Ensure Glance Registry service is running and enabled
+  ansible.builtin.service:
+    name: glance-registry
+    state: started
+    enabled: yes

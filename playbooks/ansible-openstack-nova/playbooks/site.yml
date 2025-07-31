@@ -1,0 +1,50 @@
+---
+# This is the main playbook that orchestrates the entire OpenStack Nova deployment and validation.
+
+- name: Common setup for all OpenStack nodes
+  hosts: openstack_nodes
+  become: yes
+  roles:
+    - common
+
+- name: Install and configure MariaDB
+  hosts: controllers
+  become: yes
+  roles:
+    - mariadb
+
+- name: Install and configure RabbitMQ
+  hosts: controllers
+  become: yes
+  roles:
+    - rabbitmq
+
+- name: Install and configure Keystone (minimal)
+  hosts: controllers
+  become: yes
+  roles:
+    - keystone_minimal
+
+- name: Install and configure Glance (minimal)
+  hosts: controllers
+  become: yes
+  roles:
+    - glance_minimal
+
+- name: Install and configure Placement (minimal)
+  hosts: controllers
+  become: yes
+  roles:
+    - placement_minimal
+
+- name: Install and configure Nova
+  hosts: openstack_nodes # Nova components run on both controller and compute
+  become: yes
+  roles:
+    - nova
+
+- name: Validate Nova deployment
+  hosts: controllers # Validation tasks run on the controller where CLI tools are available
+  become: yes
+  roles:
+    - nova_validation

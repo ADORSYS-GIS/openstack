@@ -1,0 +1,17 @@
+---
+# Tasks for setting up the Nova database on the controller.
+
+- name: Create Nova database
+  community.mysql.mysql_db:
+    name: "{{ nova_db_name }}"
+    state: present
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: Grant privileges to Nova database user
+  community.mysql.mysql_user:
+    name: "{{ openstack_db_user }}"
+    password: "{{ openstack_db_password }}"
+    host: "%"
+    priv: "{{ nova_db_name }}.*:ALL"
+    state: present
+  delegate_to: "{{ inventory_hostname }}"

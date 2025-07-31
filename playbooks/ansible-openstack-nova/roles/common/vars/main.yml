@@ -1,0 +1,12 @@
+---
+common_packages:
+  - curl
+  - wget
+  - git
+  - vim
+  - python3-openstackclient # Essential for interacting with OpenStack APIs
+  - open-iscsi              # Required for Nova to connect to Cinder volumes (even if Cinder isn't fully deployed yet)
+
+hosts_entries:
+  - { ip: "192.168.56.10", hostname: "controller" }
+  - { ip: "192.168.56.11", hostname: "compute" }

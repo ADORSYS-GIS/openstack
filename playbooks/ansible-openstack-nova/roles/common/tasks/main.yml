@@ -1,0 +1,64 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600 # Cache valid for 1 hour
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+  register: install_common_packages
+  until: install_common_packages is success
+  retries: 5
+  delay: 5
+
+- name: Set operating system hostname
+  ansible.builtin.hostname:
+    # Use 'node_os_hostname' if defined for this host, otherwise default to 'inventory_hostname'
+    name: "{{ node_os_hostname | default(inventory_hostname) }}"
+  when: ansible_hostname != (node_os_hostname | default(inventory_hostname))
+  # The 'when' condition also needs to reflect the potential new hostname
+
+- name: Configure /etc/hosts entries
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "^{{ item.ip }}\\s+{{ item.hostname }}$"
+    line: "{{ item.ip }} {{ item.hostname }}"
+    state: present
+  loop: "{{ hosts_entries }}"
+  # Ensure the hosts file is updated on all nodes with correct entries for controller and compute.
+
+- name: Disable AppArmor (if enabled)
+  ansible.builtin.service:
+    name: apparmor
+    state: stopped
+    enabled: no
+  ignore_errors: yes # AppArmor might not be installed on all systems
+  when: ansible_facts['os_family'] == "Debian" # AppArmor is primarily a Debian/Ubuntu feature
+
+- name: Ensure AppArmor is purged (if present)
+  ansible.builtin.apt:
+    name: apparmor
+    state: absent
+    purge: yes
+  ignore_errors: yes
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Disable swap
+  ansible.builtin.command: swapoff -a
+  changed_when: true # Always report as changed if swap is active
+  failed_when: false # Don't fail if swapoff fails (e.g., no swap configured)
+
+- name: Comment out swap entries in /etc/fstab
+  ansible.builtin.replace:
+    path: /etc/fstab
+    regexp: '^(/swapfile|UUID=.*none\\s+swap)'
+    replace: '#\1'
+  when: ansible_facts['mounts'] | selectattr('fstype', 'equalto', 'swap') | list | length > 0
+
+- name: Install PyMySQL for database connectivity
+  ansible.builtin.pip:
+    name: PyMySQL
+    state: present
+    executable: pip3 # Ensure pip3 is used

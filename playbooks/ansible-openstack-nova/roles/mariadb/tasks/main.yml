@@ -1,0 +1,60 @@
+---
+- name: Install MariaDB server and client packages
+  ansible.builtin.apt:
+    name:
+      - mariadb-server
+      - python3-pymysql
+    state: present
+  notify: Restart mariadb
+
+- name: Ensure MariaDB service is running and enabled
+  ansible.builtin.service:
+    name: mariadb
+    state: started
+    enabled: yes
+
+- name: Configure MariaDB server (my.cnf)
+  ansible.builtin.template:
+    src: my.cnf.j2
+    dest: /etc/mysql/mariadb.conf.d/99-openstack.cnf # Use a custom file for OpenStack specific configs
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart mariadb
+
+- name: Secure MariaDB installation - Remove anonymous users
+  community.mysql.mysql_user:
+    name: ""
+    host: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ ansible_hostname }}"
+    - localhost
+  delegate_to: "{{ inventory_hostname }}" # Ensure this task runs on the current host
+
+- name: Secure MariaDB installation - Disable remote root login
+  community.mysql.mysql_user:
+    name: root
+    host: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ ansible_hostname }}"
+    - 127.0.0.1
+    - ::1
+  when: mariadb_bind_address != '0.0.0.0' # Only remove if not binding to all interfaces
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: Secure MariaDB installation - Remove test database
+  community.mysql.mysql_db:
+    name: test
+    state: absent
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: Create OpenStack database user
+  community.mysql.mysql_user:
+    name: "{{ openstack_db_user }}"
+    password: "{{ openstack_db_password }}"
+    host: "%" # Allow connections from any host (for OpenStack services)
+    priv: "*.*:ALL,GRANT" # Grant all privileges and grant option
+    state: present
+  delegate_to: "{{ inventory_hostname }}"

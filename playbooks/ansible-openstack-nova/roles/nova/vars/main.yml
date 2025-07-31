@@ -1,0 +1,6 @@
+---
+# Role-specific variables for Nova.
+
+# Nova database names
+nova_db_name: nova
+nova_api_db_name: nova_api

@@ -1,0 +1,37 @@
+---
+- name: Install RabbitMQ server
+  ansible.builtin.apt:
+    name: rabbitmq-server
+    state: present
+  notify: Restart rabbitmq-server
+
+- name: Ensure RabbitMQ service is running and enabled
+  ansible.builtin.service:
+    name: rabbitmq-server
+    state: started
+    enabled: yes
+
+- name: Create RabbitMQ OpenStack user
+  community.rabbitmq.rabbitmq_user:
+    user: openstack
+    password: "{{ rabbitmq_password }}"
+    tags: administrator
+    state: present
+  delegate_to: "{{ inventory_hostname }}" # Ensure this runs on the RabbitMQ host
+
+- name: Set permissions for RabbitMQ OpenStack user on / virtual host
+  community.rabbitmq.rabbitmq_user:
+    user: openstack
+    vhost: /
+    configure_priv: ".*"
+    read_priv: ".*"
+    write_priv: ".*"
+    state: present
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: Ensure RabbitMQ default guest user is removed (for security)
+  community.rabbitmq.rabbitmq_user:
+    user: guest
+    state: absent
+  delegate_to: "{{ inventory_hostname }}"
+  ignore_errors: yes

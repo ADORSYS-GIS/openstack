@@ -1,0 +1,49 @@
+---
+# Variables specific to controller nodes.
+
+# Controller IP address (redundant with hosts.ini but useful for explicit reference in roles)
+controller_ip: 192.168.56.10
+
+# Keystone service endpoint URLs
+keystone_admin_url: "http://{{ controller_ip }}:5000/v3"
+keystone_public_url: "http://{{ controller_ip }}:5000/v3"
+keystone_internal_url: "http://{{ controller_ip }}:5000/v3"
+
+# Glance service endpoint URLs
+glance_api_url: "http://{{ controller_ip }}:9292"
+
+# Placement service endpoint URLs
+placement_api_url: "http://{{ controller_ip }}:8778"
+
+# RabbitMQ host (typically on controller)
+rabbitmq_host: "{{ controller_ip }}"
+
+# MariaDB specific variables
+mariadb_bind_address: 0.0.0.0 # Binds to all interfaces, allowing connections from compute node
+
+# Keystone specific variables
+keystone_db_name: keystone
+
+# Glance specific variables
+glance_db_name: glance
+
+# Placement specific variables
+placement_db_name: placement
+
+# Nova service endpoint URLs
+nova_public_url: "http://{{ controller_ip }}:8774/v2.1"
+nova_internal_url: "http://{{ controller_ip }}:8774/v2.1"
+nova_admin_url: "http://{{ controller_ip }}:8774/v2.1"
+
+# OpenStack CLI configuration for openstack modules
+# This tells openstacksdk how to authenticate using the admin-openrc.sh file
+openstack_cloud_config:
+  cloud: admin_cloud # A name for this cloud profile
+  auth:
+    auth_url: "{{ keystone_admin_url }}"
+    username: admin
+    password: "{{ openstack_admin_password }}"
+    project_name: admin
+    user_domain_name: Default
+    project_domain_name: Default
+  region_name: "{{ openstack_region_name }}"

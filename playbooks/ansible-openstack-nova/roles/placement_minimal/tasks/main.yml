@@ -1,0 +1,84 @@
+---
+- name: Install Placement API packages
+  ansible.builtin.apt:
+    name:
+      - placement-api
+    state: present
+  notify: Restart apache2 # Placement also runs as WSGI under Apache
+
+- name: Create Placement database
+  community.mysql.mysql_db:
+    name: "{{ placement_db_name }}"
+    state: present
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: Grant privileges to Placement database user
+  community.mysql.mysql_user:
+    name: "{{ openstack_db_user }}"
+    password: "{{ openstack_db_password }}"
+    host: "%"
+    priv: "{{ placement_db_name }}.*:ALL"
+    state: present
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: Populate the Placement database
+  ansible.builtin.command: su -s /bin/sh -c "placement-manage db sync" placement
+  args:
+    creates: /var/lib/placement/placement.sqlite # Prevent re-running if DB is already synced
+  become: yes
+  become_user: placement
+  register: placement_db_sync_result
+  changed_when: "'No changes to make' not in placement_db_sync_result.stderr"
+
+- name: Create Placement service user in Keystone
+  community.general.openstack.openstack_user:
+    cloud: "{{ openstack_cloud_config }}"
+    state: present
+    name: placement
+    password: "{{ placement_user_password }}"
+    domain: Default
+  environment:
+    OS_CLOUD: ""
+
+- name: Create Placement service in Keystone
+  community.general.openstack.openstack_service:
+    cloud: "{{ openstack_cloud_config }}"
+    state: present
+    name: placement
+    type: placement
+    description: "OpenStack Placement service"
+  environment:
+    OS_CLOUD: ""
+
+- name: Create Placement endpoints in Keystone
+  community.general.openstack.openstack_endpoint:
+    cloud: "{{ openstack_cloud_config }}"
+    state: present
+    service: placement
+    endpoint_interface: "{{ item.interface }}"
+    url: "{{ item.url }}"
+    region: "{{ openstack_region_name }}"
+  loop:
+    - { interface: 'public', url: "{{ placement_api_url }}" }
+    - { interface: 'internal', url: "{{ placement_api_url }}" }
+    - { interface: 'admin', url: "{{ placement_api_url }}" }
+  environment:
+    OS_CLOUD: ""
+
+- name: Configure Placement API (placement.conf)
+  ansible.builtin.template:
+    src: placement.conf.j2
+    dest: /etc/placement/placement.conf
+    owner: placement
+    group: placement
+    mode: '0640'
+  notify: Restart apache2
+
+# Note: Apache2 setup for Placement is usually handled by the package itself
+# or by a common Apache role if we had one. For minimal, we assume it's linked
+# by the package installation. We just need to ensure Apache is running.
+- name: Ensure Apache2 is running for Placement WSGI
+  ansible.builtin.service:
+    name: apache2
+    state: started
+    enabled: yes

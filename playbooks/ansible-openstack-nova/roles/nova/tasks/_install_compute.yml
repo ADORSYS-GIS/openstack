@@ -1,0 +1,93 @@
+---
+# Tasks for installing and configuring Nova components on the compute node.
+
+- name: Install Nova compute packages
+  ansible.builtin.apt:
+    name:
+      - nova-compute
+      - qemu-kvm
+      - libvirt-daemon-system
+      - libvirt-clients
+      - bridge-utils
+      - virtinst # For virt-install, useful for testing
+    state: present
+  notify:
+    - Restart nova-compute
+    - Restart libvirtd
+
+- name: Ensure libvirtd service is running and enabled
+  ansible.builtin.service:
+    name: libvirtd
+    state: started
+    enabled: yes
+
+- name: Ensure Nova Compute service is running and enabled
+  ansible.builtin.service:
+    name: nova-compute
+    state: started
+    enabled: yes
+
+- name: Configure Libvirt to listen on all interfaces for VNC
+  ansible.builtin.lineinfile:
+    path: /etc/libvirt/qemu.conf
+    regexp: '^#vnc_listen = "0.0.0.0"$'
+    line: 'vnc_listen = "0.0.0.0"'
+    state: present
+  notify: Restart libvirtd
+
+- name: Configure Libvirt to allow VNC connections from any address
+  ansible.builtin.lineinfile:
+    path: /etc/libvirt/qemu.conf
+    regexp: '^#vnc_allow_host_auto = 1$'
+    line: 'vnc_allow_host_auto = 1'
+    state: present
+  notify: Restart libvirtd
+
+- name: Add nova user to libvirt group
+  ansible.builtin.user:
+    name: nova
+    groups: libvirt
+    append: yes
+
+- name: Add libvirt user to kvm group
+  ansible.builtin.user:
+    name: libvirt-qemu
+    groups: kvm
+    append: yes
+
+- name: Ensure KVM module is loaded
+  ansible.builtin.modprobe:
+    name: kvm
+    state: present
+
+- name: Ensure KVM_intel module is loaded with nested virtualization (if Intel CPU)
+  ansible.builtin.modprobe:
+    name: kvm_intel
+    state: present
+    params: nested=1
+  when: ansible_facts['processor_vulnerabilities']['l1tf']['cpu_flags'] is defined and 'vmx' in ansible_facts['processor_vulnerabilities']['l1tf']['cpu_flags']
+  ignore_errors: yes # May not be Intel, or nested already enabled
+
+- name: Ensure KVM_amd module is loaded with nested virtualization (if AMD CPU)
+  ansible.builtin.modprobe:
+    name: kvm_amd
+    state: present
+    params: nested=1
+  when: ansible_facts['processor_vulnerabilities']['l1tf']['cpu_flags'] is defined and 'svm' in ansible_facts['processor_vulnerabilities']['l1tf']['cpu_flags']
+  ignore_errors: yes # May not be AMD, or nested already enabled
+
+- name: Create a bridge for instances (br-ex)
+  ansible.builtin.template:
+    src: interfaces.j2
+    dest: /etc/network/interfaces.d/br-ex.cfg
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart networking
+
+- name: Bring up the br-ex bridge
+  ansible.builtin.command: ifup br-ex
+  args:
+    creates: /sys/class/net/br-ex # Check if bridge exists
+  changed_when: true # Always report as changed if ifup runs
+  failed_when: false # Don't fail if bridge is already up

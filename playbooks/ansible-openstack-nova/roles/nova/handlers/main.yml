@@ -1,0 +1,48 @@
+---
+- name: Restart nova-api
+  ansible.builtin.service:
+    name: nova-api
+    state: restarted
+  listen: "Restart nova-api"
+
+- name: Restart nova-scheduler
+  ansible.builtin.service:
+    name: nova-scheduler
+    state: restarted
+  listen: "Restart nova-scheduler"
+
+- name: Restart nova-conductor
+  ansible.builtin.service:
+    name: nova-conductor
+    state: restarted
+  listen: "Restart nova-conductor"
+
+- name: Restart nova-novncproxy
+  ansible.builtin.service:
+    name: nova-novncproxy
+    state: restarted
+  listen: "Restart nova-novncproxy"
+
+- name: Restart nova-consoleproxy
+  ansible.builtin.service:
+    name: nova-consoleproxy
+    state: restarted
+  listen: "Restart nova-consoleproxy"
+
+- name: Restart nova-compute
+  ansible.builtin.service:
+    name: nova-compute
+    state: restarted
+  listen: "Restart nova-compute"
+
+- name: Restart libvirtd
+  ansible.builtin.service:
+    name: libvirtd
+    state: restarted
+  listen: "Restart libvirtd"
+
+- name: Restart networking
+  ansible.builtin.service:
+    name: networking
+    state: restarted
+  listen: "Restart networking"

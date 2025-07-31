@@ -1,0 +1,69 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  # Define the base box to use for all VMs
+  # Using a generic Ubuntu box that supports libvirt
+  config.vm.box = "ubuntu/focal64"
+
+  # Disable automatic box updates
+  config.vm.box_check_update = false
+
+  # Define common network settings
+  config.vm.network "private_network", ip: "192.168.56.10",
+    libvirt__network_name: "vagrant-libvirt",
+    libvirt__forward_mode: "nat"
+
+  # Define the Controller Node
+  config.vm.define "controller" do |controller|
+    controller.vm.hostname = "controller"
+    controller.vm.network "private_network", ip: "192.168.56.10",
+      libvirt__network_name: "vagrant-libvirt",
+      libvirt__forward_mode: "nat"
+    controller.vm.provider "libvirt" do |libvirt|
+      libvirt.memory = "2048"
+      libvirt.cpus = "2"     
+      libvirt.driver = "kvm" 
+      libvirt.disk_bus = "virtio" # Use virtio for better performance
+      libvirt.volume_cache = "writeback" # Improve disk I/O
+      libvirt.nested_virt = true
+    end
+    # Provision with a shell script to ensure Ansible is installed
+    controller.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get update
+      sudo apt-get install -y python3 python3-pip
+      pip3 install ansible
+    SHELL
+  end
+
+  # Define the Compute Node
+  config.vm.define "compute" do |compute|
+    compute.vm.hostname = "compute"
+    compute.vm.network "private_network", ip: "192.168.56.11",
+      libvirt__network_name: "vagrant-libvirt",
+      libvirt__forward_mode: "nat"
+    compute.vm.provider "libvirt" do |libvirt|
+      libvirt.memory = "2048"
+      libvirt.cpus = "2"     
+      libvirt.driver = "kvm" 
+      libvirt.disk_bus = "virtio" # Use virtio for better performance
+      libvirt.volume_cache = "writeback" # Improve disk I/O
+      libvirt.nested_virt = true
+    end
+    # Provision with a shell script to ensure Ansible is installed
+    compute.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get update
+      sudo apt-get install -y python3 python3-pip
+      pip3 install ansible
+    SHELL
+  end
+
+  # Configure Ansible provisioner to run from the host
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "playbooks/site.yml" 
+    ansible.inventory_path = "inventory/hosts.ini"
+    ansible.limit = "all"
+    ansible.verbose = "vvv" 
+    ansible.raw_args = ["--forks=5"]
+  end
+end

@@ -1,0 +1,48 @@
+---
+# Tasks for registering Nova with Keystone on the controller.
+
+- name: Create Nova service user in Keystone
+  community.general.openstack.openstack_user:
+    cloud: "{{ openstack_cloud_config }}"
+    state: present
+    name: nova
+    password: "{{ nova_user_password }}"
+    domain: Default
+  environment:
+    OS_CLOUD: ""
+
+- name: Add admin role to Nova user in service project
+  community.general.openstack.openstack_user_role:
+    cloud: "{{ openstack_cloud_config }}"
+    state: present
+    user: nova
+    role: admin
+    project: service
+    domain: Default
+  environment:
+    OS_CLOUD: ""
+
+- name: Create Nova service in Keystone
+  community.general.openstack.openstack_service:
+    cloud: "{{ openstack_cloud_config }}"
+    state: present
+    name: nova
+    type: compute
+    description: "OpenStack Compute service"
+  environment:
+    OS_CLOUD: ""
+
+- name: Create Nova endpoints in Keystone
+  community.general.openstack.openstack_endpoint:
+    cloud: "{{ openstack_cloud_config }}"
+    state: present
+    service: compute
+    endpoint_interface: "{{ item.interface }}"
+    url: "{{ item.url }}"
+    region: "{{ openstack_region_name }}"
+  loop:
+    - { interface: 'public', url: "{{ nova_public_url }}" }
+    - { interface: 'internal', url: "{{ nova_internal_url }}" }
+    - { interface: 'admin', url: "{{ nova_admin_url }}" }
+  environment:
+    OS_CLOUD: ""
