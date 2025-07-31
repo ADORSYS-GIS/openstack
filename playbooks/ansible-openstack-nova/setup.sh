@@ -1,12 +1,13 @@
 #!/bin/sh
 
+# setup.sh
 # Installs libvirt, vagrant-libvirt, performs host checks, provisions Vagrant VMs with Ansible, and optionally triggers cleanup.
 
-set -e
+set -e # Exit immediately if any command fails
 
 # Parse arguments
 CLEANUP=false
-while [ "$#" -gt 0 ]; do # Use "$#" for POSIX compatibility with argument count
+while [ "$#" -gt 0 ]; do
     case "$1" in
         --cleanup) CLEANUP=true; shift ;;
         *) echo "Error: Unknown argument: $1"; exit 1 ;;
@@ -51,16 +52,17 @@ echo "No package manager lock detected."
 # Install host system dependencies for libvirt and vagrant-libvirt
 echo "Installing host system dependencies for libvirt and vagrant-libvirt..."
 if [ "$DISTRO" = "debian" ]; then
-    for i in 1 2 3; do # POSIX: Replaced {1..3} with explicit list
+    for i in 1 2 3; do
         sudo apt-get update && break || { echo "Retry $i: apt-get update failed. Retrying in 2 seconds..."; sleep 2; }
     done
-    sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager dnsmasq-base ruby-full build-essential libxml2-dev libxslt1-dev libvirt-dev zlib1g-dev || \
+    sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager dnsmasq-base ruby-full build-essential libxml2-dev libxslt1-dev libvirt-dev zlib1g-dev python3-venv python3-pip || \
         { echo "Error: Failed to install Debian/Ubuntu host dependencies. Exiting."; exit 1; }
 elif [ "$DISTRO" = "rhel" ]; then
-    for i in 1 2 3; do # POSIX: Replaced {1..3} with explicit list
-        sudo dnf install -y qemu-kvm libvirt virt-install bridge-utils virt-manager libguestfs-tools ruby-devel gcc libxml2-devel libxslt-devel libvirt-devel zlib-devel make && break || { echo "Retry $i: dnf install failed. Retrying in 2 seconds..."; sleep 2; }
+    for i in 1 2 3; do
+        sudo dnf install -y qemu-kvm libvirt virt-install bridge-utils virt-manager libguestfs-tools ruby-devel gcc libxml2-devel libxslt-devel libvirt-devel zlib-devel make python3-virtualenv python3-pip || \
+            { echo "Retry $i: dnf install failed. Retrying in 2 seconds..."; sleep 2; }
     done
-    sudo dnf install -y qemu-kvm libvirt virt-install bridge-utils virt-manager libguestfs-tools ruby-devel gcc libxml2-devel libxslt-devel libvirt-devel zlib-devel make || \
+    sudo dnf install -y qemu-kvm libvirt virt-install bridge-utils virt-manager libguestfs-tools ruby-devel gcc libxml2-devel libxslt-devel libvirt-devel zlib-devel make python3-virtualenv python3-pip || \
         { echo "Error: Failed to install RHEL host dependencies. Exiting."; exit 1; }
 fi
 echo "Host dependencies installed."
@@ -91,7 +93,7 @@ echo "Vagrant is installed."
 echo "Checking for vagrant-libvirt plugin..."
 if ! vagrant plugin list | grep -q "vagrant-libvirt"; then
     echo "Installing vagrant-libvirt plugin (this may take a moment)..."
-    for i in 1 2 3; do # POSIX: Replaced {1..3} with explicit list
+    for i in 1 2 3; do
         vagrant plugin install vagrant-libvirt && break || { echo "Retry $i: vagrant-libvirt plugin install failed. Retrying in 2 seconds..."; sleep 2; }
     done
     vagrant plugin list | grep -q "vagrant-libvirt" || { echo "Error: Failed to install vagrant-libvirt plugin. Exiting."; exit 1; }
@@ -113,14 +115,14 @@ echo "libvirt is accessible via virsh."
 
 # Check nested virtualization on host CPU and KVM module
 echo "Checking host CPU for virtualization support and KVM nested virtualization enablement..."
-if ! lscpu | grep -E -q "Virtualization:.*VT-x|AMD-V"; then # Used grep -E for extended regex |
+if ! lscpu | grep -E -q "Virtualization:.*VT-x|AMD-V"; then
     echo "Error: Host CPU does NOT support virtualization (VT-x/AMD-V flags not found). Enable in BIOS/UEFI. Exiting."
     exit 1
 fi
 
 KVM_NESTED_ENABLED=false
 if [ -f /sys/module/kvm_intel/parameters/nested ]; then
-    if [ "$(cat /sys/module/kvm_intel/parameters/nested)" = "Y" ]; then # POSIX: Used = instead of ==
+    if [ "$(cat /sys/module/kvm_intel/parameters/nested)" = "Y" ]; then
         KVM_NESTED_ENABLED=true
         echo "Intel KVM nested virtualization is enabled."
     else
@@ -128,7 +130,7 @@ if [ -f /sys/module/kvm_intel/parameters/nested ]; then
         echo "To enable: 'sudo modprobe -r kvm_intel; sudo modprobe kvm_intel nested=1'."
     fi
 elif [ -f /sys/module/kvm_amd/parameters/nested ]; then
-    if [ "$(cat /sys/module/kvm_amd/parameters/nested)" = "1" ]; then # POSIX: Used = instead of ==
+    if [ "$(cat /sys/module/kvm_amd/parameters/nested)" = "1" ]; then
         KVM_NESTED_ENABLED=true
         echo "AMD KVM nested virtualization is enabled."
     else
@@ -139,11 +141,29 @@ else
     echo "Warning: KVM module parameters for nested virtualization not found (likely not loaded or non-Intel/AMD CPU)."
 fi
 
-if [ "$KVM_NESTED_ENABLED" = false ]; then # POSIX: Used = instead of ==
+if [ "$KVM_NESTED_ENABLED" = false ]; then
     echo "WARNING: Nested virtualization is crucial for running OpenStack instances within Vagrant VMs."
     echo "Please ensure it's properly enabled on your host system if you encounter issues launching VMs."
 fi
 echo "Host virtualization checks completed."
+
+# --- Install Ansible on Host in a Virtual Environment ---
+echo "Setting up Python virtual environment for Ansible on host..."
+PYTHON_VENV_DIR=".venv"
+if [ ! -d "$PYTHON_VENV_DIR" ]; then
+    python3 -m venv "$PYTHON_VENV_DIR" || { echo "Error: Failed to create Python virtual environment. Ensure python3-venv is installed. Exiting."; exit 1; }
+    echo "Virtual environment created at $PYTHON_VENV_DIR."
+fi
+
+# Activate the virtual environment
+. "$PYTHON_VENV_DIR/bin/activate" || { echo "Error: Failed to activate virtual environment. Exiting."; exit 1; }
+echo "Virtual environment activated."
+
+echo "Installing Ansible and OpenStackSDK in virtual environment..."
+pip install --upgrade pip || { echo "Warning: Failed to upgrade pip."; }
+pip install ansible openstacksdk || { echo "Error: Failed to install Ansible and OpenStackSDK in virtual environment. Exiting."; exit 1; }
+echo "Ansible and OpenStackSDK installed in virtual environment."
+# --- End Ansible Host Installation ---
 
 # Verify essential project files
 echo "Verifying essential project files..."
@@ -155,11 +175,13 @@ echo "All essential project files found."
 
 # Install Ansible Collections
 echo "Installing Ansible Collections from requirements.yml..."
+# This command will now use ansible-galaxy from the activated virtual environment
 ansible-galaxy collection install -r requirements.yml || { echo "Error: Failed to install Ansible collections. Exiting."; exit 1; }
 echo "Ansible Collections installed."
 
 # Start Vagrant VMs and trigger Ansible provisioning
 echo "Starting Vagrant VMs (this may take a while)..."
+# Vagrant's Ansible provisioner will use the Ansible installed on the host (now in venv)
 vagrant up --provider=libvirt >vagrant_up.log 2>&1 || { echo "Error: Vagrant up failed. Check vagrant_up.log for details. Exiting."; cat vagrant_up.log; exit 1; }
 echo "Vagrant VMs provisioned successfully."
 
