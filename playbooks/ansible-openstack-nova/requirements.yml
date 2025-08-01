@@ -1,5 +1,4 @@
 ---
-# requirements.yml
 # This file lists the Ansible collections required by this project.
 # It ensures that all necessary modules are available when running the playbooks.
 

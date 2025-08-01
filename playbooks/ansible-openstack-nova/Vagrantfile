@@ -3,8 +3,7 @@
 
 Vagrant.configure("2") do |config|
   # Define the base box to use for all VMs
-  # Using a generic Ubuntu box that supports libvirt
-  config.vm.box = "ubuntu/focal64"
+  config.vm.box = "generic/ubuntu2004"
 
   # Disable automatic box updates
   config.vm.box_check_update = false
@@ -21,14 +20,14 @@ Vagrant.configure("2") do |config|
       libvirt__network_name: "vagrant-libvirt",
       libvirt__forward_mode: "nat"
     controller.vm.provider "libvirt" do |libvirt|
-      libvirt.memory = "2048"
-      libvirt.cpus = "2"     
-      libvirt.driver = "kvm" 
-      libvirt.disk_bus = "virtio" # Use virtio for better performance
-      libvirt.volume_cache = "writeback" # Improve disk I/O
-      libvirt.nested_virt = true
+      libvirt.memory = 2048
+      libvirt.cpus = 2
+      libvirt.cpu_mode = "host-passthrough"
+      libvirt.nested = true
+      libvirt.driver = "kvm"
+      libvirt.disk_bus = "virtio"
+      libvirt.disk_driver :cache => "writeback"
     end
-    # Provision with a shell script to ensure Ansible is installed
     controller.vm.provision "shell", inline: <<-SHELL
       sudo apt-get update
       sudo apt-get install -y python3 python3-pip
@@ -43,14 +42,14 @@ Vagrant.configure("2") do |config|
       libvirt__network_name: "vagrant-libvirt",
       libvirt__forward_mode: "nat"
     compute.vm.provider "libvirt" do |libvirt|
-      libvirt.memory = "2048"
-      libvirt.cpus = "2"     
-      libvirt.driver = "kvm" 
-      libvirt.disk_bus = "virtio" # Use virtio for better performance
-      libvirt.volume_cache = "writeback" # Improve disk I/O
-      libvirt.nested_virt = true
+      libvirt.memory = 2048
+      libvirt.cpus = 2
+      libvirt.cpu_mode = "host-passthrough"
+      libvirt.nested = true
+      libvirt.driver = "kvm"
+      libvirt.disk_bus = "virtio"
+      libvirt.disk_driver :cache => "writeback"
     end
-    # Provision with a shell script to ensure Ansible is installed
     compute.vm.provision "shell", inline: <<-SHELL
       sudo apt-get update
       sudo apt-get install -y python3 python3-pip
@@ -60,10 +59,9 @@ Vagrant.configure("2") do |config|
 
   # Configure Ansible provisioner to run from the host
   config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "playbooks/site.yml" 
+    ansible.playbook = "playbooks/site.yml"
     ansible.inventory_path = "inventory/hosts.ini"
     ansible.limit = "all"
-    ansible.verbose = "vvv" 
-    ansible.raw_args = ["--forks=5"]
+    ansible.verbose = "vvv"
   end
 end

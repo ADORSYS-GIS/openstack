@@ -3,9 +3,9 @@
   ansible.builtin.apt:
     name:
       - keystone
-      - python3-openstackclient # Ensure openstack client is available on controller
+      - python3-openstackclient
     state: present
-  notify: Restart apache2 # Keystone often runs as WSGI under Apache
+  notify: Restart apache2
 
 - name: Configure Keystone (keystone.conf)
   ansible.builtin.template:
@@ -34,7 +34,7 @@
 - name: Populate the Keystone database
   ansible.builtin.command: su -s /bin/sh -c "keystone-manage db_sync" keystone
   args:
-    creates: /var/lib/keystone/keystone.sqlite # Prevent re-running if DB is already synced
+    creates: /var/lib/keystone/keystone.sqlite
   become: yes
   become_user: keystone
   register: keystone_db_sync_result
@@ -62,11 +62,11 @@
     --bootstrap-internal-url {{ keystone_internal_url }}
     --bootstrap-region-id {{ openstack_region_name }}
   args:
-    creates: /etc/keystone/bootstrap_complete # A simple marker file
+    creates: /etc/keystone/bootstrap_complete
   become: yes
   become_user: keystone
   environment:
-    OS_CLOUD: "" # Ensure no existing cloud env vars interfere
+    OS_CLOUD: ""
 
 - name: Ensure Apache2 is installed and running (for WSGI)
   ansible.builtin.apt:

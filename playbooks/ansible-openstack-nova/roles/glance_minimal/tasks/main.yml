@@ -1,12 +1,15 @@
 ---
-- name: Install Glance packages
+- name: Install Glance packages and OpenStack client
   ansible.builtin.apt:
     name:
       - glance
+      - python3-openstackclient # Ensure openstack client is available
+      - bash # Ensure bash is available for shell scripts
     state: present
   notify:
     - Restart glance-api
     - Restart glance-registry
+  become: yes # Ensure this task runs with sudo
 
 - name: Create Glance database
   community.mysql.mysql_db:
@@ -26,44 +29,105 @@
 - name: Populate the Glance database
   ansible.builtin.command: su -s /bin/sh -c "glance-manage db_sync" glance
   args:
-    creates: /var/lib/glance/glance.sqlite # Prevent re-running if DB is already synced
+    creates: /var/lib/glance/glance.sqlite
   become: yes
   become_user: glance
   register: glance_db_sync_result
   changed_when: "'No changes to make' not in glance_db_sync_result.stderr"
 
-- name: Create Glance service user in Keystone
-  community.general.openstack.openstack_user:
-    cloud: "{{ openstack_cloud_config }}"
-    state: present
-    name: glance
-    password: "{{ glance_user_password }}"
-    domain: Default
+- name: Check if Glance service user exists
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack user show glance --domain Default
+  args:
+    executable: /bin/bash
+  register: glance_user_check
+  failed_when: glance_user_check.rc not in [0, 1] # 0 if exists, 1 if not found
+  changed_when: false
   environment:
     OS_CLOUD: "" # Ensure no existing cloud env vars interfere
 
-- name: Create Glance service in Keystone
-  community.general.openstack.openstack_service:
-    cloud: "{{ openstack_cloud_config }}"
-    state: present
-    name: glance
-    type: image
-    description: "OpenStack Image service"
+- name: Create Glance service user in Keystone
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack user create \
+      --domain Default \
+      --password "{{ glance_user_password }}" \
+      glance 2>&1 | tee /var/log/ansible-glance-user.log
+  args:
+    executable: /bin/bash
+  when: glance_user_check.rc == 1 # Only create if user does not exist
+  register: glance_user_create
+  retries: 3
+  delay: 5
+  until: glance_user_create.rc == 0 or 'already exists' in glance_user_create.stderr # Robust idempotency
+  changed_when: glance_user_create.rc == 0 # Only changed if creation was successful
+  failed_when: glance_user_create.rc != 0 and 'already exists' not in glance_user_create.stderr # Fail only on true errors
   environment:
     OS_CLOUD: ""
 
-- name: Create Glance endpoints in Keystone
-  community.general.openstack.openstack_endpoint:
-    cloud: "{{ openstack_cloud_config }}"
-    state: present
-    service: image
-    endpoint_interface: "{{ item.interface }}"
-    url: "{{ item.url }}"
-    region: "{{ openstack_region_name }}"
+- name: Check if Glance service exists
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack service show glance
+  args:
+    executable: /bin/bash
+  register: glance_service_check
+  failed_when: glance_service_check.rc not in [0, 1]
+  changed_when: false
+  environment:
+    OS_CLOUD: ""
+
+- name: Create Glance service in Keystone
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack service create \
+      --name glance \
+      --description "OpenStack Image service" \
+      image 2>&1 | tee /var/log/ansible-glance-service.log
+  args:
+    executable: /bin/bash
+  when: glance_service_check.rc == 1 # Only create if service does not exist
+  register: glance_service_create
+  retries: 3
+  delay: 5
+  until: glance_service_create.rc == 0 or 'already exists' in glance_service_create.stderr
+  changed_when: glance_service_create.rc == 0
+  failed_when: glance_service_create.rc != 0 and 'already exists' not in glance_service_create.stderr
+  environment:
+    OS_CLOUD: ""
+
+- name: Create or Update Glance endpoints in Keystone
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    # Check if endpoint exists. If not, create it. If it exists, ensure URL is correct.
+    if ! openstack endpoint show glance {{ item.interface }} &>/dev/null; then
+      echo "Creating Glance {{ item.interface }} endpoint..."
+      openstack endpoint create \
+        --region "{{ openstack_region_name }}" \
+        {{ item.interface }} \
+        image \
+        "{{ item.url }}" 2>&1 | tee /var/log/ansible-glance-endpoint-{{ item.interface }}.log
+    else
+      echo "Updating Glance {{ item.interface }} endpoint..."
+      openstack endpoint set \
+        --region "{{ openstack_region_name }}" \
+        --url "{{ item.url }}" \
+        {{ item.interface }} \
+        image 2>&1 | tee /var/log/ansible-glance-endpoint-{{ item.interface }}.log
+    fi
+  args:
+    executable: /bin/bash
   loop:
     - { interface: 'public', url: "{{ glance_api_url }}" }
     - { interface: 'internal', url: "{{ glance_api_url }}" }
     - { interface: 'admin', url: "{{ glance_api_url }}" }
+  register: glance_endpoint_result
+  retries: 3
+  delay: 5
+  until: glance_endpoint_result.rc == 0
+  changed_when: "glance_endpoint_result.rc == 0 and ('created' in glance_endpoint_result.stdout or 'updated' in glance_endpoint_result.stdout)" # More precise changed_when
+  failed_when: glance_endpoint_result.rc != 0
   environment:
     OS_CLOUD: ""
 

@@ -23,6 +23,7 @@ mariadb_bind_address: 0.0.0.0 # Binds to all interfaces, allowing connections fr
 
 # Keystone specific variables
 keystone_db_name: keystone
+keystone_rc_file: "/root/admin-openrc.sh" # ADDED: Path to the admin-openrc.sh file
 
 # Glance specific variables
 glance_db_name: glance

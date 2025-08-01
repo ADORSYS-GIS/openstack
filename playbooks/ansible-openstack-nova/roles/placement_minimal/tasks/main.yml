@@ -1,10 +1,13 @@
 ---
-- name: Install Placement API packages
+- name: Install Placement API packages and OpenStack client
   ansible.builtin.apt:
     name:
       - placement-api
+      - python3-openstackclient # Ensure openstack client is available
+      - bash # Ensure bash is available for shell scripts
     state: present
   notify: Restart apache2 # Placement also runs as WSGI under Apache
+  become: yes # Ensure this task runs with sudo
 
 - name: Create Placement database
   community.mysql.mysql_db:
@@ -30,38 +33,99 @@
   register: placement_db_sync_result
   changed_when: "'No changes to make' not in placement_db_sync_result.stderr"
 
+- name: Check if Placement service user exists
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack user show placement --domain Default
+  args:
+    executable: /bin/bash
+  register: placement_user_check
+  failed_when: placement_user_check.rc not in [0, 1] # 0 if exists, 1 if not found
+  changed_when: false
+  environment:
+    OS_CLOUD: "" # Ensure no existing cloud env vars interfere
+
 - name: Create Placement service user in Keystone
-  community.general.openstack.openstack_user:
-    cloud: "{{ openstack_cloud_config }}"
-    state: present
-    name: placement
-    password: "{{ placement_user_password }}"
-    domain: Default
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack user create \
+      --domain Default \
+      --password "{{ placement_user_password }}" \
+      placement 2>&1 | tee /var/log/ansible-placement-user.log
+  args:
+    executable: /bin/bash
+  when: placement_user_check.rc == 1 # Only create if user does not exist
+  register: placement_user_create
+  retries: 3
+  delay: 5
+  until: placement_user_create.rc == 0 or 'already exists' in placement_user_create.stderr # Robust idempotency
+  changed_when: placement_user_create.rc == 0 # Only changed if creation was successful
+  failed_when: placement_user_create.rc != 0 and 'already exists' not in placement_user_create.stderr # Fail only on true errors
+  environment:
+    OS_CLOUD: ""
+
+- name: Check if Placement service exists
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack service show placement
+  args:
+    executable: /bin/bash
+  register: placement_service_check
+  failed_when: placement_service_check.rc not in [0, 1]
+  changed_when: false
   environment:
     OS_CLOUD: ""
 
 - name: Create Placement service in Keystone
-  community.general.openstack.openstack_service:
-    cloud: "{{ openstack_cloud_config }}"
-    state: present
-    name: placement
-    type: placement
-    description: "OpenStack Placement service"
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack service create \
+      --name placement \
+      --description "OpenStack Placement service" \
+      placement 2>&1 | tee /var/log/ansible-placement-service.log
+  args:
+    executable: /bin/bash
+  when: placement_service_check.rc == 1 # Only create if service does not exist
+  register: placement_service_create
+  retries: 3
+  delay: 5
+  until: placement_service_create.rc == 0 or 'already exists' in placement_service_create.stderr
+  changed_when: placement_service_create.rc == 0
+  failed_when: placement_service_create.rc != 0 and 'already exists' not in placement_service_create.stderr
   environment:
     OS_CLOUD: ""
 
-- name: Create Placement endpoints in Keystone
-  community.general.openstack.openstack_endpoint:
-    cloud: "{{ openstack_cloud_config }}"
-    state: present
-    service: placement
-    endpoint_interface: "{{ item.interface }}"
-    url: "{{ item.url }}"
-    region: "{{ openstack_region_name }}"
+- name: Create or Update Placement endpoints in Keystone
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    # Check if endpoint exists. If not, create it. If it exists, ensure URL is correct.
+    if ! openstack endpoint show placement {{ item.interface }} &>/dev/null; then
+      echo "Creating Placement {{ item.interface }} endpoint..."
+      openstack endpoint create \
+        --region "{{ openstack_region_name }}" \
+        {{ item.interface }} \
+        placement \
+        "{{ item.url }}" 2>&1 | tee /var/log/ansible-placement-endpoint-{{ item.interface }}.log
+    else
+      echo "Updating Placement {{ item.interface }} endpoint..."
+      openstack endpoint set \
+        --region "{{ openstack_region_name }}" \
+        --url "{{ item.url }}" \
+        {{ item.interface }} \
+        placement 2>&1 | tee /var/log/ansible-placement-endpoint-{{ item.interface }}.log
+    fi
+  args:
+    executable: /bin/bash
   loop:
     - { interface: 'public', url: "{{ placement_api_url }}" }
     - { interface: 'internal', url: "{{ placement_api_url }}" }
     - { interface: 'admin', url: "{{ placement_api_url }}" }
+  register: placement_endpoint_result
+  retries: 3
+  delay: 5
+  until: placement_endpoint_result.rc == 0
+  changed_when: "placement_endpoint_result.rc == 0 and ('created' in placement_endpoint_result.stdout or 'updated' in placement_endpoint_result.stdout)" # More precise changed_when
+  failed_when: placement_endpoint_result.rc != 0
   environment:
     OS_CLOUD: ""
 
