@@ -1,67 +1,33 @@
-# -*- mode: ruby -*-
-# vi: set ft=ruby :
-
 Vagrant.configure("2") do |config|
-  # Define the base box to use for all VMs
   config.vm.box = "generic/ubuntu2004"
-
-  # Disable automatic box updates
   config.vm.box_check_update = false
-
-  # Define common network settings
-  config.vm.network "private_network", ip: "192.168.56.10",
-    libvirt__network_name: "vagrant-libvirt",
-    libvirt__forward_mode: "nat"
-
-  # Define the Controller Node
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.cpus = 2
+    libvirt.memory = 4096
+    libvirt.uri = 'qemu:///system'
+    libvirt.cpu_mode = 'host-passthrough'
+    libvirt.nested = true
+  end
   config.vm.define "controller" do |controller|
     controller.vm.hostname = "controller"
-    controller.vm.network "private_network", ip: "192.168.56.10",
-      libvirt__network_name: "vagrant-libvirt",
-      libvirt__forward_mode: "nat"
-    controller.vm.provider "libvirt" do |libvirt|
-      libvirt.memory = 2048
-      libvirt.cpus = 2
-      libvirt.cpu_mode = "host-passthrough"
-      libvirt.nested = true
-      libvirt.driver = "kvm"
-      libvirt.disk_bus = "virtio"
-      libvirt.disk_driver :cache => "writeback"
+    controller.vm.network :private_network, ip: "192.168.56.10"
+    controller.vm.provision :ansible do |ansible|
+      ansible.playbook = "playbooks/site.yml"
+      ansible.inventory_path = "inventory/hosts.ini"
+      ansible.limit = "controller"
+      ansible.verbose = "v"
+      ansible.extra_vars = { ansible_python_interpreter: "/usr/bin/python3" }
     end
-    controller.vm.provision "shell", inline: <<-SHELL
-      sudo apt-get update
-      sudo apt-get install -y python3 python3-pip
-      pip3 install ansible
-    SHELL
   end
-
-  # Define the Compute Node
   config.vm.define "compute" do |compute|
     compute.vm.hostname = "compute"
-    compute.vm.network "private_network", ip: "192.168.56.11",
-      libvirt__network_name: "vagrant-libvirt",
-      libvirt__forward_mode: "nat"
-    compute.vm.provider "libvirt" do |libvirt|
-      libvirt.memory = 2048
-      libvirt.cpus = 2
-      libvirt.cpu_mode = "host-passthrough"
-      libvirt.nested = true
-      libvirt.driver = "kvm"
-      libvirt.disk_bus = "virtio"
-      libvirt.disk_driver :cache => "writeback"
+    compute.vm.network :private_network, ip: "192.168.56.11"
+    compute.vm.provision :ansible do |ansible|
+      ansible.playbook = "playbooks/site.yml"
+      ansible.inventory_path = "inventory/hosts.ini"
+      ansible.limit = "compute"
+      ansible.verbose = "v"
+      ansible.extra_vars = { ansible_python_interpreter: "/usr/bin/python3" }
     end
-    compute.vm.provision "shell", inline: <<-SHELL
-      sudo apt-get update
-      sudo apt-get install -y python3 python3-pip
-      pip3 install ansible
-    SHELL
-  end
-
-  # Configure Ansible provisioner to run from the host
-  config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "playbooks/site.yml"
-    ansible.inventory_path = "inventory/hosts.ini"
-    ansible.limit = "all"
-    ansible.verbose = "vvv"
   end
 end

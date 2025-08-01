@@ -1,11 +1,18 @@
----
+
 common_packages:
   - curl
   - wget
   - git
   - vim
   - python3-openstackclient # Essential for interacting with OpenStack APIs
-  - open-iscsi              # Required for Nova to connect to Cinder volumes (even if Cinder isn't fully deployed yet)
+  - open-iscsi              # Required for Nova to connect to Cinder volumes
+  - python3-pip             # Required for installing Python packages
+  - python3-dev             # Needed for compiling Python extensions
+  - libffi-dev              # Required for cryptography and OpenStack dependencies
+  - libssl-dev              # Needed for SSL/TLS support in Python packages
+  - mariadb-client          # For database connectivity (used by OpenStack services)
+  - chrony                  # Critical for time synchronization across all nodes
+  - bridge-utils            # For network bridge configuration (e.g., for Neutron)
 
 hosts_entries:
   - { ip: "192.168.56.10", hostname: "controller" }
