@@ -67,7 +67,7 @@ if [ "$DISTRO" = debian ]; then
         log_error "apt is locked by another process. Please wait or resolve manually."
     fi
 elif [ "$DISTRO" = rhel ]; then
-    if sudo fuser /var/run/dnf.pid >/dev/null 2>&1; then # Changed yum.pid to dnf.pid
+    if sudo fuser /var/run/dnf.pid >/dev/null 2>&1; then
         log_error "dnf is locked by another process. Please wait or resolve manually."
     fi
 fi
@@ -91,16 +91,16 @@ if [ "$DISTRO" = debian ]; then
 elif [ "$DISTRO" = rhel ]; then
     i=1
     while [ "$i" -le 3 ]; do
-        if stdbuf -oL sudo dnf install -y dnf-utils qemu-kvm libvirt virt-install bridge-utils virt-manager libguestfs-tools ruby-devel gcc libxml2-devel libxslt-devel libvirt-devel zlib-devel make python3-virtualenv python3-pip; then # Changed yum to dnf
+        if stdbuf -oL sudo dnf install -y dnf-utils qemu-kvm libvirt virt-install bridge-utils virt-manager libguestfs-tools ruby-devel gcc libxml2-devel libxslt-devel libvirt-devel zlib-devel make python3-virtualenv python3-pip; then
             break
         else
-            log_warning "Retry $i: dnf install failed. Retrying in 2 seconds..." # Changed yum to dnf
+            log_warning "Retry $i: dnf install failed. Retrying in 2 seconds..."
             sleep 2
             i=$(expr $i + 1)
         fi
     done
-    stdbuf -oL sudo dnf install -y dnf-utils qemu-kvm libvirt virt-install bridge-utils virt-manager libguestfs-tools ruby-devel gcc libxml2-devel libxslt-devel libvirt-devel zlib-devel make python3-virtualenv python3-pip || \
-        log_error "Failed to install RHEL host dependencies." # Changed yum to dnf
+    stdbuf -oL sudo dnf install -y dnf-kvm libvirt virt-install bridge-utils virt-manager libguestfs-tools ruby-devel gcc libxml2-devel libxslt-devel libvirt-devel zlib-devel make python3-virtualenv python3-pip || \
+        log_error "Failed to install RHEL host dependencies."
 fi
 log_info "Host dependencies installed."
 
@@ -111,21 +111,42 @@ if ! command -v vagrant >/dev/null 2>&1; then
     if [ "$DISTRO" = debian ]; then
         wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg || \
             log_error "Failed to download HashiCorp GPG key."
+        
+        # --- Start Codename Fix ---
         UBUNTU_CODENAME=""
+        # Try from /etc/os-release first
         if [ -f /etc/os-release ]; then
-            UBUNTU_CODENAME=$(grep UBUNTU_CODENAME /etc/os-release | cut -d= -f2)
+            TEMP_CODENAME=$(grep -E "^UBUNTU_CODENAME=" /etc/os-release | cut -d= -f2 | tr -d '\r')
+            if [ -n "$TEMP_CODENAME" ]; then
+                UBUNTU_CODENAME="$TEMP_CODENAME"
+            fi
         fi
-        [ -z "$UBUNTU_CODENAME" ] && UBUNTU_CODENAME=$(lsb_release -cs 2>/dev/null) || \
-            log_error "Failed to determine Ubuntu codename." # This should be a warning, not error, if lsb_release fails
+
+        # If still empty, try lsb_release as a fallback
+        if [ -z "$UBUNTU_CODENAME" ]; then
+            TEMP_CODENAME=$(lsb_release -cs 2>/dev/null | tr -d '\r')
+            if [ -n "$TEMP_CODENAME" ]; then
+                UBUNTU_CODENAME="$TEMP_CODENAME"
+            fi
+        fi
+
+        # Final check for codename
+        if [ -z "$UBUNTU_CODENAME" ]; then
+            log_error "Failed to determine Ubuntu codename. Both /etc/os-release and lsb_release failed to provide it."
+        else
+            log_info "Ubuntu codename determined: $UBUNTU_CODENAME."
+        fi
+        # --- End Codename Fix ---
+
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $UBUNTU_CODENAME main" | \
             sudo tee /etc/apt/sources.list.d/hashicorp.list || log_error "Failed to add HashiCorp APT repository."
         stdbuf -oL sudo apt-get update || log_error "Failed to update APT after adding HashiCorp repository."
         stdbuf -oL sudo apt-get install -y vagrant || log_error "Failed to install Vagrant on Debian/Ubuntu."
     elif [ "$DISTRO" = rhel ]; then
-        stdbuf -oL sudo dnf install -y dnf-utils || log_error "Failed to install dnf-utils." # Changed yum to dnf
+        stdbuf -oL sudo dnf install -y dnf-utils || log_error "Failed to install dnf-utils."
         stdbuf -oL sudo dnf config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo || \
-            log_error "Failed to add HashiCorp DNF repository." # Changed yum to dnf
-        stdbuf -oL sudo dnf -y install vagrant || log_error "Failed to install Vagrant on RHEL/CentOS." # Changed yum to dnf
+            log_error "Failed to add HashiCorp DNF repository."
+        stdbuf -oL sudo dnf -y install vagrant || log_error "Failed to install Vagrant on RHEL/CentOS."
     fi
     command -v vagrant >/dev/null 2>&1 || log_error "Vagrant installation failed. Please install manually from vagrantup.com."
 fi
@@ -145,7 +166,7 @@ if id -nG "$USER" | grep libvirt >/dev/null 2>&1; then
     log_info "User '$USER' is already in 'libvirt' group."
 else
     sudo usermod -aG libvirt "$USER" || log_error "Failed to add user '$USER' to 'libvirt' group."
-    log_warning "User '$USER' added to 'libvirt' group. IMPORTANT: You may need to run 'newgrp libvirt' or log out and log back in for group changes to take full effect. Re-run this script after doing so." # Changed to log_warning and removed exit 1
+    log_warning "User '$USER' added to 'libvirt' group. IMPORTANT: You may need to run 'newgrp libvirt' or log out and log back in for group changes to take full effect. Re-run this script after doing so."
 fi
 
 # Install/Update vagrant-libvirt plugin
@@ -210,7 +231,7 @@ log_info "Host virtualization checks completed."
 
 # Install Ansible in Virtual Environment
 log_section "Setting Up Ansible Environment"
-PYTHON_VENV_DIR=".venv" # Changed to relative path
+PYTHON_VENV_DIR=".venv"
 if [ ! -d "$PYTHON_VENV_DIR" ]; then
     PYTHONUNBUFFERED=1 python3 -m venv "$PYTHON_VENV_DIR" || log_error "Failed to create Python virtual environment. Ensure python3-venv is installed."
     log_info "Virtual environment created at $PYTHON_VENV_DIR."
@@ -218,7 +239,7 @@ fi
 . "$PYTHON_VENV_DIR/bin/activate" || log_error "Failed to activate virtual environment."
 log_info "Virtual environment activated."
 log_info "Installing Ansible and OpenStackSDK in virtual environment..."
-PYTHONUNBUFFERED=1 stdbuf -oL pip install --upgrade pip || log_warning "Failed to upgrade pip."
+PYTHONUNBUFFERED=1 stdbuf -oL pip install --upgrade pip || log_warning "Failed to upgrade pip."; sleep 1 # Added sleep
 PYTHONUNBUFFERED=1 stdbuf -oL pip install ansible openstacksdk || log_error "Failed to install Ansible and OpenStackSDK."
 log_info "Ansible and OpenStackSDK installed in virtual environment."
 
@@ -232,9 +253,7 @@ log_info "All essential project files found."
 
 # Install Ansible Collections
 log_section "Installing Ansible Collections"
-# Ensure the collections are installed into the project's local 'collections' directory
-# This relies on ansible.cfg having 'collections_path = ./collections'
-ANSIBLE_COLLECTIONS_PATH_ENV="$(pwd)/collections" # Set env var for this specific command if needed
+ANSIBLE_COLLECTIONS_PATH_ENV="$(pwd)/collections"
 PYTHONUNBUFFERED=1 stdbuf -oL ANSIBLE_COLLECTIONS_PATH="$ANSIBLE_COLLECTIONS_PATH_ENV" ansible-galaxy collection install -r requirements.yml || log_error "Failed to install Ansible collections."
 log_info "Ansible Collections installed."
 
