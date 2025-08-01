@@ -1,6 +1,6 @@
 #!/bin/sh
 # cleanup.sh
-# Waits for Ansible playbook (site.yml) to complete, then destroys Vagrant VMs if successful.
+# Streams Ansible playbook output and destroys Vagrant VMs if successful.
 
 set -e
 
@@ -32,12 +32,12 @@ log_error() {
 
 # Parse arguments
 FORCE=false
-TIMEOUT=1800
+TIMEOUT=3600  # Increased to 1 hour
 while [ $# -gt 0 ]; do
     case "$1" in
         --force) FORCE=true; shift ;;
         --timeout=*)
-            TIMEOUT=`echo "$1" | cut -d= -f2`
+            TIMEOUT=$(echo "$1" | cut -d= -f2)
             shift
             ;;
         *) log_error "Unknown argument: $1" ;;
@@ -66,24 +66,30 @@ fi
 if [ "$FORCE" = true ]; then
     log_info "Force mode enabled. Skipping playbook success check."
 else
-    # Wait for Ansible playbook completion
-    log_section "Waiting for Ansible Playbook Completion"
+    # Wait for Ansible playbook completion while streaming output
+    log_section "Streaming Ansible Playbook Output"
     [ -f vagrant_up.log ] || log_error "vagrant_up.log not found. Run './setup.sh' to provision VMs."
-    log_info "Waiting for Ansible playbook (site.yml) to complete (timeout: $TIMEOUT seconds)..."
+    log_info "Streaming output of Ansible playbook (site.yml) from vagrant_up.log (timeout: ${TIMEOUT} seconds)..." # Use ${TIMEOUT}
     ELAPSED=0
     SLEEP=10
+    tail -n 0 -f vagrant_up.log &
+    TAIL_PID=$!
     while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
         if grep "PLAY RECAP" vagrant_up.log >/dev/null 2>&1; then
+            kill $TAIL_PID 2>/dev/null || true
             log_info "Ansible playbook completed."
             break
         fi
         sleep "$SLEEP"
-        ELAPSED=`expr $ELAPSED + $SLEEP`
-        log_info "Waited $ELAPSED seconds..."
+        ELAPSED=$(expr $ELAPSED + $SLEEP)
     done
 
+    # Ensure tail process is terminated
+    kill $TAIL_PID 2>/dev/null || true
+    wait $TAIL_PID 2>/dev/null || true
+
     if ! grep "PLAY RECAP" vagrant_up.log >/dev/null 2>&1; then
-        log_error "Ansible playbook did not complete within $TIMEOUT seconds. Check vagrant_up.log or increase --timeout. VMs preserved."
+        log_error "Ansible playbook did not complete within ${TIMEOUT} seconds. Check vagrant_up.log or increase --timeout. VMs preserved." # Use ${TIMEOUT}
     fi
 
     # Verify failed=0 for controller and compute
