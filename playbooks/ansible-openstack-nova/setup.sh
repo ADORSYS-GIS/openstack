@@ -52,6 +52,9 @@ log_section "Starting Setup"
 # Ensure USER is set
 USER="${USER:-$(whoami)}"
 [ -z "$USER" ] && log_error "Cannot determine user."
+if [ "$USER" = "root" ]; then
+    log_warning "Running as root is not recommended. Consider using a non-root user (e.g., 'ubuntu') for better security."
+fi
 
 # Check host resources
 log_section "Checking Host Resources"
@@ -81,11 +84,11 @@ log_info "Detected OS: $DISTRO."
 # Check for package manager lock
 log_section "Checking Package Manager Lock"
 if [ "$DISTRO" = debian ]; then
-    if sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 || \
-       sudo fuser /var/lib/apt/lists/lock >/dev/null 2>&1 || \
-       sudo fuser /var/cache/apt/archives/lock >/dev/null 2>&1; then
-        log_error "apt is locked by another process. Please wait or resolve manually."
-    fi
+    for lock in /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock /var/cache/apt/archives/lock; do
+        if sudo fuser "$lock" >/dev/null 2>&1; then
+            log_error "apt lock detected at $lock. Please wait or resolve manually."
+        fi
+    done
 elif [ "$DISTRO" = rhel ]; then
     if sudo fuser /var/run/dnf.pid >/dev/null 2>&1; then
         log_error "dnf is locked by another process. Please wait or resolve manually."
@@ -130,14 +133,21 @@ VAGRANT_MIN_VERSION="2.4.1"
 if ! command -v vagrant >/dev/null 2>&1; then
     log_info "Vagrant not found. Installing Vagrant..."
     if [ "$DISTRO" = debian ]; then
-        wget -q -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg || \
-            log_error "Failed to download HashiCorp GPG key."
+        # Ensure lsb-release is installed
+        if ! command -v lsb_release >/dev/null 2>&1; then
+            log_info "Installing lsb-release..."
+            stdbuf -oL sudo apt-get install -y -q lsb-release || log_error "Failed to install lsb-release."
+        fi
+        # Get codename from /etc/os-release or lsb_release
         UBUNTU_CODENAME=""
         if [ -f /etc/os-release ]; then
-            UBUNTU_CODENAME=$(grep -E "^UBUNTU_CODENAME=" /etc/os-release | cut -d= -f2 | tr -d '\r')
+            UBUNTU_CODENAME=$(grep -E "^(UBUNTU_CODENAME|VERSION_CODENAME)=" /etc/os-release | cut -d= -f2 | tr -d '\r' | head -n1)
         fi
-        [ -z "$UBUNTU_CODENAME" ] && UBUNTU_CODENAME=$(lsb_release -cs 2>/dev/null | tr -d '\r') || \
-            log_error "Failed to determine Ubuntu codename."
+        [ -z "$UBUNTU_CODENAME" ] && UBUNTU_CODENAME=$(lsb_release -cs 2>/dev/null | tr -d '\r')
+        [ -z "$UBUNTU_CODENAME" ] && UBUNTU_CODENAME="noble"  # Fallback for minimal images (e.g., Ubuntu 24.04)
+        log_info "Using Ubuntu codename: $UBUNTU_CODENAME"
+        wget -q -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg || \
+            log_error "Failed to download HashiCorp GPG key."
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $UBUNTU_CODENAME main" | \
             sudo tee /etc/apt/sources.list.d/hashicorp.list || log_error "Failed to add HashiCorp APT repository."
         stdbuf -oL sudo apt-get update -q || log_error "Failed to update APT after adding HashiCorp repository."
@@ -175,12 +185,21 @@ log_info "libvirt default network is active."
 # Add user to libvirt group
 log_section "Configuring User Permissions"
 getent group libvirt >/dev/null || log_error "'libvirt' group does not exist."
-if id -nG "$USER" | grep -q libvirt; then
+if [ "$USER" = "root" ]; then
+    log_info "Running as root; skipping libvirt group check, as root has full access."
+elif id -nG "$USER" | grep -q libvirt; then
     log_info "User '$USER' is already in 'libvirt' group."
 else
+    log_info "Adding user '$USER' to 'libvirt' group..."
     sudo usermod -aG libvirt "$USER" || log_error "Failed to add user '$USER' to 'libvirt' group."
-    log_warning "User '$USER' added to 'libvirt' group. Run 'newgrp libvirt' or log out and back in, then re-run this script."
-    exit 1
+    log_info "User '$USER' added to 'libvirt' group. Applying group change in current session."
+    # Re-execute script with libvirt group using sg
+    if command -v sg >/dev/null 2>&1; then
+        exec sg libvirt -c "$0 $*"
+    else
+        log_warning "sg command not found. Run 'newgrp libvirt' or log out and back in, then re-run this script."
+        exit 0  # Non-critical exit
+    fi
 fi
 
 # Install/Update vagrant-libvirt plugin
@@ -267,10 +286,9 @@ log_info "Ansible and OpenStackSDK installed (Ansible: $(ansible --version | hea
 
 # Verify project files
 log_section "Verifying Project Files"
-[ -f Vagrantfile ] || log_error "Vagrantfile not found."
-[ -f playbooks/site.yml ] || log_error "Ansible main playbook (playbooks/site.yml) not found."
-[ -f inventory/hosts.ini ] || log_error "Ansible inventory (inventory/hosts.ini) not found."
-[ -f requirements.yml ] || log_error "Ansible collections requirements file (requirements.yml) not found."
+for file in Vagrantfile playbooks/site.yml inventory/hosts.ini requirements.yml; do
+    [ -f "$file" ] || log_error "Required file $file not found."
+done
 log_info "All essential project files found."
 
 # Validate requirements.yml

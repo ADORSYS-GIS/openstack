@@ -7,6 +7,7 @@ ansible_become: yes
 ansible_python_interpreter: /usr/bin/python3
 
 # OpenStack general variables
+openstack_db_name: openstack
 openstack_db_user: openstack_admin
 openstack_db_password: "SUPER_SECURE_DB_PASSWORD"
 openstack_admin_password: "ADMIN_PASSWORD_FOR_KEYSTONE"

@@ -1,22 +1,14 @@
-# Minimal Keystone configuration for OpenStack
-
 [DEFAULT]
-# The verbose option will make the log output more verbose.
-# verbose = true
+log_dir = /var/log/keystone
+debug = False
 
-# The debug option will make the log output really verbose.
-# debug = true
+[database]
+connection = mysql+pymysql://{{ openstack_db_user }}:{{ openstack_db_password }}@localhost/{{ keystone_db_name }}
 
-# Connection string for the database.
-connection = {{ database_connection_base }}/{{ keystone_db_name }}
-
-# Token provider for the `UUID` token format.
 [token]
 provider = fernet
 
-# Configure the `[cache]` section for memcached.
 [cache]
-# memcache_servers = localhost:11211 # Not strictly needed for minimal, but good for future
 backend = dogpile.cache.memcache
 enabled = true
 
@@ -24,25 +16,15 @@ enabled = true
 # memcache_servers = localhost:11211
 
 [assignment]
-# Driver to use for assignment backend.
 driver = sql
 
 [auth]
-# Driver to use for authentication backend.
 methods = external,password,token,oauth1
 password = keystone.auth.backends.sql.Password
 token = keystone.auth.backends.sql.Token
 
 [federation]
-# Driver to use for federation backend.
 driver = sql
 
 [oslo_middleware]
-# The base URL for the Keystone API.
-# This should be the public endpoint.
-# url_from_host = true # This is usually good, but we'll hardcode for simplicity
 enable_proxy_headers_parsing = true
-
-[wsgi]
-# Number of processes to spawn for the WSGI server.
-# workers = 2 # Default is usually fine for minimal setup
