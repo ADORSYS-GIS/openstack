@@ -1,35 +1,18 @@
-# OpenStack Nova Deployment with Ansible
+# OpenStack Nova Setup with Vagrant and Ansible
 
-This project automates the complete and robust deployment of OpenStack Nova (Compute Service) along with its minimal dependencies for testing and validation. It uses Vagrant with libvirt to create virtual machines for a controller and compute node, then provisions them with Ansible playbooks to create a fully functional OpenStack environment.
+This project provides an automated setup for a minimal OpenStack Nova environment using Vagrant and Ansible. It creates two virtual machines (controller and compute) and deploys a basic OpenStack Nova setup with all necessary services.
 
-## Table of Contents
+## Project Overview
 
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Prerequisites](#prerequisites)
-- [Project Structure](#project-structure)
-- [Configuration](#configuration)
-- [Deployment](#deployment)
-- [Validation](#validation)
-- [Cleanup](#cleanup)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
-
-## Overview
-
-This project automates the deployment of a minimal OpenStack environment with Nova compute service. It includes:
-
-- Controller node running:
-  - MariaDB (database)
-  - RabbitMQ (message queue)
-  - Keystone (identity service)
-  - Glance (image service)
-  - Placement (placement service)
-  - Nova API, Scheduler, and Conductor services
-- Compute node running:
-  - Nova Compute service
-  - Libvirt for VM management
+The setup includes:
+- **Controller VM**: Runs OpenStack control plane services
+  - Keystone (Identity)
+  - Glance (Image)
+  - Placement (Resource tracking)
+  - Nova Controller
+- **Compute VM**: Runs Nova compute service
+- **Libvirt/KVM**: Used as the hypervisor
+- **Ansible**: Used for provisioning and configuration management
 
 ## Architecture
 
@@ -37,228 +20,173 @@ This project automates the deployment of a minimal OpenStack environment with No
 +------------------+     +------------------+
 |   Controller     |     |    Compute       |
 |                  |     |                  |
-|  MariaDB         |     |  Nova Compute    |
-|  RabbitMQ        |     |  Libvirt         |
-|  Keystone        |     |                  |
-|  Glance          |     |                  |
-|  Placement       |     |                  |
-|  Nova API        |     |                  |
-|  Nova Scheduler  |     |                  |
-|  Nova Conductor  |     |                  |
+| Keystone         |     | Nova Compute     |
+| Glance           |     | Libvirt/KVM      |
+| Placement        |     |                  |
+| Nova Controller  |     |                  |
 +------------------+     +------------------+
          |                        |
-         +----------+-------------+
-                    |
-              +-----+-----+
-              |  Network  |
-              +-----------+
+         +------------------------+
+                  |
+            Management Network
+                  |
+            (192.168.56.0/24)
 ```
-
-For detailed information about the architecture and service interactions, see:
-- [Architecture Documentation](docs/architecture.md)
-- [Security Implementation](docs/security.md)
 
 ## Prerequisites
 
-- Linux host system (Debian/Ubuntu or RHEL/CentOS)
+- Linux system with KVM support
 - Minimum 8GB RAM and 2 CPU cores
-- Nested virtualization enabled in BIOS/UEFI
-- Internet connectivity for package downloads
+- Internet connectivity (for initial setup)
 
-## Project Structure
+## Quick Start
 
-```
-.
-├── ansible.cfg                 # Ansible configuration
-├── cleanup.sh                  # Cleanup script to destroy VMs
-├── inventory/                  # Ansible inventory files
-│   ├── hosts.ini               # Host definitions
-│   └── group_vars/             # Group-specific variables
-├── playbooks/                  # Ansible playbooks
-│   ├── site.yml                # Main playbook orchestrating deployment
-│   ├── install_nova.yml        # Nova-only installation
-│   ├── check_dependencies.yml  # Dependency installation
-│   └── validate_nova.yml       # Nova validation
-├── requirements.yml            # Required Ansible collections
-├── roles/                      # Ansible roles for each service
-│   ├── common/                 # Common setup tasks
-│   ├── mariadb/                # Database setup
-│   ├── rabbitmq/               # Message queue setup
-│   ├── keystone_minimal/       # Identity service setup
-│   ├── glance_minimal/         # Image service setup
-│   ├── placement_minimal/      # Placement service setup
-│   ├── nova/                   # Compute service setup
-│   └── nova_validation/        # Nova validation tasks
-├── setup.sh                    # Main setup script
-└── Vagrantfile                 # Vagrant configuration
-```
-
-## Configuration
-
-### Inventory
-
-The inventory is defined in `inventory/hosts.ini` and group variables in `inventory/group_vars/`.
-
-Key variables to configure:
-
-- `openstack_db_password` - Database password
-- `openstack_admin_password` - Admin user password
-- `rabbitmq_password` - RabbitMQ password
-- Network settings in `hosts_entries`
-
-### Network Configuration
-
-By default, the setup uses:
-- Controller IP: 192.168.56.10
-- Compute IP: 192.168.56.11
-- Private network: 192.168.56.0/24
-
-These can be modified by setting environment variables:
-- `CONTROLLER_IP` - Controller node IP address (default: 192.168.56.10)
-- `COMPUTE_IP` - Compute node IP address (default: 192.168.56.11)
-
-Example:
-```bash
-CONTROLLER_IP=192.168.57.10 COMPUTE_IP=192.168.57.11 ./setup.sh
-```
-
-The IP addresses can also be modified in:
-- `inventory/group_vars/all.yml` - `controller_ip_address` and `compute_ip_address` variables
-- `inventory/group_vars/controllers.yml` - `controller_ip` variable
-- `inventory/group_vars/computes.yml` - `compute_ip` variable
-
-## Deployment
-
-1. Clone this repository:
-   ```bash
-   git clone <repository-url>
-   cd ansible-openstack-nova
-   ```
-
-2. Run the setup script:
+1. **Basic Setup**:
    ```bash
    ./setup.sh
    ```
 
-The setup script will:
-- Install Vagrant and required dependencies
-- Set up libvirt and networking
-- Create Python virtual environment with Ansible
-- Install required Ansible collections
-- Start and provision Vagrant VMs
+2. **Access the VMs**:
+   ```bash
+   # SSH into controller
+   vagrant ssh controller
+   
+   # SSH into compute node
+   vagrant ssh compute
+   ```
 
-### Setup Script Options
+3. **Test the Setup**:
+   ```bash
+   ./test-setup.sh
+   ```
 
-- `--cleanup`: Automatically run cleanup after deployment
-- `--force-provision`: Force re-provisioning of existing VMs
-- `--timeout=<seconds>`: Set timeout for operations (default: 3600)
+4. **Cleanup**:
+   ```bash
+   ./cleanup.sh
+   ```
 
-Example:
+## Advanced Usage
+
+### Handling Network Issues
+
+If you encounter network connectivity issues with the default box:
+
+1. **Automatic local box creation**:
+   ```bash
+   # The setup script will automatically try to create a local box
+   ./setup.sh
+   ```
+
+2. **Manual local box creation**:
+   ```bash
+   # Create and add a local box manually
+   ./add-local-box.sh
+   
+   # Use the local box
+   VAGRANT_BOX=ubuntu2004 ./setup.sh
+   ```
+
+3. **Offline mode** (requires pre-installed boxes):
+   ```bash
+   ./setup.sh --offline
+   ```
+
+### Environment Variables
+
+- `VAGRANT_BOX`: Specify a different Vagrant box (default: generic/ubuntu2004)
+- `CONTROLLER_IP`: Controller VM IP address (default: 192.168.56.10)
+- `COMPUTE_IP`: Compute VM IP address (default: 192.168.56.11)
+
+### Script Options
+
+**setup.sh**:
 ```bash
-./setup.sh --cleanup --timeout=7200
+./setup.sh                    # Basic setup
+./setup.sh --force-provision  # Force Ansible provisioning
+./setup.sh --offline          # Offline mode (requires pre-installed boxes)
+./setup.sh --cleanup          # Cleanup after setup
+VAGRANT_BOX=ubuntu2004 ./setup.sh  # Use a specific box
 ```
 
-## Validation
-
-The deployment includes an automated validation process that:
-1. Verifies all services are running
-2. Uploads a CirrOS test image
-3. Creates a test network and security group
-4. Launches a test instance
-5. Verifies network connectivity to the instance
-6. Cleans up all test resources
-
-You can manually run validation with:
+**cleanup.sh**:
 ```bash
-vagrant ssh controller -c "sudo ansible-playbook /home/ubuntu/openstack/playbooks/ansible-openstack-nova/playbooks/validate_nova.yml"
+./cleanup.sh        # Basic cleanup
+./cleanup.sh --force # Force cleanup without playbook success check
 ```
 
-## Cleanup
-
-To destroy the VMs and clean up resources:
-
+**add-local-box.sh**:
 ```bash
-./cleanup.sh
+./add-local-box.sh                    # Create and add default local box
+./add-local-box.sh --box-name=mybox   # Use custom box name
+./add-local-box.sh --box-file=/path/to/box  # Add existing box file
 ```
 
-### Cleanup Script Options
+## Testing the Setup
 
-- `--force`: Skip playbook success verification
-- `--timeout=<seconds>`: Set timeout for operations (default: 3600)
+After successful setup:
+1. SSH into the controller VM: `vagrant ssh controller`
+2. Source the OpenStack admin credentials: `source ~/admin-openrc.sh`
+3. Run OpenStack commands:
+   ```bash
+   openstack server list
+   openstack image list
+   openstack network list
+   ```
+
+## Project Structure
+
+```
+├── setup.sh              # Main setup script
+├── cleanup.sh            # Cleanup script
+├── add-local-box.sh      # Local box creation helper
+├── test-setup.sh         # Setup verification script
+├── Vagrantfile           # Vagrant configuration
+├── ansible.cfg           # Ansible configuration
+├── requirements.yml      # Ansible collections requirements
+├── inventory/            # Ansible inventory files
+├── playbooks/            # Ansible playbooks
+└── roles/                # Ansible roles for each service
+```
+
+## Services Deployed
+
+- **Keystone**: Identity service with default admin user
+- **Glance**: Image service with CirrOS test image
+- **Placement**: Resource tracking for Nova
+- **Nova**: Compute service with controller and compute components
+- **MariaDB**: Database backend for all services
+- **RabbitMQ**: Message queue for inter-service communication
 
 ## Troubleshooting
 
-### Common Issues
+### Box Download Issues
+If the setup fails due to box download issues:
+1. Try running `./add-local-box.sh` to create a local box
+2. Use `VAGRANT_BOX=ubuntu2004 ./setup.sh` to use the local box
+3. Check network connectivity and firewall settings
 
-1. **Vagrant fails to start VMs**:
-   - Ensure nested virtualization is enabled
-   - Check available system resources
-   - Verify libvirt is running: `systemctl status libvirtd`
+### VM Provisioning Failures
+If VM provisioning fails:
+1. Check `vagrant_up.log` for detailed error messages
+2. Try `./setup.sh --force-provision` to re-run Ansible
+3. Verify system resources (RAM, CPU, disk space)
 
-2. **Ansible provisioning fails**:
-   - Check `vagrant_up.log` for detailed error messages
-   - Verify network connectivity between VMs
-   - Ensure all passwords are properly set in inventory
+### Service Access Issues
+If you cannot access OpenStack services:
+1. Verify VMs are running: `vagrant status`
+2. Check service status inside controller VM
+3. Verify network connectivity between VMs
 
-3. **Services not starting**:
-   - Check service logs on VMs: `journalctl -u <service-name>`
-   - Verify database connectivity
-   - Check configuration files in `/etc/<service>/`
+## Security Notes
 
-### Accessing VMs
+- Default passwords are used for demonstration purposes only
+- Host key checking is disabled for development convenience
+- Not suitable for production use without security hardening
 
-After deployment, you can access the VMs with:
-```bash
-vagrant ssh controller
-vagrant ssh compute
-```
+## Requirements
 
-### Checking Service Status
-
-On the controller node:
-```bash
-sudo systemctl status mariadb
-sudo systemctl status rabbitmq-server
-sudo systemctl status apache2  # Keystone, Glance, Placement
-sudo systemctl status nova-api nova-scheduler nova-conductor nova-novncproxy
-```
-
-On the compute node:
-```bash
-sudo systemctl status nova-compute
-sudo systemctl status libvirtd
-```
-
-## Security Considerations
-
-This deployment implements several security best practices:
-
-- Services run under dedicated system users for isolation
-- File permissions are properly set for configuration files
-- Database connections use secure authentication
-- Passwords are parameterized and should be changed for production use
-- Communication between services is secured where possible
-- Fernet tokens are used for Keystone authentication
-
-For detailed information about security implementation, see [Security Documentation](docs/security.md).
-
-For production deployments, additional security measures should be implemented:
-- Use HTTPS for all API endpoints
-- Implement proper certificate management
-- Enable firewall rules to restrict access
-- Regularly update and patch all components
-- Implement monitoring and logging solutions
-
-## Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add or update documentation as needed
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
+- Vagrant >= 2.4.1
+- vagrant-libvirt plugin >= 0.12.2
+- libvirt/KVM
+- Ansible >= 8.7.0
+- Minimum 8GB RAM and 2 CPU cores

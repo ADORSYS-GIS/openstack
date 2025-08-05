@@ -3,6 +3,14 @@
 # Installs Vagrant, libvirt, vagrant-libvirt, performs host checks, provisions Vagrant VMs with Ansible, and optionally triggers cleanup.
 # Production-ready with robust error handling, retries, and resource validation.
 
+# Usage:
+#   ./setup.sh                    # Basic setup
+#   ./setup.sh --force-provision  # Force Ansible provisioning
+#   ./setup.sh --offline          # Offline mode (requires pre-installed boxes)
+#   VAGRANT_BOX=ubuntu2004 ./setup.sh  # Use a specific box
+#
+# For cleanup: ./cleanup.sh
+
 # Network configuration - can be overridden with environment variables
 CONTROLLER_IP="${CONTROLLER_IP:-192.168.56.10}"
 COMPUTE_IP="${COMPUTE_IP:-192.168.56.11}"
@@ -38,11 +46,13 @@ log_error() {
 # Parse arguments
 CLEANUP=false
 FORCE_PROVISION=false
+OFFLINE_MODE=false
 TIMEOUT=3600  # 1 hour default timeout
 while [ $# -gt 0 ]; do
     case "$1" in
         --cleanup) CLEANUP=true; shift ;;
         --force-provision) FORCE_PROVISION=true; shift ;;
+        --offline) OFFLINE_MODE=true; shift ;;
         --timeout=*)
             TIMEOUT=$(echo "$1" | cut -d= -f2)
             shift
@@ -100,6 +110,25 @@ elif [ "$DISTRO" = rhel ]; then
 fi
 log_info "No package manager lock detected."
 
+# Network diagnostics
+log_section "Network Diagnostics"
+if [ "$OFFLINE_MODE" = false ]; then
+    log_info "Checking network connectivity..."
+    if ! ping -c 1 8.8.8.8 >/dev/null 2>&1; then
+        log_warning "Cannot ping 8.8.8.8. Network connectivity may be limited."
+    else
+        log_info "Basic network connectivity is working."
+    fi
+    
+    if ! nslookup google.com >/dev/null 2>&1; then
+        log_warning "DNS resolution failed. This may cause issues with downloading resources."
+    else
+        log_info "DNS resolution is working."
+    fi
+else
+    log_info "Offline mode enabled. Skipping network checks."
+fi
+
 # Install host system dependencies
 log_section "Installing Host System Dependencies"
 if [ "$DISTRO" = debian ]; then
@@ -154,28 +183,7 @@ if ! command -v vagrant >/dev/null 2>&1; then
             log_error "Failed to download HashiCorp GPG key."
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $UBUNTU_CODENAME main" | \
             sudo tee /etc/apt/sources.list.d/hashicorp.list || log_error "Failed to add HashiCorp APT repository."
-        stdbuf -oL sudo apt-get update -q || log_error "Failed to update APT after adding HashiCorp repository."
-        stdbuf -oL sudo apt-get install -y -q vagrant || log_error "Failed to install Vagrant on Debian/Ubuntu."
-    elif [ "$DISTRO" = rhel ]; then
-        stdbuf -oL sudo dnf install -y -q dnf-utils || log_error "Failed to install dnf-utils."
-        stdbuf -oL sudo dnf config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo || \
-            log_error "Failed to add HashiCorp DNF repository."
-        stdbuf -oL sudo dnf -y -q install vagrant || log_error "Failed to install Vagrant on RHEL/CentOS."
-    fi
-else
-    VAGRANT_VERSION=$(vagrant --version | awk '{print $2}')
-    if [ "$(printf '%s\n%s' "$VAGRANT_VERSION" "$VAGRANT_MIN_VERSION" | sort -V | head -n1)" != "$VAGRANT_MIN_VERSION" ]; then
-        log_warning "Vagrant version $VAGRANT_VERSION is older than recommended $VAGRANT_MIN_VERSION. Consider upgrading."
-    fi
-fi
-command -v vagrant >/dev/null 2>&1 || log_error "Vagrant installation failed. Please install manually from https://www.vagrantup.com."
-log_info "Vagrant is installed (version: $(vagrant --version))."
-
-# Start and enable libvirtd
-log_section "Configuring libvirtd Service"
-sudo systemctl enable --now libvirtd || log_error "Failed to enable or start libvirtd. Check logs with 'journalctl -u libvirtd -n 50'."
-systemctl is-active libvirtd >/dev/null 2>&1 || log_error "libvirtd is not running after start attempt."
-log_info "libvirtd is running."
+        stdbuf -oL sudo apt-get update -q || log_error "Failed to update A
 
 # Ensure libvirt default network is active
 log_section "Configuring libvirt Default Network"
@@ -338,8 +346,36 @@ if stdbuf -oL vagrant status | grep -E "controller.*running|compute.*running" | 
     fi
 else
     log_info "Starting and provisioning Vagrant VMs..."
+    # Check if the box is available locally before trying to download
+    BOX_NAME="${VAGRANT_BOX:-generic/ubuntu2004}"
+    if ! vagrant box list | grep -q "$BOX_NAME"; then
+        log_warning "Box '$BOX_NAME' not found locally. Attempting to download..."
+        if [ "$OFFLINE_MODE" = true ]; then
+            log_error "Offline mode enabled but box '$BOX_NAME' not found locally. Please add the box manually or disable offline mode."
+        fi
+    fi
+    
     CONTROLLER_IP="$CONTROLLER_IP" COMPUTE_IP="$COMPUTE_IP" stdbuf -oL vagrant up --provider=libvirt --no-tty >vagrant_up.log 2>&1 || {
-        log_error "Vagrant up failed. Check vagrant_up.log for details:\n$(cat vagrant_up.log)"
+        # Check if the error is related to box download
+        if grep -q "Could not resolve host\|Failed to download\|not found or could not be accessed" vagrant_up.log; then
+            log_warning "Vagrant up failed due to box download issues."
+            # Check if add-local-box.sh exists and is executable
+            if [ -f add-local-box.sh ] && [ -x add-local-box.sh ]; then
+                log_info "Attempting to add local box with add-local-box.sh..."
+                if ./add-local-box.sh --box-name="$BOX_NAME"; then
+                    log_info "Local box added successfully. Retrying vagrant up..."
+                    CONTROLLER_IP="$CONTROLLER_IP" COMPUTE_IP="$COMPUTE_IP" stdbuf -oL vagrant up --provider=libvirt --no-tty >vagrant_up.log 2>&1 || {
+                        log_error "Vagrant up still failed after adding local box. Check vagrant_up.log for details:\n$(cat vagrant_up.log)"
+                    }
+                else
+                    log_error "Failed to add local box. Try:\n1. Check network connectivity\n2. Manually add a local box with: vagrant box add $BOX_NAME /path/to/box/file\n3. Use a different box by setting VAGRANT_BOX environment variable\n\nCheck vagrant_up.log for details:\n$(cat vagrant_up.log)"
+                fi
+            else
+                log_error "Vagrant up failed due to box download issues. Try:\n1. Check network connectivity\n2. Manually add a local box with: vagrant box add $BOX_NAME /path/to/box/file\n3. Use a different box by setting VAGRANT_BOX environment variable\n\nCheck vagrant_up.log for details:\n$(cat vagrant_up.log)"
+            fi
+        else
+            log_error "Vagrant up failed. Check vagrant_up.log for details:\n$(cat vagrant_up.log)"
+        fi
     }
 fi
 
@@ -400,6 +436,16 @@ if [ "$CLEANUP" = true ]; then
         log_info "Cleanup completed."
     else
         log_warning "cleanup.sh not found or not executable. Skipping cleanup."
+    fi
+fi
+
+# Run test script if available
+if [ -f test-setup.sh ] && [ -x test-setup.sh ]; then
+    log_info "Running setup verification tests..."
+    if ./test-setup.sh; then
+        log_info "Setup verification tests passed."
+    else
+        log_warning "Setup verification tests failed. Check the output above for details."
     fi
 fi
 

@@ -2,6 +2,10 @@
 # cleanup.sh
 # Streams Ansible playbook output and destroys Vagrant VMs if successful.
 
+# Usage:
+#   ./cleanup.sh        # Basic cleanup
+#   ./cleanup.sh --force # Force cleanup without playbook success check
+
 set -e
 
 # ANSI color codes
