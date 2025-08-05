@@ -351,7 +351,7 @@ fi
 log_info "Virtual environment activated."
 log_info "Installing Ansible and OpenStackSDK in virtual environment..."
 PYTHONUNBUFFERED=1 stdbuf -oL pip install --upgrade pip setuptools wheel || log_warning "Failed to upgrade pip/setuptools/wheel. Continuing..."
-PYTHONUNBUFFERED=1 stdbuf -oL pip install ansible==8.7.0 openstacksdk==4.6.0 || log_error "Failed to install Ansible and OpenStackSDK."
+PYTHONUNBUFFERED=1 stdbuf -oL pip install ansible==9.1.0 openstacksdk==4.6.0 || log_error "Failed to install Ansible and OpenStackSDK."
 log_info "Ansible and OpenStackSDK installed (Ansible: $(ansible --version | head -n1), OpenStackSDK: $(pip show openstacksdk | grep Version))."
 
 # Verify project files
@@ -372,7 +372,8 @@ fi
 # Install Ansible Collections
 log_section "Installing Ansible Collections"
 ANSIBLE_COLLECTIONS_PATH_ENV="$(pwd)/collections"
-mkdir -p "$ANSIBLE_COLLECTIONS_PATH_ENV" || log_error "Failed to create collections directory at $ANSIBLE_COLLECTIONS_PATH_ENV."
+log_info "Creating collections directory structure at $ANSIBLE_COLLECTIONS_PATH_ENV..."
+mkdir -p "$ANSIBLE_COLLECTIONS_PATH_ENV/ansible_collections" || log_error "Failed to create collections directory at $ANSIBLE_COLLECTIONS_PATH_ENV."
 if [ ! -d "$ANSIBLE_COLLECTIONS_PATH_ENV" ]; then
     log_error "Collections directory $ANSIBLE_COLLECTIONS_PATH_ENV does not exist after creation attempt."
 fi
