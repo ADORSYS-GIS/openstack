@@ -373,11 +373,17 @@ fi
 log_section "Installing Ansible Collections"
 ANSIBLE_COLLECTIONS_PATH_ENV="$(pwd)/collections"
 log_info "Creating collections directory structure at $ANSIBLE_COLLECTIONS_PATH_ENV..."
-mkdir -p "$ANSIBLE_COLLECTIONS_PATH_ENV/ansible_collections" || log_error "Failed to create collections directory at $ANSIBLE_COLLECTIONS_PATH_ENV."
-if [ ! -d "$ANSIBLE_COLLECTIONS_PATH_ENV" ]; then
-    log_error "Collections directory $ANSIBLE_COLLECTIONS_PATH_ENV does not exist after creation attempt."
+mkdir -p "$ANSIBLE_COLLECTIONS_PATH_ENV/ansible_collections/community" || log_error "Failed to create collections directory structure."
+mkdir -p "$ANSIBLE_COLLECTIONS_PATH_ENV/ansible_collections/ansible" || log_error "Failed to create ansible collections directory."
+if [ ! -d "$ANSIBLE_COLLECTIONS_PATH_ENV/ansible_collections" ]; then
+    log_error "Collections directory structure $ANSIBLE_COLLECTIONS_PATH_ENV/ansible_collections does not exist after creation attempt."
 fi
-log_info "Collections directory created at $ANSIBLE_COLLECTIONS_PATH_ENV."
+log_info "Collections directory structure created at $ANSIBLE_COLLECTIONS_PATH_ENV."
+
+# Ensure we're using the virtual environment ansible-galaxy
+log_info "Using virtual environment ansible-galaxy: $(which ansible-galaxy)"
+log_info "Ansible version in virtual environment: $(ansible --version | head -n1)"
+
 i=1
 while [ "$i" -le 3 ]; do
     if PYTHONUNBUFFERED=1 stdbuf -oL ansible-galaxy collection install -r requirements.yml -p "$ANSIBLE_COLLECTIONS_PATH_ENV" --force; then
@@ -467,6 +473,7 @@ fi
 log_section "Verifying Ansible Playbook Completion"
 i=1
 while [ "$i" -le 3 ]; do
+    if PYTHONUNBUFFERED=1 stdbuf -oL ansible-galaxy collection install -r requirements.yml -p "$ANSIBLE_COLLECTIONS_PATH_ENV" --force; then ]; do
     if grep -q "PLAY RECAP" vagrant_up.log; then
         log_info "Ansible playbook completed. Checking for failures..."
         for host in controller compute; do
