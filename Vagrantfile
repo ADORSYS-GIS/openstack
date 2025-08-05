@@ -25,7 +25,7 @@ Vagrant.configure("2") do |config|
 
   # Provision with Ansible (local)
   config.vm.provision "ansible_local" do |ansible|
-    ansible.playbook = "/vagrant/playbooks/keystone_manual/keystone-ansible-role/playbook.yml"
+    ansible.playbook = "/vagrant/playbooks/keystone_manual/playbook.yml"
     ansible.become = true
     ansible.extra_vars = {
       ansible_python_interpreter: "/usr/bin/python3"
