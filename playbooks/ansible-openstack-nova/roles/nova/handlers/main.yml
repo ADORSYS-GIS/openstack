@@ -46,3 +46,9 @@
     name: networking
     state: restarted
   listen: "Restart networking"
+
+- name: Restart apache2
+  ansible.builtin.service:
+    name: apache2
+    state: restarted
+  listen: "Restart apache2"

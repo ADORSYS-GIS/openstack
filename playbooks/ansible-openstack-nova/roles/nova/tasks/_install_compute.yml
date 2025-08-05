@@ -60,21 +60,33 @@
     name: kvm
     state: present
 
+- name: Check CPU virtualization support
+  ansible.builtin.shell: |
+    if grep -q vmx /proc/cpuinfo; then
+      echo "intel"
+    elif grep -q svm /proc/cpuinfo; then
+      echo "amd"
+    else
+      echo "none"
+    fi
+  register: cpu_virt_support
+  changed_when: false
+
 - name: Ensure KVM_intel module is loaded with nested virtualization (if Intel CPU)
   ansible.builtin.modprobe:
     name: kvm_intel
     state: present
     params: nested=1
-  when: ansible_facts['processor_vulnerabilities']['l1tf']['cpu_flags'] is defined and 'vmx' in ansible_facts['processor_vulnerabilities']['l1tf']['cpu_flags']
-  ignore_errors: yes # May not be Intel, or nested already enabled
+  when: cpu_virt_support.stdout == "intel"
+  ignore_errors: true # May not be Intel, or nested already enabled
 
 - name: Ensure KVM_amd module is loaded with nested virtualization (if AMD CPU)
   ansible.builtin.modprobe:
     name: kvm_amd
     state: present
     params: nested=1
-  when: ansible_facts['processor_vulnerabilities']['l1tf']['cpu_flags'] is defined and 'svm' in ansible_facts['processor_vulnerabilities']['l1tf']['cpu_flags']
-  ignore_errors: yes # May not be AMD, or nested already enabled
+  when: cpu_virt_support.stdout == "amd"
+  ignore_errors: true # May not be AMD, or nested already enabled
 
 - name: Create a bridge for instances (br-ex)
   ansible.builtin.template:

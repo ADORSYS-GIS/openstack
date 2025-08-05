@@ -5,6 +5,16 @@
   community.mysql.mysql_db:
     name: "{{ nova_db_name }}"
     state: present
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: Create Nova API database
+  community.mysql.mysql_db:
+    name: "{{ nova_api_db_name }}"
+    state: present
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock
   delegate_to: "{{ inventory_hostname }}"
 
 - name: Grant privileges to Nova database user
@@ -14,4 +24,17 @@
     host: "%"
     priv: "{{ nova_db_name }}.*:ALL"
     state: present
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: Grant privileges to Nova API database user
+  community.mysql.mysql_user:
+    name: "{{ openstack_db_user }}"
+    password: "{{ openstack_db_password }}"
+    host: "%"
+    priv: "{{ nova_api_db_name }}.*:ALL"
+    state: present
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock
   delegate_to: "{{ inventory_hostname }}"

@@ -64,6 +64,44 @@
   environment:
     OS_CLOUD: ""
 
+- name: Check if Placement user has admin role in service project
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack role assignment list \
+      --user placement \
+      --project service \
+      --role admin \
+      --user-domain Default \
+      --project-domain Default --format value
+  args:
+    executable: /bin/bash
+  register: placement_role_assignment_check
+  failed_when: placement_role_assignment_check.rc != 0
+  changed_when: false
+  environment:
+    OS_CLOUD: ""
+
+- name: Add admin role to Placement user in service project
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack role add \
+      --user placement \
+      --project service \
+      admin \
+      --user-domain Default \
+      --project-domain Default 2>&1 | tee /var/log/ansible-placement-role.log
+  args:
+    executable: /bin/bash
+  when: placement_role_assignment_check.stdout == "" # Only add if assignment not found
+  register: placement_role_add
+  retries: 3
+  delay: 5
+  until: placement_role_add.rc == 0 or 'already has role' in placement_role_add.stderr
+  changed_when: placement_role_add.rc == 0
+  failed_when: placement_role_add.rc != 0 and 'already has role' not in placement_role_add.stderr
+  environment:
+    OS_CLOUD: ""
+
 - name: Check if Placement service exists
   ansible.builtin.shell: |
     source {{ keystone_rc_file }}

@@ -183,7 +183,22 @@ if ! command -v vagrant >/dev/null 2>&1; then
             log_error "Failed to download HashiCorp GPG key."
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $UBUNTU_CODENAME main" | \
             sudo tee /etc/apt/sources.list.d/hashicorp.list || log_error "Failed to add HashiCorp APT repository."
-        stdbuf -oL sudo apt-get update -q || log_error "Failed to update A
+        stdbuf -oL sudo apt-get update -q || log_error "Failed to update APT after adding HashiCorp repository."
+        stdbuf -oL sudo apt-get install -y -q vagrant || log_error "Failed to install Vagrant."
+    elif [ "$DISTRO" = rhel ]; then
+        sudo dnf config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo || log_error "Failed to add HashiCorp DNF repository."
+        stdbuf -oL sudo dnf install -y -q vagrant || log_error "Failed to install Vagrant."
+    fi
+else
+    log_info "Vagrant found. Checking version..."
+    VAGRANT_VERSION=$(vagrant --version | awk '{print $2}')
+    if [ "$(printf '%s\n%s' "$VAGRANT_VERSION" "$VAGRANT_MIN_VERSION" | sort -V | head -n1)" != "$VAGRANT_MIN_VERSION" ]; then
+        log_warning "Vagrant version $VAGRANT_VERSION is older than recommended $VAGRANT_MIN_VERSION. Consider upgrading."
+    else
+        log_info "Vagrant version $VAGRANT_VERSION meets minimum requirements."
+    fi
+fi
+log_info "Vagrant installed/verified (version: $(vagrant --version | awk '{print $2}'))."
 
 # Ensure libvirt default network is active
 log_section "Configuring libvirt Default Network"
@@ -284,7 +299,7 @@ log_info "Nested virtualization enabled."
 
 # Install Ansible in Virtual Environment
 log_section "Setting Up Ansible Environment"
-PYTHON_VENV_DIR="/opt/dev/venv"
+PYTHON_VENV_DIR="$HOME/venv"
 if [ ! -d "$PYTHON_VENV_DIR" ]; then
     PYTHONUNBUFFERED=1 python3 -m venv "$PYTHON_VENV_DIR" || log_error "Failed to create Python virtual environment. Ensure python3-venv is installed."
     log_info "Virtual environment created at $PYTHON_VENV_DIR."

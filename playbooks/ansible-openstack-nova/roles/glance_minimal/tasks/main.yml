@@ -63,7 +63,7 @@
     executable: /bin/bash
   environment:
     OS_CLOUD: ""
-    OS_AUTH_URL: {{ keystone_public_url }}
+    OS_AUTH_URL: "{{ keystone_public_url }}"
     OS_PROJECT_DOMAIN_NAME: Default
     OS_USER_DOMAIN_NAME: Default
     OS_PROJECT_NAME: admin
@@ -81,7 +81,7 @@
     executable: /bin/bash
   environment:
     OS_CLOUD: ""
-    OS_AUTH_URL: {{ keystone_public_url }}
+    OS_AUTH_URL: "{{ keystone_public_url }}"
     OS_PROJECT_DOMAIN_NAME: Default
     OS_USER_DOMAIN_NAME: Default
     OS_PROJECT_NAME: admin
@@ -105,7 +105,7 @@
     executable: /bin/bash
   environment:
     OS_CLOUD: ""
-    OS_AUTH_URL: {{ keystone_public_url }}
+    OS_AUTH_URL: "{{ keystone_public_url }}"
     OS_PROJECT_DOMAIN_NAME: Default
     OS_USER_DOMAIN_NAME: Default
     OS_PROJECT_NAME: admin
@@ -123,7 +123,7 @@
     executable: /bin/bash
   environment:
     OS_CLOUD: ""
-    OS_AUTH_URL: {{ keystone_public_url }}
+    OS_AUTH_URL: "{{ keystone_public_url }}"
     OS_PROJECT_DOMAIN_NAME: Default
     OS_USER_DOMAIN_NAME: Default
     OS_PROJECT_NAME: admin
@@ -155,7 +155,7 @@
     - { interface: 'admin', url: "{{ glance_api_url }}" }
   environment:
     OS_CLOUD: ""
-    OS_AUTH_URL: {{ keystone_public_url }}
+    OS_AUTH_URL: "{{ keystone_public_url }}"
     OS_PROJECT_DOMAIN_NAME: Default
     OS_USER_DOMAIN_NAME: Default
     OS_PROJECT_NAME: admin
