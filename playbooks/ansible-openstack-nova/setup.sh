@@ -3,6 +3,10 @@
 # Installs Vagrant, libvirt, vagrant-libvirt, performs host checks, provisions Vagrant VMs with Ansible, and optionally triggers cleanup.
 # Production-ready with robust error handling, retries, and resource validation.
 
+# Network configuration - can be overridden with environment variables
+CONTROLLER_IP="${CONTROLLER_IP:-192.168.56.10}"
+COMPUTE_IP="${COMPUTE_IP:-192.168.56.11}"
+
 set -e
 
 # ANSI color codes
@@ -326,7 +330,7 @@ if stdbuf -oL vagrant status | grep -E "controller.*running|compute.*running" | 
     log_info "Both controller and compute VMs are running."
     if [ "$FORCE_PROVISION" = true ]; then
         log_info "Forcing Ansible provisioning..."
-        stdbuf -oL vagrant provision >vagrant_up.log 2>&1 || {
+        CONTROLLER_IP="$CONTROLLER_IP" COMPUTE_IP="$COMPUTE_IP" stdbuf -oL vagrant provision >vagrant_up.log 2>&1 || {
             log_error "Vagrant provision failed. Check vagrant_up.log for details:\n$(cat vagrant_up.log)"
         }
     else
@@ -334,7 +338,7 @@ if stdbuf -oL vagrant status | grep -E "controller.*running|compute.*running" | 
     fi
 else
     log_info "Starting and provisioning Vagrant VMs..."
-    stdbuf -oL vagrant up --provider=libvirt --no-tty >vagrant_up.log 2>&1 || {
+    CONTROLLER_IP="$CONTROLLER_IP" COMPUTE_IP="$COMPUTE_IP" stdbuf -oL vagrant up --provider=libvirt --no-tty >vagrant_up.log 2>&1 || {
         log_error "Vagrant up failed. Check vagrant_up.log for details:\n$(cat vagrant_up.log)"
     }
 fi

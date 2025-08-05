@@ -1,0 +1,24 @@
+---
+# Insert ServerName directive to prevent Apache warnings
+# This is needed to avoid "Could not reliably determine the server's fully qualified domain name" warning
+- name: Insert 'ServerName localhost' after ServerRoot line
+  ansible.builtin.lineinfile:
+    path: /etc/apache2/apache2.conf
+    line: "ServerName localhost"
+    insertafter: '^#ServerRoot.*'
+    state: present
+    backup: yes
+  become: true
+  notify: Restart apache2
+  when: inventory_hostname == 'controller'
+
+# Enable Keystone WSGI configuration in Apache2
+# This allows Apache to serve the Keystone API via WSGI
+- name: Enable Keystone WSGI in Apache2
+  ansible.builtin.file:
+    src: /usr/share/keystone/wsgi-keystone.conf
+    dest: /etc/apache2/conf-enabled/wsgi-keystone.conf
+    state: link
+  become: true
+  notify: Restart apache2
+  when: inventory_hostname == 'controller'

@@ -3,8 +3,10 @@
   ansible.builtin.service:
     name: glance-api
     state: restarted
+  become: yes
 
 - name: Restart glance-registry
   ansible.builtin.service:
     name: glance-registry
     state: restarted
+  become: yes

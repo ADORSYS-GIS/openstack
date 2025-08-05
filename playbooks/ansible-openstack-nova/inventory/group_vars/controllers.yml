@@ -2,7 +2,7 @@
 # Variables specific to controller nodes.
 
 # Controller IP address (redundant with hosts.ini but useful for explicit reference in roles)
-controller_ip: 192.168.56.10
+controller_ip: "{{ controller_ip_address }}"
 
 # Keystone service endpoint URLs
 keystone_admin_url: "http://{{ controller_ip }}:5000/v3"

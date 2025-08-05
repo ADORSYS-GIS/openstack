@@ -3,7 +3,7 @@
   ansible.builtin.service:
     name: apache2
     state: restarted
-  listen: Restart apache2
+  become: yes
 
 - name: Mark db_sync complete
   ansible.builtin.file:
@@ -12,4 +12,4 @@
     owner: keystone
     group: keystone
     mode: '0640'
-  listen: Mark db_sync complete
+  become: yes

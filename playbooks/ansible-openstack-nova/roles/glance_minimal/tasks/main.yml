@@ -3,19 +3,35 @@
   ansible.builtin.apt:
     name:
       - glance
-      - python3-openstackclient # Ensure openstack client is available
-      - bash # Ensure bash is available for shell scripts
+      - python3-openstackclient
+      - bash
     state: present
+    update_cache: yes
+  become: yes
+  register: apt_result
+  retries: 3
+  delay: 5
+  until: apt_result is success
   notify:
     - Restart glance-api
     - Restart glance-registry
-  become: yes # Ensure this task runs with sudo
+  when: inventory_hostname == 'controller'
+
+- name: Check if MariaDB Unix socket exists
+  ansible.builtin.stat:
+    path: /var/run/mysqld/mysqld.sock
+  register: socket_stat
+  failed_when: not socket_stat.stat.exists
+  when: inventory_hostname == 'controller'
 
 - name: Create Glance database
   community.mysql.mysql_db:
     name: "{{ glance_db_name }}"
     state: present
-  delegate_to: "{{ inventory_hostname }}"
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  become: yes
+  when: inventory_hostname == 'controller' and socket_stat.stat.exists
 
 - name: Grant privileges to Glance database user
   community.mysql.mysql_user:
@@ -24,139 +40,178 @@
     host: "%"
     priv: "{{ glance_db_name }}.*:ALL"
     state: present
-  delegate_to: "{{ inventory_hostname }}"
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  become: yes
+  when: inventory_hostname == 'controller' and socket_stat.stat.exists
 
 - name: Populate the Glance database
-  ansible.builtin.command: su -s /bin/sh -c "glance-manage db_sync" glance
-  args:
-    creates: /var/lib/glance/glance.sqlite
+  ansible.builtin.command:
+    cmd: glance-manage --config-file /etc/glance/glance-api.conf db_sync
+    creates: /etc/glance/db_synced
   become: yes
   become_user: glance
   register: glance_db_sync_result
-  changed_when: "'No changes to make' not in glance_db_sync_result.stderr"
+  retries: 5
+  delay: 10
+  until: glance_db_sync_result is success
+  when: inventory_hostname == 'controller'
 
 - name: Check if Glance service user exists
-  ansible.builtin.shell: |
-    source {{ keystone_rc_file }}
-    openstack user show glance --domain Default
-  args:
+  ansible.builtin.command:
+    cmd: openstack user show glance --domain Default
     executable: /bin/bash
-  register: glance_user_check
-  failed_when: glance_user_check.rc not in [0, 1] # 0 if exists, 1 if not found
-  changed_when: false
   environment:
-    OS_CLOUD: "" # Ensure no existing cloud env vars interfere
+    OS_CLOUD: ""
+    OS_AUTH_URL: {{ keystone_public_url }}
+    OS_PROJECT_DOMAIN_NAME: Default
+    OS_USER_DOMAIN_NAME: Default
+    OS_PROJECT_NAME: admin
+    OS_USERNAME: admin
+    OS_PASSWORD: "{{ openstack_admin_password }}"
+    OS_IDENTITY_API_VERSION: 3
+  register: glance_user_check
+  failed_when: glance_user_check.rc not in [0, 1]
+  changed_when: false
+  when: inventory_hostname == 'controller'
 
 - name: Create Glance service user in Keystone
-  ansible.builtin.shell: |
-    source {{ keystone_rc_file }}
-    openstack user create \
-      --domain Default \
-      --password "{{ glance_user_password }}" \
-      glance 2>&1 | tee /var/log/ansible-glance-user.log
-  args:
+  ansible.builtin.command:
+    cmd: openstack user create --domain Default --password "{{ glance_user_password }}" glance
     executable: /bin/bash
-  when: glance_user_check.rc == 1 # Only create if user does not exist
+  environment:
+    OS_CLOUD: ""
+    OS_AUTH_URL: {{ keystone_public_url }}
+    OS_PROJECT_DOMAIN_NAME: Default
+    OS_USER_DOMAIN_NAME: Default
+    OS_PROJECT_NAME: admin
+    OS_USERNAME: admin
+    OS_PASSWORD: "{{ openstack_admin_password }}"
+    OS_IDENTITY_API_VERSION: 3
+  when:
+    - glance_user_check.rc == 1
+    - inventory_hostname == 'controller'
   register: glance_user_create
   retries: 3
   delay: 5
-  until: glance_user_create.rc == 0 or 'already exists' in glance_user_create.stderr # Robust idempotency
-  changed_when: glance_user_create.rc == 0 # Only changed if creation was successful
-  failed_when: glance_user_create.rc != 0 and 'already exists' not in glance_user_create.stderr # Fail only on true errors
-  environment:
-    OS_CLOUD: ""
+  until: glance_user_create.rc == 0 or 'already exists' in glance_user_create.stderr
+  changed_when: glance_user_create.rc == 0
+  failed_when: glance_user_create.rc != 0 and 'already exists' not in glance_user_create.stderr
+
 
 - name: Check if Glance service exists
-  ansible.builtin.shell: |
-    source {{ keystone_rc_file }}
-    openstack service show glance
-  args:
+  ansible.builtin.command:
+    cmd: openstack service show glance
     executable: /bin/bash
+  environment:
+    OS_CLOUD: ""
+    OS_AUTH_URL: {{ keystone_public_url }}
+    OS_PROJECT_DOMAIN_NAME: Default
+    OS_USER_DOMAIN_NAME: Default
+    OS_PROJECT_NAME: admin
+    OS_USERNAME: admin
+    OS_PASSWORD: "{{ openstack_admin_password }}"
+    OS_IDENTITY_API_VERSION: 3
   register: glance_service_check
   failed_when: glance_service_check.rc not in [0, 1]
   changed_when: false
-  environment:
-    OS_CLOUD: ""
+  when: inventory_hostname == 'controller'
 
 - name: Create Glance service in Keystone
-  ansible.builtin.shell: |
-    source {{ keystone_rc_file }}
-    openstack service create \
-      --name glance \
-      --description "OpenStack Image service" \
-      image 2>&1 | tee /var/log/ansible-glance-service.log
-  args:
+  ansible.builtin.command:
+    cmd: openstack service create --name glance --description "OpenStack Image service" image
     executable: /bin/bash
-  when: glance_service_check.rc == 1 # Only create if service does not exist
+  environment:
+    OS_CLOUD: ""
+    OS_AUTH_URL: {{ keystone_public_url }}
+    OS_PROJECT_DOMAIN_NAME: Default
+    OS_USER_DOMAIN_NAME: Default
+    OS_PROJECT_NAME: admin
+    OS_USERNAME: admin
+    OS_PASSWORD: "{{ openstack_admin_password }}"
+    OS_IDENTITY_API_VERSION: 3
+  when:
+    - glance_service_check.rc == 1
+    - inventory_hostname == 'controller'
   register: glance_service_create
   retries: 3
   delay: 5
   until: glance_service_create.rc == 0 or 'already exists' in glance_service_create.stderr
   changed_when: glance_service_create.rc == 0
   failed_when: glance_service_create.rc != 0 and 'already exists' not in glance_service_create.stderr
-  environment:
-    OS_CLOUD: ""
 
-- name: Create or Update Glance endpoints in Keystone
-  ansible.builtin.shell: |
-    source {{ keystone_rc_file }}
-    # Check if endpoint exists. If not, create it. If it exists, ensure URL is correct.
-    if ! openstack endpoint show glance {{ item.interface }} &>/dev/null; then
-      echo "Creating Glance {{ item.interface }} endpoint..."
-      openstack endpoint create \
-        --region "{{ openstack_region_name }}" \
-        {{ item.interface }} \
-        image \
-        "{{ item.url }}" 2>&1 | tee /var/log/ansible-glance-endpoint-{{ item.interface }}.log
-    else
-      echo "Updating Glance {{ item.interface }} endpoint..."
-      openstack endpoint set \
-        --region "{{ openstack_region_name }}" \
-        --url "{{ item.url }}" \
-        {{ item.interface }} \
-        image 2>&1 | tee /var/log/ansible-glance-endpoint-{{ item.interface }}.log
-    fi
-  args:
+- name: Create or update Glance endpoints in Keystone
+  ansible.builtin.command:
+    cmd: |
+      if ! openstack endpoint show glance {{ item.interface }} &>/dev/null; then
+        openstack endpoint create --region "{{ openstack_region_name }}" image {{ item.interface }} "{{ item.url }}"
+      else
+        openstack endpoint set --region "{{ openstack_region_name }}" --url "{{ item.url }}" {{ item.interface }} image
+      fi
     executable: /bin/bash
   loop:
     - { interface: 'public', url: "{{ glance_api_url }}" }
     - { interface: 'internal', url: "{{ glance_api_url }}" }
     - { interface: 'admin', url: "{{ glance_api_url }}" }
+  environment:
+    OS_CLOUD: ""
+    OS_AUTH_URL: {{ keystone_public_url }}
+    OS_PROJECT_DOMAIN_NAME: Default
+    OS_USER_DOMAIN_NAME: Default
+    OS_PROJECT_NAME: admin
+    OS_USERNAME: admin
+    OS_PASSWORD: "{{ openstack_admin_password }}"
+    OS_IDENTITY_API_VERSION: 3
   register: glance_endpoint_result
   retries: 3
   delay: 5
   until: glance_endpoint_result.rc == 0
-  changed_when: "glance_endpoint_result.rc == 0 and ('created' in glance_endpoint_result.stdout or 'updated' in glance_endpoint_result.stdout)" # More precise changed_when
+  changed_when: glance_endpoint_result.rc == 0
   failed_when: glance_endpoint_result.rc != 0
-  environment:
-    OS_CLOUD: ""
+  when: inventory_hostname == 'controller'
 
-- name: Configure Glance API (glance-api.conf)
+- name: Configure Glance API
   ansible.builtin.template:
     src: glance-api.conf.j2
     dest: /etc/glance/glance-api.conf
     owner: glance
     group: glance
     mode: '0640'
+  become: yes
   notify: Restart glance-api
+  when: inventory_hostname == 'controller'
 
-- name: Configure Glance Registry (glance-registry.conf)
+- name: Configure Glance Registry
   ansible.builtin.template:
     src: glance-registry.conf.j2
     dest: /etc/glance/glance-registry.conf
     owner: glance
     group: glance
     mode: '0640'
+  become: yes
   notify: Restart glance-registry
+  when: inventory_hostname == 'controller'
 
 - name: Ensure Glance API service is running and enabled
   ansible.builtin.service:
     name: glance-api
     state: started
     enabled: yes
+  become: yes
+  register: glance_api_service_result
+  retries: 3
+  delay: 5
+  until: glance_api_service_result is success
+  when: inventory_hostname == 'controller'
 
 - name: Ensure Glance Registry service is running and enabled
   ansible.builtin.service:
     name: glance-registry
     state: started
     enabled: yes
+  become: yes
+  register: glance_registry_service_result
+  retries: 3
+  delay: 5
+  until: glance_registry_service_result is success
+  when: inventory_hostname == 'controller'

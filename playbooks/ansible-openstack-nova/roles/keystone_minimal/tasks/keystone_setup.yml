@@ -1,0 +1,72 @@
+---
+# Remove any residual SQLite database files that might interfere with MySQL setup
+- name: Remove residual SQLite database files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/keystone/keystone.db
+    - /etc/keystone/keystone.conf.d
+  become: true
+  when: inventory_hostname == 'controller'
+
+# Configure Keystone with database connection and other settings
+# The configuration file is owned by the keystone user for proper permissions
+- name: Configure Keystone database connection
+  ansible.builtin.template:
+    src: keystone.conf.j2
+    dest: /etc/keystone/keystone.conf
+    owner: keystone
+    group: keystone
+    mode: '0640'
+  become: true
+  notify: Restart apache2
+  when: inventory_hostname == 'controller'
+
+# Debug task to display the Keystone configuration (useful for troubleshooting)
+- name: Debug Keystone configuration
+  ansible.builtin.command:
+    cmd: cat /etc/keystone/keystone.conf
+  register: keystone_conf_content
+  changed_when: false
+  become: true
+  when: inventory_hostname == 'controller'
+
+# Display the Keystone configuration for debugging purposes
+- name: Display Keystone configuration
+  ansible.builtin.debug:
+    msg: "{{ keystone_conf_content.stdout_lines }}"
+  when: inventory_hostname == 'controller'
+
+# Verify that Keystone can connect to the database before proceeding
+# This helps catch configuration issues early in the process
+- name: Verify Keystone database connectivity
+  ansible.builtin.command:
+    cmd: mysql -u "{{ openstack_db_user }}" -p"{{ openstack_db_password }}" -h localhost -e "SELECT 1 FROM information_schema.tables WHERE table_schema='{{ openstack_db_name }}'"
+  register: db_connect_result
+  changed_when: false
+  failed_when: db_connect_result.rc != 0
+  retries: 3
+  delay: 5
+  until: db_connect_result is success
+  become: true
+  when: inventory_hostname == 'controller'
+
+# Populate the Keystone database with initial schema
+# This should be run as the keystone user to ensure proper file permissions
+- name: Populate the Keystone database
+  ansible.builtin.command:
+    cmd: keystone-manage --config-file /etc/keystone/keystone.conf db_sync
+    creates: /etc/keystone/db_synced
+  become: true
+  # Run as the keystone user to ensure proper file permissions and service access
+  become_user: keystone
+  environment:
+    OSLO_CONFIG_FILE: /etc/keystone/keystone.conf
+    PYTHONPATH: /usr/lib/python3/dist-packages
+  register: keystone_db_sync_result
+  retries: 5
+  delay: 10
+  until: keystone_db_sync_result is success
+  when: inventory_hostname == 'controller'
+  notify: Mark db_sync complete

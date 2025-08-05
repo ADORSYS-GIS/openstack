@@ -1,0 +1,55 @@
+---
+# Ensure the keystone system user exists
+# This user will be used to run keystone services and own keystone files
+- name: Ensure keystone user exists
+  ansible.builtin.user:
+    name: keystone
+    system: yes
+    shell: /usr/sbin/nologin
+  become: true
+  when: inventory_hostname == 'controller'
+
+# Ensure the keystone log directory exists with proper ownership
+- name: Ensure /var/log/keystone directory exists
+  ansible.builtin.file:
+    path: /var/log/keystone
+    state: directory
+    owner: keystone
+    group: keystone
+    mode: '0755'
+  become: true
+  when: inventory_hostname == 'controller'
+
+# Ensure the keystone log file exists with proper ownership
+- name: Ensure Keystone log file exists
+  ansible.builtin.file:
+    path: /var/log/keystone/keystone-manage.log
+    state: touch
+    owner: keystone
+    group: keystone
+    mode: '0640'
+  become: true
+  when: inventory_hostname == 'controller'
+
+# Bootstrap the Keystone service to create initial admin user, project, and endpoints
+# This should be run only once during initial setup
+- name: Bootstrap Keystone service
+  ansible.builtin.command:
+    cmd: >
+      keystone-manage bootstrap
+      --bootstrap-password "{{ openstack_admin_password }}"
+      --bootstrap-username admin
+      --bootstrap-project-name admin
+      --bootstrap-role-name admin
+      --bootstrap-service-name keystone
+      --bootstrap-region-id "{{ openstack_region_name }}"
+      --bootstrap-admin-url "{{ keystone_admin_url }}"
+      --bootstrap-public-url "{{ keystone_public_url }}"
+      --bootstrap-internal-url "{{ keystone_internal_url }}"
+    creates: /etc/keystone/bootstrap_complete
+  become: true
+  # Run as the keystone user to ensure proper file permissions and service access
+  become_user: keystone
+  environment:
+    OS_CLOUD: ""
+  when: inventory_hostname == 'controller'

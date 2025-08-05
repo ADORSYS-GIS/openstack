@@ -14,6 +14,4 @@ common_packages:
   - chrony                  # Critical for time synchronization across all nodes
   - bridge-utils            # For network bridge configuration (e.g., for Neutron)
 
-hosts_entries:
-  - { ip: "192.168.56.10", hostname: "controller" }
-  - { ip: "192.168.56.11", hostname: "compute" }
+hosts_entries: "{{ hosts_entries_all }}"
