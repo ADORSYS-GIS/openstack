@@ -1,0 +1,13 @@
+---
+# This file lists the Ansible collections required by this project.
+# It ensures that all necessary modules are available when running the playbooks.
+
+collections:
+  - name: community.general
+    version: ">=8.0.0,<9.0.0"
+  - name: community.mysql
+    version: ">=3.5.0"
+  - name: community.rabbitmq
+    version: ">=1.6.0"
+  - name: ansible.posix
+    version: ">=1.5.0"

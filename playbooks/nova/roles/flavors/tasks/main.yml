@@ -1,0 +1,26 @@
+---
+- name: Ensure required OpenStack credentials are sourced
+  assert:
+    that:
+      - lookup('env', 'OS_AUTH_URL') != ''
+      - lookup('env', 'OS_USERNAME') != ''
+      - lookup('env', 'OS_PASSWORD') != ''
+      - lookup('env', 'OS_PROJECT_NAME') != ''
+    fail_msg: "OpenStack credentials are not set. Source admin-openrc before running this role."
+
+- name: Create OpenStack flavors
+  become: true
+  vars:
+    flavor_extra_specs: {}
+  openstack.cloud.compute_flavor:
+    cloud: null  # Use environment variables instead of clouds.yaml
+    name: "{{ item.name }}"
+    ram: "{{ item.ram }}"
+    vcpus: "{{ item.vcpus }}"
+    disk: "{{ item.disk }}"
+    region_name: "{{ flavor_region }}"
+    project: "{{ flavor_project }}"
+    is_public: true
+    state: present
+    extra_specs: "{{ flavor_extra_specs }}"
+  loop: "{{ openstack_flavors }}"

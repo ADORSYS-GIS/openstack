@@ -1,0 +1,46 @@
+---
+# Ensure the Fernet keys directory exists with proper ownership and permissions
+# Fernet tokens are used for authentication in Keystone
+- name: Ensure Fernet keys directory exists
+  ansible.builtin.file:
+    path: /etc/keystone/fernet-keys
+    state: directory
+    owner: keystone
+    group: keystone
+    mode: '0750'
+  become: true
+  when: inventory_hostname == 'controller'
+
+# Initialize the Fernet key repository
+# This should be run as the keystone user to ensure proper file permissions
+- name: Initialize Fernet key repository
+  ansible.builtin.command:
+    cmd: keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+    creates: /etc/keystone/fernet-keys/0
+  become: true
+  # Run as the keystone user to ensure proper file permissions and service access
+  become_user: keystone
+  when: inventory_hostname == 'controller'
+
+# Ensure the credential keys directory exists with proper ownership and permissions
+# Credential keys are used for encrypting credentials stored in Keystone
+- name: Ensure credential keys directory exists
+  ansible.builtin.file:
+    path: /etc/keystone/credential-keys
+    state: directory
+    owner: keystone
+    group: keystone
+    mode: '0750'
+  become: true
+  when: inventory_hostname == 'controller'
+
+# Initialize the Credential key repository
+# This should be run as the keystone user to ensure proper file permissions
+- name: Initialize Credential key repository
+  ansible.builtin.command:
+    cmd: keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
+    creates: /etc/keystone/credential-keys/0
+  become: true
+  # Run as the keystone user to ensure proper file permissions and service access
+  become_user: keystone
+  when: inventory_hostname == 'controller'

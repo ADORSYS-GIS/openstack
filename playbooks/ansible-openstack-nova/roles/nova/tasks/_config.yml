@@ -1,0 +1,83 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ansible/schemas/main/f/ansible-tasks.json
+# Tasks for configuring Nova (nova.conf) on both controller and compute nodes.
+
+- name: Ensure /etc/nova directory exists
+  ansible.builtin.file:
+    path: /etc/nova
+    state: directory
+    owner: nova
+    group: nova
+    mode: '0755'
+  become: true
+
+- name: Configure Nova (nova.conf)
+  ansible.builtin.template:
+    src: nova.conf.j2
+    dest: /etc/nova/nova.conf
+    owner: nova
+    group: nova
+    mode: '0640'
+  become: true
+  notify:
+    - Restart nova-api
+    - Restart nova-scheduler
+    - Restart nova-conductor
+    - Restart nova-novncproxy
+    - Restart nova-compute
+
+- name: Check if Nova API database is already synced
+  ansible.builtin.stat:
+    path: /var/lib/nova/.api_db_synced
+  register: nova_api_db_synced
+  when: inventory_hostname in groups['controllers']
+
+- name: Populate the Nova API database (on controller)
+  ansible.builtin.command: nova-manage api_db sync
+  become: true
+  become_user: nova
+  register: nova_api_db_sync_result
+  changed_when: nova_api_db_sync_result.rc == 0
+  failed_when: nova_api_db_sync_result.rc != 0
+  when: 
+    - inventory_hostname in groups['controllers']
+    - not nova_api_db_synced.stat.exists
+
+- name: Mark Nova API database as synced
+  ansible.builtin.file:
+    path: /var/lib/nova/.api_db_synced
+    state: touch
+    owner: nova
+    group: nova
+    mode: '0644'
+  become: true
+  when:
+    - inventory_hostname in groups['controllers']
+
+- name: Check if Nova database is already synced
+  ansible.builtin.stat:
+    path: /var/lib/nova/.db_synced
+  register: nova_db_synced
+  when: inventory_hostname in groups['controllers']
+
+- name: Populate the Nova database (on controller)
+  ansible.builtin.command: nova-manage db sync
+  become: true
+  become_user: nova
+  register: nova_db_sync_result
+  changed_when: nova_db_sync_result.rc == 0
+  failed_when: nova_db_sync_result.rc != 0
+  when:
+    - inventory_hostname in groups['controllers']
+    - not nova_db_synced.stat.exists
+
+- name: Mark Nova database as synced
+  ansible.builtin.file:
+    path: /var/lib/nova/.db_synced
+    state: touch
+    owner: nova
+    group: nova
+    mode: '0644'
+  become: true
+  when:
+    - inventory_hostname in groups['controllers']

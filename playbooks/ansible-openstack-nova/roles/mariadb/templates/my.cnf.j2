@@ -1,0 +1,15 @@
+# Custom MariaDB configuration for OpenStack
+
+[mysqld]
+bind-address = {{ mariadb_bind_address }}
+
+default-storage-engine = innodb
+innodb_file_per_table = on
+max_connections = 4096
+collation-server = utf8mb4_general_ci
+character-set-server = utf8mb4
+
+# Required for XtraDB/InnoDB to function correctly with OpenStack
+# These values are common recommendations, adjust if needed for larger deployments
+innodb_buffer_pool_size = 256M # Adjust based on available RAM and database size
+innodb_log_file_size = 64M

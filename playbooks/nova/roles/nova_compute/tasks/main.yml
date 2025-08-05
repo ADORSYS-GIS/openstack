@@ -1,0 +1,20 @@
+---
+- name: Install Nova Compute packages
+  package:
+    name: "{{ compute_packages }}"
+    state: present
+
+- name: Configure nova.conf for compute node
+  template:
+    src: nova.conf.j2
+    dest: /etc/nova/nova.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart nova-compute
+
+- name: Ensure nova-compute service is enabled and started
+  service:
+    name: nova-compute
+    state: started
+    enabled: true

@@ -1,0 +1,5 @@
+---
+# Variables specific to compute nodes.
+
+# Compute IP address (redundant with hosts.ini but useful for explicit reference in roles)
+compute_ip: "{{ compute_ip_address }}"

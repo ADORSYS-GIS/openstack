@@ -1,0 +1,110 @@
+---
+- name: Install MariaDB server and Python DB connector
+  ansible.builtin.apt:
+    name:
+      - mariadb-server
+      - python3-mysqldb # Essential for community.mysql modules to connect
+    state: present
+    update_cache: yes # Ensure package cache is updated
+  become: yes
+  register: apt_install_result # Register result for retries
+  until: apt_install_result is success # Retry until successful
+  retries: 3
+  delay: 5 # Wait 5 seconds between retries
+  notify: Restart mariadb
+
+- name: Configure MariaDB server (my.cnf)
+  ansible.builtin.template:
+    src: my.cnf.j2
+    dest: /etc/mysql/mariadb.conf.d/99-openstack.cnf
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  notify: Restart mariadb
+
+- name: Ensure MariaDB service is running and enabled
+  ansible.builtin.service:
+    name: mariadb
+    state: started
+    enabled: yes
+  become: yes
+  register: mariadb_service_result # Register result for retries
+  until: mariadb_service_result is success # Retry until successful
+  retries: 3
+  delay: 5 # Wait 5 seconds between retries
+
+# --- FIX: Use login_unix_socket for initial root access ---
+# Add a check to ensure the socket exists before attempting to use it
+- name: Check if MariaDB Unix socket exists
+  ansible.builtin.stat:
+    path: /var/run/mysqld/mysqld.sock
+  register: socket_stat
+  failed_when: not socket_stat.stat.exists # Fail if socket doesn't exist
+  when: inventory_hostname == 'controller' # Only run on the controller
+
+- name: Secure MariaDB installation - Remove anonymous users
+  community.mysql.mysql_user:
+    name: ''
+    host: "{{ item }}"
+    state: absent
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock # FIX: Use Unix socket for root authentication
+  become: yes
+  loop:
+    - controller # Assuming this is the hostname for the controller
+    - localhost
+  when: inventory_hostname == 'controller' and socket_stat.stat.exists # Only run if on controller AND socket exists
+
+- name: Secure MariaDB installation - Disallow root login remotely
+  community.mysql.mysql_user:
+    name: root
+    host: "{{ item }}"
+    state: absent
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock # FIX: Use Unix socket for root authentication
+  become: yes
+  loop:
+    - 127.0.0.1
+    - ::1
+    - "{{ ansible_hostname }}" # Ensure controller's own hostname is covered
+  when: inventory_hostname == 'controller' and socket_stat.stat.exists
+
+- name: Secure MariaDB installation - Remove test database
+  community.mysql.mysql_db:
+    name: test
+    state: absent
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock # FIX: Use Unix socket for root authentication
+  become: yes
+  when: inventory_hostname == 'controller' and socket_stat.stat.exists
+
+# --- NEW: Create OpenStack database ---
+- name: Create OpenStack database
+  community.mysql.mysql_db:
+    name: "{{ openstack_db_name }}"
+    state: present
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  become: yes
+  when: inventory_hostname == 'controller' and socket_stat.stat.exists
+
+- name: Create OpenStack database user
+  community.mysql.mysql_user:
+    name: "{{ openstack_db_user }}"
+    password: "{{ openstack_db_password }}"
+    host: "%" # Allow connections from any host (e.g., compute node)
+    priv: "{{ openstack_db_name }}.*:ALL" # Grant all privileges on OpenStack DB
+    state: present
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock # FIX: Use Unix socket for root authentication
+  become: yes
+  when: inventory_hostname == 'controller' and socket_stat.stat.exists
+
+- name: Flush privileges after user creation
+  community.mysql.mysql_query:
+    query: FLUSH PRIVILEGES
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock # FIX: Use Unix socket for root authentication
+  become: yes
+  when: inventory_hostname == 'controller' and socket_stat.stat.exists

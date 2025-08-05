@@ -1,0 +1,4 @@
+---
+nova_manage_cmd: /usr/bin/nova-manage
+nova_user: nova
+nova_group: nova

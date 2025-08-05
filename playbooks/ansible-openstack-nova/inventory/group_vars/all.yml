@@ -1,0 +1,58 @@
+---
+# Variables applicable to all hosts in the inventory.
+
+# Ansible connection variables
+ansible_user: vagrant
+ansible_become: yes
+ansible_python_interpreter: /usr/bin/python3
+
+# OpenStack general variables
+openstack_db_name: openstack
+openstack_db_user: openstack_admin
+openstack_db_password: "SUPER_SECURE_DB_PASSWORD"
+openstack_admin_password: "ADMIN_PASSWORD_FOR_KEYSTONE"
+openstack_region_name: RegionOne
+
+# RabbitMQ specific variables
+rabbitmq_password: "RABBITMQ_SECURE_PASSWORD"
+
+# Glance specific variables
+glance_user_password: "GLANCE_SECURE_PASSWORD"
+
+# Placement specific variables
+placement_user_password: "PLACEMENT_SECURE_PASSWORD"
+
+# Nova specific variables
+nova_user_password: "NOVA_SECURE_PASSWORD"
+
+# Database connection details (will be used by services like Nova)
+# This assumes MariaDB is on the controller node
+database_connection_base: "mysql+pymysql://{{ openstack_db_user }}:{{ openstack_db_password }}@{{ hostvars['controller']['ansible_host'] }}"
+
+# Network configuration
+controller_ip_address: "192.168.56.10"
+compute_ip_address: "192.168.56.11"
+
+# List of hosts and their IPs for /etc/hosts configuration
+# This is used by the common role to populate /etc/hosts on all nodes.
+hosts_entries:
+  - { ip: "{{ controller_ip_address }}", hostname: "controller" }
+  - { ip: "{{ compute_ip_address }}", hostname: "compute" }
+
+# This is used by the common role to populate /etc/hosts on all nodes.
+hosts_entries_all: "{{ hosts_entries }}"
+
+# Nova Validation specific variables
+cirros_image_url: "http://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img"
+cirros_image_name: "cirros-0.5.2-x86_64-disk.img"
+cirros_image_glance_name: "cirros-test-image"
+test_network_name: "test-net"
+test_subnet_name: "test-subnet"
+test_subnet_cidr: "10.0.0.0/24"
+test_subnet_gateway: "10.0.0.1"
+test_dns_nameservers: ["8.8.8.8"]
+test_security_group_name: "test-security-group"
+test_keypair_name: "test-keypair"
+test_flavor_name: "m1.tiny" # Default OpenStack flavor
+test_instance_name: "test-nova-instance"
+test_physical_network: "physnet1" # This needs to match your Neutron setup. For flat, often 'physnet1'.

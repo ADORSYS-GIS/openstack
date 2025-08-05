@@ -1,0 +1,10 @@
+---
+# This playbook validates the Nova deployment by checking services, endpoints,
+# and launching/cleaning up a test virtual machine.
+# It assumes Nova and its dependencies are already installed and running.
+
+- name: Validate Nova deployment
+  hosts: controllers # Validation tasks run on the controller where CLI tools are available
+  become: yes
+  roles:
+    - nova_validation

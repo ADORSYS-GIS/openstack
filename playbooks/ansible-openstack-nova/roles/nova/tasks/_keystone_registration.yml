@@ -1,0 +1,136 @@
+---
+# Tasks for registering Nova with Keystone on the controller.
+
+- name: Check if Nova service user exists
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack user show nova --domain Default
+  args:
+    executable: /bin/bash
+  register: nova_user_check
+  failed_when: nova_user_check.rc not in [0, 1]
+  changed_when: false
+  environment:
+    OS_CLOUD: ""
+
+- name: Create Nova service user in Keystone
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack user create \
+      --domain Default \
+      --password "{{ nova_user_password }}" \
+      nova 2>&1 | tee /var/log/ansible-nova-user.log
+  args:
+    executable: /bin/bash
+  when: nova_user_check.rc == 1
+  register: nova_user_create
+  retries: 3
+  delay: 5
+  until: nova_user_create.rc == 0 or 'already exists' in nova_user_create.stderr
+  changed_when: nova_user_create.rc == 0
+  failed_when: nova_user_create.rc != 0 and 'already exists' not in nova_user_create.stderr
+  environment:
+    OS_CLOUD: ""
+
+- name: Check if Nova user has admin role in service project
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack role assignment list \
+      --user nova \
+      --project service \
+      --role admin \
+      --user-domain Default \
+      --project-domain Default --format value
+  args:
+    executable: /bin/bash
+  register: nova_role_assignment_check
+  failed_when: nova_role_assignment_check.rc != 0
+  changed_when: false
+  environment:
+    OS_CLOUD: ""
+
+- name: Add admin role to Nova user in service project
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack role add \
+      --user nova \
+      --project service \
+      admin \
+      --user-domain Default \
+      --project-domain Default 2>&1 | tee /var/log/ansible-nova-role.log
+  args:
+    executable: /bin/bash
+  when: nova_role_assignment_check.stdout == "" # Only add if assignment not found
+  register: nova_role_add
+  retries: 3
+  delay: 5
+  until: nova_role_add.rc == 0 or 'already has role' in nova_role_add.stderr
+  changed_when: nova_role_add.rc == 0
+  failed_when: nova_role_add.rc != 0 and 'already has role' not in nova_role_add.stderr
+  environment:
+    OS_CLOUD: ""
+
+- name: Check if Nova service exists
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack service show nova
+  args:
+    executable: /bin/bash
+  register: nova_service_check
+  failed_when: nova_service_check.rc not in [0, 1]
+  changed_when: false
+  environment:
+    OS_CLOUD: ""
+
+- name: Create Nova service in Keystone
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack service create \
+      --name nova \
+      --description "OpenStack Compute service" \
+      compute 2>&1 | tee /var/log/ansible-nova-service.log
+  args:
+    executable: /bin/bash
+  when: nova_service_check.rc == 1
+  register: nova_service_create
+  retries: 3
+  delay: 5
+  until: nova_service_create.rc == 0 or 'already exists' in nova_service_create.stderr
+  changed_when: nova_service_create.rc == 0
+  failed_when: nova_service_create.rc != 0 and 'already exists' not in nova_service_create.stderr
+  environment:
+    OS_CLOUD: ""
+
+- name: Create or Update Nova endpoints in Keystone
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    # Check if endpoint exists. If not, create it. If it exists, ensure URL is correct.
+    if ! openstack endpoint show nova {{ item.interface }} &>/dev/null; then
+      echo "Creating Nova {{ item.interface }} endpoint..."
+      openstack endpoint create \
+        --region "{{ openstack_region_name }}" \
+        {{ item.interface }} \
+        compute \
+        "{{ item.url }}" 2>&1 | tee /var/log/ansible-nova-endpoint-{{ item.interface }}.log
+    else
+      echo "Updating Nova {{ item.interface }} endpoint..."
+      openstack endpoint set \
+        --region "{{ openstack_region_name }}" \
+        --url "{{ item.url }}" \
+        {{ item.interface }} \
+        compute 2>&1 | tee /var/log/ansible-nova-endpoint-{{ item.interface }}.log
+    fi
+  args:
+    executable: /bin/bash
+  loop:
+    - { interface: 'public', url: "{{ nova_public_url }}" }
+    - { interface: 'internal', url: "{{ nova_internal_url }}" }
+    - { interface: 'admin', url: "{{ nova_admin_url }}" }
+  register: nova_endpoint_result
+  retries: 3
+  delay: 5
+  until: nova_endpoint_result.rc == 0
+  changed_when: "nova_endpoint_result.rc == 0 and ('created' in nova_endpoint_result.stdout or 'updated' in nova_endpoint_result.stdout)"
+  failed_when: nova_endpoint_result.rc != 0
+  environment:
+    OS_CLOUD: ""

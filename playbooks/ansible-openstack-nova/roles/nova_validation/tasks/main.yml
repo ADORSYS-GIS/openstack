@@ -1,0 +1,513 @@
+---
+# Tasks for validating the Nova deployment.
+# These tasks will primarily run on the controller node, as it has access to the OpenStack CLI.
+
+- name: Source admin-openrc.sh for OpenStack CLI environment
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    echo "OS_AUTH_URL=$OS_AUTH_URL"
+    echo "OS_USERNAME=$OS_USERNAME"
+    echo "OS_PROJECT_NAME=$OS_PROJECT_NAME"
+  args:
+    executable: /bin/bash
+  register: openrc_output
+  changed_when: false
+  when: inventory_hostname in groups['controllers']
+  # This task is primarily for debugging and ensuring the environment variables are set.
+
+# --- Verify Nova services are running on controller ---
+- name: Ensure Nova API service is running on controller
+  ansible.builtin.service:
+    name: nova-api
+    state: started
+  when: inventory_hostname in groups['controllers']
+  changed_when: false # This is a check, not an intended change
+
+- name: Ensure Nova Scheduler service is running on controller
+  ansible.builtin.service:
+    name: nova-scheduler
+    state: started
+  when: inventory_hostname in groups['controllers']
+  changed_when: false
+
+- name: Ensure Nova Conductor service is running on controller
+  ansible.builtin.service:
+    name: nova-conductor
+    state: started
+  when: inventory_hostname in groups['controllers']
+  changed_when: false
+
+- name: Ensure Nova NoVNC Proxy service is running on controller
+  ansible.builtin.service:
+    name: nova-novncproxy
+    state: started
+  when: inventory_hostname in groups['controllers']
+  changed_when: false
+
+- name: Ensure Nova Console Proxy service is running on controller
+  ansible.builtin.service:
+    name: nova-consoleproxy
+    state: started
+  when: inventory_hostname in groups['controllers']
+  changed_when: false
+
+# --- Verify Nova compute service and libvirtd are running on compute node ---
+- name: Ensure Nova Compute service is running on compute node
+  ansible.builtin.service:
+    name: nova-compute
+    state: started
+  when: inventory_hostname in groups['computes']
+  changed_when: false
+
+- name: Ensure libvirtd service is running on compute node
+  ansible.builtin.service:
+    name: libvirtd
+    state: started
+  when: inventory_hostname in groups['computes']
+  changed_when: false
+
+- name: Verify Nova endpoints are registered in Keystone
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack endpoint list --service compute --format json
+  args:
+    executable: /bin/bash
+  register: nova_endpoints_list
+  changed_when: false
+  when: inventory_hostname in groups['controllers']
+  failed_when: nova_endpoints_list.rc != 0 or (nova_endpoints_list.stdout | from_json | length) == 0
+  environment:
+    OS_CLOUD: ""
+
+- name: Display Nova service and endpoint info (from CLI output)
+  ansible.builtin.debug:
+    msg: "Nova endpoints: {{ nova_endpoints_list.stdout | from_json }}"
+  when: inventory_hostname in groups['controllers'] and nova_endpoints_list is defined
+
+- name: Check OpenStack service list (general health check)
+  ansible.builtin.command: openstack service list
+  register: service_list_output
+  changed_when: false
+  when: inventory_hostname in groups['controllers']
+  environment:
+    OS_CLOUD: "{{ openstack_cloud_config }}"
+
+- name: Display OpenStack service list
+  ansible.builtin.debug:
+    msg: "{{ service_list_output.stdout }}"
+  when: inventory_hostname in groups['controllers']
+
+- name: Check OpenStack endpoint list (general health check)
+  ansible.builtin.command: openstack endpoint list
+  register: endpoint_list_output
+  changed_when: false
+  when: inventory_hostname in groups['controllers']
+  environment:
+    OS_CLOUD: "{{ openstack_cloud_config }}"
+
+- name: Display OpenStack endpoint list
+  ansible.builtin.debug:
+    msg: "{{ endpoint_list_output.stdout }}"
+  when: inventory_hostname in groups['controllers']
+
+- name: Check Nova service status (nova service-list)
+  ansible.builtin.command: openstack compute service list
+  register: nova_service_status
+  changed_when: false
+  when: inventory_hostname in groups['controllers']
+  environment:
+    OS_CLOUD: "{{ openstack_cloud_config }}"
+
+- name: Display Nova service status
+  ansible.builtin.debug:
+    msg: "{{ nova_service_status.stdout }}"
+  when: inventory_hostname in groups['controllers']
+
+- name: Ensure all Nova services are 'up'
+  ansible.builtin.assert:
+    that:
+      - "' down ' not in nova_service_status.stdout"
+      - "'XXX' not in nova_service_status.stdout"
+    fail_msg: "One or more Nova services are down or disabled!"
+    success_msg: "All Nova services are up and enabled."
+  when: inventory_hostname in groups['controllers']
+
+- name: Download CirrOS image (if not already present)
+  ansible.builtin.get_url:
+    url: "{{ cirros_image_url }}"
+    dest: "/tmp/{{ cirros_image_name }}"
+    mode: '0644'
+  register: cirros_download
+  until: cirros_download is success
+  retries: 5
+  delay: 10
+  when: inventory_hostname in groups['controllers']
+
+- name: Check if CirrOS image exists in Glance
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack image show "{{ cirros_image_glance_name }}" --format value -c id
+  args:
+    executable: /bin/bash
+  register: cirros_image_check
+  failed_when: cirros_image_check.rc not in [0, 1]
+  changed_when: false
+  environment:
+    OS_CLOUD: ""
+
+- name: Upload CirrOS image to Glance
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack image create "{{ cirros_image_glance_name }}" \
+      --file "/tmp/{{ cirros_image_name }}" \
+      --disk-format qcow2 \
+      --container-format bare \
+      --public 2>&1 | tee /var/log/ansible-glance-image-upload.log
+  args:
+    executable: /bin/bash
+  when: cirros_image_check.rc == 1
+  register: cirros_upload_result
+  retries: 3
+  delay: 10
+  until: cirros_upload_result.rc == 0 or 'already exists' in cirros_upload_result.stderr
+  changed_when: cirros_upload_result.rc == 0
+  failed_when: cirros_upload_result.rc != 0 and 'already exists' not in cirros_upload_result.stderr
+  environment:
+    OS_CLOUD: ""
+
+- name: Check if test network exists
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack network show "{{ test_network_name }}" --format value -c id
+  args:
+    executable: /bin/bash
+  register: test_network_check
+  failed_when: test_network_check.rc not in [0, 1]
+  changed_when: false
+  environment:
+    OS_CLOUD: ""
+
+- name: Create a test network
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack network create "{{ test_network_name }}" \
+      --provider-physical-network "{{ test_physical_network }}" \
+      --provider-network-type flat \
+      --share 2>&1 | tee /var/log/ansible-network-create.log
+  args:
+    executable: /bin/bash
+  when: test_network_check.rc == 1
+  register: test_network_create_result
+  retries: 3
+  delay: 5
+  until: test_network_create_result.rc == 0 or 'already exists' in test_network_create_result.stderr
+  changed_when: test_network_create_result.rc == 0
+  failed_when: test_network_create_result.rc != 0 and 'already exists' not in test_network_create_result.stderr
+  environment:
+    OS_CLOUD: ""
+
+- name: Check if test subnet exists
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack subnet show "{{ test_subnet_name }}" --format value -c id
+  args:
+    executable: /bin/bash
+  register: test_subnet_check
+  failed_when: test_subnet_check.rc not in [0, 1]
+  changed_when: false
+  environment:
+    OS_CLOUD: ""
+
+- name: Create a test subnet
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack subnet create "{{ test_subnet_name }}" \
+      --network "{{ test_network_name }}" \
+      --subnet-range "{{ test_subnet_cidr }}" \
+      --gateway "{{ test_subnet_gateway }}" \
+      --dns-nameserver "{{ test_dns_nameservers | join(',') }}" \
+      --enable-dhcp 2>&1 | tee /var/log/ansible-subnet-create.log
+  args:
+    executable: /bin/bash
+  when: test_subnet_check.rc == 1
+  register: test_subnet_create_result
+  retries: 3
+  delay: 5
+  until: test_subnet_create_result.rc == 0 or 'already exists' in test_subnet_create_result.stderr
+  changed_when: test_subnet_create_result.rc == 0
+  failed_when: test_subnet_create_result.rc != 0 and 'already exists' not in test_subnet_create_result.stderr
+  environment:
+    OS_CLOUD: ""
+
+- name: Check if test security group exists
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack security group show "{{ test_security_group_name }}" --format value -c id
+  args:
+    executable: /bin/bash
+  register: test_security_group_check
+  failed_when: test_security_group_check.rc not in [0, 1]
+  changed_when: false
+  environment:
+    OS_CLOUD: ""
+
+- name: Create a test security group to allow SSH and ICMP
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack security group create "{{ test_security_group_name }}" \
+      --description "Security group for test VMs (SSH and ICMP)" 2>&1 | tee /var/log/ansible-secgroup-create.log
+  args:
+    executable: /bin/bash
+  when: test_security_group_check.rc == 1
+  register: test_security_group_create_result
+  retries: 3
+  delay: 5
+  until: test_security_group_create_result.rc == 0 or 'already exists' in test_security_group_create_result.stderr
+  changed_when: test_security_group_create_result.rc == 0
+  failed_when: test_security_group_create_result.rc != 0 and 'already exists' not in test_security_group_create_result.stderr
+  environment:
+    OS_CLOUD: ""
+
+- name: Check if SSH rule exists in test security group
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack security group rule list "{{ test_security_group_name }}" \
+      --protocol tcp --port 22 --direction ingress --remote-ip 0.0.0.0/0 --format value -c id
+  args:
+    executable: /bin/bash
+  register: ssh_rule_check
+  failed_when: ssh_rule_check.rc != 0
+  changed_when: false
+  environment:
+    OS_CLOUD: ""
+
+- name: Add SSH rule to test security group
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack security group rule create "{{ test_security_group_name }}" \
+      --protocol tcp --dst-port 22 --ingress --remote-ip 0.0.0.0/0 2>&1 | tee /var/log/ansible-secgroup-ssh-rule.log
+  args:
+    executable: /bin/bash
+  when: ssh_rule_check.stdout == ""
+  register: ssh_rule_create_result
+  retries: 3
+  delay: 5
+  until: ssh_rule_create_result.rc == 0 or 'already exists' in ssh_rule_create_result.stderr
+  changed_when: ssh_rule_create_result.rc == 0
+  failed_when: ssh_rule_create_result.rc != 0 and 'already exists' not in ssh_rule_create_result.stderr
+  environment:
+    OS_CLOUD: ""
+
+- name: Check if ICMP rule exists in test security group
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack security group rule list "{{ test_security_group_name }}" \
+      --protocol icmp --direction ingress --remote-ip 0.0.0.0/0 --format value -c id
+  args:
+    executable: /bin/bash
+  register: icmp_rule_check
+  failed_when: icmp_rule_check.rc != 0
+  changed_when: false
+  environment:
+    OS_CLOUD: ""
+
+- name: Add ICMP rule to test security group
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack security group rule create "{{ test_security_group_name }}" \
+      --protocol icmp --ingress --remote-ip 0.0.0.0/0 2>&1 | tee /var/log/ansible-secgroup-icmp-rule.log
+  args:
+    executable: /bin/bash
+  when: icmp_rule_check.stdout == ""
+  register: icmp_rule_create_result
+  retries: 3
+  delay: 5
+  until: icmp_rule_create_result.rc == 0 or 'already exists' in icmp_rule_create_result.stderr
+  changed_when: icmp_rule_create_result.rc == 0
+  failed_when: icmp_rule_create_result.rc != 0 and 'already exists' not in icmp_rule_create_result.stderr
+  environment:
+    OS_CLOUD: ""
+
+- name: Check if SSH key pair exists
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack keypair show "{{ test_keypair_name }}" --format value -c id
+  args:
+    executable: /bin/bash
+  register: test_keypair_check
+  failed_when: test_keypair_check.rc not in [0, 1]
+  changed_when: false
+  environment:
+    OS_CLOUD: ""
+
+- name: Generate SSH key pair for instance access
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    # Ensure public key file exists on controller
+    if [ ! -f ~/.ssh/id_rsa.pub ]; then
+      ssh-keygen -t rsa -f ~/.ssh/id_rsa -N ""
+    fi
+    openstack keypair create "{{ test_keypair_name }}" \
+      --public-key ~/.ssh/id_rsa.pub 2>&1 | tee /var/log/ansible-keypair-create.log
+  args:
+    executable: /bin/bash
+  when: test_keypair_check.rc == 1
+  register: test_keypair_create_result
+  retries: 3
+  delay: 5
+  until: test_keypair_create_result.rc == 0 or 'already exists' in test_keypair_create_result.stderr
+  changed_when: test_keypair_create_result.rc == 0
+  failed_when: test_keypair_create_result.rc != 0 and 'already exists' not in test_keypair_create_result.stderr
+  environment:
+    OS_CLOUD: ""
+
+- name: Set permissions for private key file (on controller host)
+  ansible.builtin.file:
+    path: "/tmp/{{ test_keypair_name }}.pem"
+    mode: '0600'
+  when: inventory_hostname in groups['controllers']
+
+- name: Check if test instance exists
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack server show "{{ test_instance_name }}" --format value -c id
+  args:
+    executable: /bin/bash
+  register: test_instance_check
+  failed_when: test_instance_check.rc not in [0, 1]
+  changed_when: false
+  environment:
+    OS_CLOUD: ""
+
+- name: Launch a test instance
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack server create "{{ test_instance_name }}" \
+      --image "{{ cirros_image_glance_name }}" \
+      --flavor "{{ test_flavor_name }}" \
+      --network "{{ test_network_name }}" \
+      --security-group "{{ test_security_group_name }}" \
+      --key-name "{{ test_keypair_name }}" \
+      --wait \
+      --timeout 300 2>&1 | tee /var/log/ansible-instance-launch.log
+  args:
+    executable: /bin/bash
+  when: test_instance_check.rc == 1
+  register: test_instance_launch_result
+  retries: 3
+  delay: 10
+  until: test_instance_launch_result.rc == 0 or 'already exists' in test_instance_launch_result.stderr or 'Build of instance' in test_instance_launch_result.stderr
+  changed_when: test_instance_launch_result.rc == 0
+  failed_when: test_instance_launch_result.rc != 0 and 'already exists' not in test_instance_launch_result.stderr
+  environment:
+    OS_CLOUD: ""
+
+- name: Get instance details for IP address
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack server show "{{ test_instance_name }}" --format json
+  args:
+    executable: /bin/bash
+  register: instance_details_raw
+  changed_when: false
+  when: inventory_hostname in groups['controllers']
+  environment:
+    OS_CLOUD: ""
+
+- name: Extract instance IP address for ping test
+  ansible.builtin.set_fact:
+    instance_ip: "{{ (instance_details_raw.stdout | from_json).addresses[test_network_name][0].addr }}"
+  when: inventory_hostname in groups['controllers'] and instance_details_raw.stdout is defined and (instance_details_raw.stdout | from_json).addresses is defined and (instance_details_raw.stdout | from_json).addresses[test_network_name] is defined
+
+- name: Ping the launched instance to verify network connectivity
+  ansible.builtin.wait_for_connection:
+    host: "{{ instance_ip }}"
+    port: 22
+    delay: 10
+    timeout: 180
+  when: inventory_hostname in groups['controllers'] and instance_ip is defined
+
+- name: Ping test successful
+  ansible.builtin.debug:
+    msg: "Successfully launched and pinged the test instance {{ test_instance_name }} at {{ instance_ip }}! Nova deployment is functional."
+  when: inventory_hostname in groups['controllers']
+
+# --- CLEANUP TASKS  ---
+
+- name: "Clean up: Delete test instance"
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack server delete "{{ test_instance_name }}" --wait --timeout 180 2>&1 | tee /var/log/ansible-instance-delete.log
+  args:
+    executable: /bin/bash
+  when: inventory_hostname in groups['controllers']
+  register: instance_delete_result
+  failed_when: instance_delete_result.rc != 0 and 'No server with a name or ID of' not in instance_delete_result.stderr
+  changed_when: instance_delete_result.rc == 0
+  environment:
+    OS_CLOUD: ""
+
+- name: "Clean up: Delete test keypair"
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack keypair delete "{{ test_keypair_name }}" 2>&1 | tee /var/log/ansible-keypair-delete.log
+  args:
+    executable: /bin/bash
+  when: inventory_hostname in groups['controllers']
+  register: keypair_delete_result
+  failed_when: keypair_delete_result.rc != 0 and 'No keypair with a name or ID of' not in keypair_delete_result.stderr
+  changed_when: keypair_delete_result.rc == 0
+  environment:
+    OS_CLOUD: ""
+
+- name: "Clean up: Delete test security group"
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack security group delete "{{ test_security_group_name }}" 2>&1 | tee /var/log/ansible-secgroup-delete.log
+  args:
+    executable: /bin/bash
+  when: inventory_hostname in groups['controllers']
+  register: secgroup_delete_result
+  failed_when: secgroup_delete_result.rc != 0 and 'No security group with a name or ID of' not in secgroup_delete_result.stderr
+  changed_when: secgroup_delete_result.rc == 0
+  environment:
+    OS_CLOUD: ""
+
+- name: "Clean up: Delete test subnet"
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack subnet delete "{{ test_subnet_name }}" 2>&1 | tee /var/log/ansible-subnet-delete.log
+  args:
+    executable: /bin/bash
+  when: inventory_hostname in groups['controllers']
+  register: subnet_delete_result
+  failed_when: subnet_delete_result.rc != 0 and 'No subnet with a name or ID of' not in subnet_delete_result.stderr
+  changed_when: subnet_delete_result.rc == 0
+  environment:
+    OS_CLOUD: ""
+
+- name: "Clean up: Delete test network"
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack network delete "{{ test_network_name }}" 2>&1 | tee /var/log/ansible-network-delete.log
+  args:
+    executable: /bin/bash
+  when: inventory_hostname in groups['controllers']
+  register: network_delete_result
+  failed_when: network_delete_result.rc != 0 and 'No network with a name or ID of' not in network_delete_result.stderr
+  changed_when: network_delete_result.rc == 0
+  environment:
+    OS_CLOUD: ""
+
+- name: "Clean up: Delete CirrOS image from Glance"
+  ansible.builtin.shell: |
+    source {{ keystone_rc_file }}
+    openstack image delete "{{ cirros_image_glance_name }}" 2>&1 | tee /var/log/ansible-image-delete.log
+  args:
+    executable: /bin/bash
+  when: inventory_hostname in groups['controllers']
+  register: image_delete_result
+  failed_when: image_delete_result.rc != 0 and 'No image with a name or ID of' not in image_delete_result.stderr
+  changed_when: image_delete_result.rc == 0
+  environment:
+    OS_CLOUD: ""

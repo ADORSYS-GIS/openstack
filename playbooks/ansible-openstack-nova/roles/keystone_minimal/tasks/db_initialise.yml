@@ -1,0 +1,48 @@
+---
+# Install MySQL Python bindings required for database operations
+# These are needed for the community.mysql modules to work
+- name: Install MySQL Python bindings
+  ansible.builtin.apt:
+    name: python3-pymysql
+    state: present
+    update_cache: yes
+  register: apt_result
+  retries: 3
+  delay: 5
+  until: apt_result is success
+  become: true
+  when: inventory_hostname == 'controller'
+
+# Check if MariaDB Unix socket exists to ensure database is running
+# This prevents errors if the database service is not yet available
+- name: Check if MariaDB Unix socket exists
+  ansible.builtin.stat:
+    path: /var/run/mysqld/mysqld.sock
+  register: mysql_socket_stat
+  failed_when: not mysql_socket_stat.stat.exists
+  when: inventory_hostname == 'controller'
+
+# Create the Keystone database in MariaDB
+# This is done with root privileges as we need to create the database
+- name: Create Keystone database
+  community.mysql.mysql_db:
+    name: "{{ openstack_db_name }}"
+    state: present
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  become: true
+  when: inventory_hostname == 'controller' and mysql_socket_stat.stat.exists
+
+# Grant privileges to the Keystone database user
+# This allows the keystone service to access its database
+- name: Grant privileges to Keystone database user
+  community.mysql.mysql_user:
+    name: "{{ openstack_db_user }}"
+    password: "{{ openstack_db_password }}"
+    host: "%"
+    priv: "{{ openstack_db_name }}.*:ALL"
+    state: present
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  become: true
+  when: inventory_hostname == 'controller' and mysql_socket_stat.stat.exists

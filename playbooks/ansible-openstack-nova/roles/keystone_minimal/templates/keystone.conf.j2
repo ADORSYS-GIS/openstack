@@ -1,0 +1,30 @@
+[DEFAULT]
+log_dir = /var/log/keystone
+debug = False
+
+[database]
+connection = mysql+pymysql://{{ openstack_db_user }}:{{ openstack_db_password }}@localhost/{{ keystone_db_name }}
+
+[token]
+provider = fernet
+
+[cache]
+backend = dogpile.cache.memcache
+enabled = true
+
+[memcache]
+# memcache_servers = localhost:11211
+
+[assignment]
+driver = sql
+
+[auth]
+methods = external,password,token,oauth1
+password = keystone.auth.backends.sql.Password
+token = keystone.auth.backends.sql.Token
+
+[federation]
+driver = sql
+
+[oslo_middleware]
+enable_proxy_headers_parsing = true

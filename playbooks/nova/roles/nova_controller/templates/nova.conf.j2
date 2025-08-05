@@ -1,0 +1,21 @@
+[DEFAULT]
+enabled_apis = osapi_compute,metadata
+
+[api_database]
+connection = mysql+pymysql://nova:{{ nova_db_password }}@{{ compute_host }}/nova_api
+
+[database]
+connection = mysql+pymysql://nova:{{ nova_db_password }}@{{ compute_host }}/nova
+
+[keystone_authtoken]
+auth_url = http://{{ compute_host }}:5000/v3
+memcached_servers = {{ compute_host }}:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = nova
+password = {{ nova_user_password }}
+
+[oslo_concurrency]
+lock_path = /var/lib/nova/tmp

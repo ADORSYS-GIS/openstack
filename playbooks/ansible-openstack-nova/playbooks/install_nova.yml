@@ -1,0 +1,10 @@
+---
+# This playbook installs and configures Nova on both controller and compute nodes.
+# It assumes that all necessary dependencies (MariaDB, RabbitMQ, Keystone, Glance, Placement)
+# have already been installed and configured.
+
+- name: Install and configure Nova
+  hosts: openstack_nodes # Nova components run on both controller and compute
+  become: yes
+  roles:
+    - nova

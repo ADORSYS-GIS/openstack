@@ -1,0 +1,65 @@
+# roles/nova/templates/nova.conf.j2
+# Nova configuration file for OpenStack
+
+[DEFAULT]
+# General options
+transport_url = rabbit://openstack:{{ rabbitmq_password }}@{{ rabbitmq_host }}
+auth_strategy = keystone
+use_neutron = True
+firewall_driver = nova.virt.firewall.NoopFirewallDriver # For minimal, use Noop. In production, use ovs or iptables.
+my_ip = {{ ansible_host }} # IP address of the node
+
+# Logging options
+# verbose = true
+# debug = true
+
+[api]
+auth_strategy = keystone
+
+[api_database]
+connection = {{ database_connection_base }}/{{ nova_api_db_name }}
+
+[database]
+connection = {{ database_connection_base }}/{{ nova_db_name }}
+
+[glance]
+api_servers = {{ glance_api_url }}
+
+[keystone_authtoken]
+www_authenticate_uri = {{ keystone_public_url }}
+auth_url = {{ keystone_admin_url }}
+memcached_servers = localhost:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = nova
+password = {{ nova_user_password }}
+
+[oslo_concurrency]
+lock_path = /var/lib/nova/tmp
+
+[placement]
+region_name = {{ openstack_region_name }}
+project_domain_name = Default
+project_name = service
+auth_type = password
+user_domain_name = Default
+username = placement
+password = {{ placement_user_password }}
+auth_url = {{ keystone_admin_url }}
+# Explicitly tell Nova where the Placement API lives.
+# This overrides service catalog discovery if there are issues or specific requirements.
+endpoint_override = {{ placement_api_url }} # ADDED: Explicit endpoint override for Placement
+
+[vnc]
+enabled = true
+# The IP address of the controller node where the noVNC proxy runs
+server_listen = 0.0.0.0 # Listen on all interfaces
+server_proxyclient_address = {{ controller_ip }} # The IP clients connect to
+# The base URL for the noVNC proxy, accessible from client browsers
+# This should be the public IP of the controller
+novncproxy_base_url = http://{{ controller_ip }}:6080/vnc_auto.html
+
+[wsgi]
+api_paste_config = /etc/nova/api-paste.ini

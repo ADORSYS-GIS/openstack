@@ -1,0 +1,21 @@
+---
+# Main entry point for the Nova installation role.
+
+- name: Include Nova database setup tasks
+  ansible.builtin.include_tasks: _db_setup.yml
+  when: inventory_hostname in groups['controllers']
+
+- name: Include Nova Keystone registration tasks
+  ansible.builtin.include_tasks: _keystone_registration.yml
+  when: inventory_hostname in groups['controllers']
+
+- name: Include Nova configuration tasks
+  ansible.builtin.include_tasks: _config.yml
+
+- name: Include Nova controller installation tasks
+  ansible.builtin.include_tasks: _install_controller.yml
+  when: inventory_hostname in groups['controllers']
+
+- name: Include Nova compute installation tasks
+  ansible.builtin.include_tasks: _install_compute.yml
+  when: inventory_hostname in groups['computes']

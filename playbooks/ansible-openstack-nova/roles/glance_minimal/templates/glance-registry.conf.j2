@@ -1,0 +1,33 @@
+# Minimal Glance Registry configuration for OpenStack
+
+[DEFAULT]
+# The verbose option will make the log output more verbose.
+# verbose = true
+
+# The debug option will make the log output really verbose.
+# debug = true
+
+# Connection string for the database.
+bind_host = 0.0.0.0
+bind_port = 9191
+
+[database]
+connection = {{ database_connection_base }}/{{ glance_db_name }}
+
+[keystone_authtoken]
+# The URL to the Keystone authentication server.
+www_authenticate_uri = {{ keystone_public_url }}
+auth_url = {{ keystone_admin_url }}
+memcached_servers = localhost:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = glance
+password = {{ glance_user_password }}
+
+[paste_deploy]
+flavor = keystone
+
+[oslo_concurrency]
+lock_path = /var/lib/glance/tmp

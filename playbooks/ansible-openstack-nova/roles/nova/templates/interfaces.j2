@@ -1,0 +1,12 @@
+# Network configuration for br-ex bridge on compute node
+
+auto br-ex
+iface br-ex inet static
+  address {{ compute_ip }} # Or an IP from your instance network if different
+  netmask 255.255.255.0 # Adjust as per your network
+  gateway 192.168.56.1 # Assuming this is your gateway for the private network
+  bridge_ports none
+  bridge_fd 9
+  bridge_hello 2
+  bridge_maxwait 20
+  bridge_stp off
