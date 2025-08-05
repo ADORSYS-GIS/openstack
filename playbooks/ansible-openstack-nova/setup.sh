@@ -200,8 +200,34 @@ else
 fi
 log_info "Vagrant installed/verified (version: $(vagrant --version | awk '{print $2}'))."
 
-# Ensure libvirt default network is active
+# Ensure libvirt default network exists and is active
 log_section "Configuring libvirt Default Network"
+if ! virsh net-list --all | grep -q " default"; then
+    log_info "libvirt default network not found. Creating it..."
+    # Create default network XML
+    cat > /tmp/default_network.xml << 'EOF'
+<network>
+  <name>default</name>
+  <uuid>9a05da11-e96b-47f3-8253-a3a482e445f5</uuid>
+  <forward mode='nat'>
+    <nat>
+      <port start='1024' end='65535'/>
+    </nat>
+  </forward>
+  <bridge name='virbr0' stp='on' delay='0'/>
+  <mac address='52:54:00:0a:cd:21'/>
+  <ip address='192.168.122.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='192.168.122.2' end='192.168.122.254'/>
+    </dhcp>
+  </ip>
+</network>
+EOF
+    virsh net-define /tmp/default_network.xml || log_error "Failed to define libvirt default network."
+    rm -f /tmp/default_network.xml
+    log_info "libvirt default network created."
+fi
+
 if ! virsh net-list --all | grep -q " default.*active"; then
     log_info "Starting libvirt default network..."
     virsh net-start default || log_error "Failed to start libvirt default network."
