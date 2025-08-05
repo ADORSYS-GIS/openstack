@@ -373,12 +373,20 @@ fi
 log_section "Installing Ansible Collections"
 ANSIBLE_COLLECTIONS_PATH_ENV="$(pwd)/collections"
 log_info "Creating collections directory structure at $ANSIBLE_COLLECTIONS_PATH_ENV..."
+# Remove existing collections directory if it has permission issues
+if [ -d "$ANSIBLE_COLLECTIONS_PATH_ENV" ]; then
+    rm -rf "$ANSIBLE_COLLECTIONS_PATH_ENV" || log_warning "Failed to remove existing collections directory."
+fi
+# Create directory structure with proper ownership
 mkdir -p "$ANSIBLE_COLLECTIONS_PATH_ENV/ansible_collections/community" || log_error "Failed to create collections directory structure."
 mkdir -p "$ANSIBLE_COLLECTIONS_PATH_ENV/ansible_collections/ansible" || log_error "Failed to create ansible collections directory."
+# Ensure proper ownership
+chown -R "$USER:$USER" "$ANSIBLE_COLLECTIONS_PATH_ENV" || log_warning "Failed to set ownership of collections directory."
+chmod -R 755 "$ANSIBLE_COLLECTIONS_PATH_ENV" || log_warning "Failed to set permissions on collections directory."
 if [ ! -d "$ANSIBLE_COLLECTIONS_PATH_ENV/ansible_collections" ]; then
     log_error "Collections directory structure $ANSIBLE_COLLECTIONS_PATH_ENV/ansible_collections does not exist after creation attempt."
 fi
-log_info "Collections directory structure created at $ANSIBLE_COLLECTIONS_PATH_ENV."
+log_info "Collections directory structure created with proper permissions at $ANSIBLE_COLLECTIONS_PATH_ENV."
 
 # Ensure we're using the virtual environment ansible-galaxy
 log_info "Using virtual environment ansible-galaxy: $(which ansible-galaxy)"
