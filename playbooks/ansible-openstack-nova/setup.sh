@@ -235,9 +235,18 @@ if ! virsh net-list --all | grep -q " default.*active"; then
 fi
 log_info "libvirt default network is active."
 
-# Add user to libvirt group
+# Add user to libvirt group and ensure libvirtd is running
 log_section "Configuring User Permissions"
 getent group libvirt >/dev/null || log_error "'libvirt' group does not exist."
+
+# Ensure libvirtd service is running
+log_info "Ensuring libvirtd service is running..."
+if ! sudo systemctl is-active --quiet libvirtd; then
+    log_info "Starting libvirtd service..."
+    sudo systemctl start libvirtd || log_error "Failed to start libvirtd service."
+fi
+sudo systemctl enable libvirtd || log_warning "Failed to enable libvirtd service."
+
 if [ "$USER" = "root" ]; then
     log_info "Running as root; skipping libvirt group check, as root has full access."
 elif id -nG "$USER" | grep -q libvirt; then
@@ -245,14 +254,22 @@ elif id -nG "$USER" | grep -q libvirt; then
 else
     log_info "Adding user '$USER' to 'libvirt' group..."
     sudo usermod -aG libvirt "$USER" || log_error "Failed to add user '$USER' to 'libvirt' group."
-    log_info "User '$USER' added to 'libvirt' group. Applying group change in current session."
-    # Re-execute script with libvirt group using sg
+    log_info "User '$USER' added to 'libvirt' group. Group change will take effect after re-login."
+    log_warning "You may need to log out and back in, or run 'newgrp libvirt' for group changes to take effect."
+    
+    # Try to apply group change in current session
     if command -v sg >/dev/null 2>&1; then
+        log_info "Attempting to apply group change in current session..."
         exec sg libvirt -c "$0 $*"
     else
-        log_warning "sg command not found. Run 'newgrp libvirt' or log out and back in, then re-run this script."
-        exit 0  # Non-critical exit
+        log_warning "sg command not found. Group changes will take effect after re-login."
     fi
+fi
+
+# Additional permission fix for libvirt socket
+log_info "Ensuring proper libvirt socket permissions..."
+if [ -S /var/run/libvirt/libvirt-sock ]; then
+    sudo chmod 666 /var/run/libvirt/libvirt-sock || log_warning "Failed to set libvirt socket permissions."
 fi
 
 # Install/Update vagrant-libvirt plugin
