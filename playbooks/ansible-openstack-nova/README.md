@@ -1,6 +1,6 @@
 # OpenStack Nova Deployment with Ansible
 
-This project provides a complete Ansible-based deployment solution for OpenStack Nova, including all necessary dependencies (MariaDB, RabbitMQ, Keystone, Glance, and Placement). It uses Vagrant with libvirt to create virtual machines for a controller and compute node, then provisions them with Ansible playbooks.
+This project automates the complete and robust deployment of OpenStack Nova (Compute Service) along with its minimal dependencies for testing and validation. It uses Vagrant with libvirt to create virtual machines for a controller and compute node, then provisions them with Ansible playbooks to create a fully functional OpenStack environment.
 
 ## Table of Contents
 
@@ -261,4 +261,4 @@ Contributions are welcome! Please follow these steps:
 
 ## License
 
-This project is licensed under the Apache License 2.0. See the LICENSE file for details.
+This project is licensed under the MIT License. See the LICENSE file for details.

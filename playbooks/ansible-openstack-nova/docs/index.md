@@ -1,6 +1,6 @@
-# OpenStack Deployment Documentation
+# OpenStack Nova Automation Documentation
 
-This directory contains comprehensive documentation for the OpenStack deployment implemented by this Ansible playbook.
+This directory contains comprehensive documentation for the OpenStack Nova automation project implemented by this Ansible playbook. The project automates the complete and robust deployment of OpenStack Nova (Compute Service) along with its minimal dependencies for testing and validation.
 
 ## Table of Contents
 
