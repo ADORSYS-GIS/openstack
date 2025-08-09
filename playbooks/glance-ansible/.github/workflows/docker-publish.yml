@@ -1,0 +1,38 @@
+name: Docker Publish
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push glance image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        dockerfile: Dockerfile.glance
+        push: true
+        tags: ghcr.io/${{ github.repository_owner }}/glance:latest
+
+    - name: Build and push keystone image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        dockerfile: Dockerfile.keystone
+        push: true
+        tags: ghcr.io/${{ github.repository_owner }}/keystone:latest

@@ -1,0 +1,64 @@
+version: '3.7'
+
+services:
+  mariadb:
+    image: mariadb:10.5
+    container_name: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: "newpassword"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - openstack_network
+
+  keystone:
+    build:
+      context: .
+      dockerfile: Dockerfile.keystone
+    container_name: keystone
+    depends_on:
+      - mariadb
+    environment:
+      - MYSQL_ROOT_PASSWORD=newpassword
+      - KEYSTONE_DB_PASS=keystone_db_pass
+      - KEYSTONE_ADMIN_PASS=admin
+      - CONTROLLER_HOST=controller
+      - KEYSTONE_PORT=5000
+    volumes:
+      - ./init-scripts:/init-scripts
+    networks:
+      - openstack_network
+    ports:
+      - "5000:5000"
+
+  glance:
+    build:
+      context: .
+      dockerfile: Dockerfile.glance
+    container_name: glance
+    depends_on:
+      - keystone
+    environment:
+      - OS_AUTH_URL=http://keystone:5000
+      - OS_PASSWORD=admin
+      - OS_USERNAME=admin
+      - MYSQL_ROOT_PASSWORD=newpassword
+      - GLANCE_DB_PASS=GlancePass123!
+      - GLANCE_USER_PASS=GlancePass123!
+      - KEYSTONE_ADMIN_PASS=admin
+      - CONTROLLER_HOST=controller
+      - KEYSTONE_PORT=5000
+    volumes:
+      - ./init-scripts:/init-scripts
+      - glance_data:/var/lib/glance
+    networks:
+      - openstack_network
+    ports:
+      - "9292:9292"
+
+volumes:
+  mariadb_data:
+  glance_data:
+
+networks:
+  openstack_network:
