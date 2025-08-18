@@ -22,15 +22,15 @@
         - name: Build and push glance image
           uses: docker/build-push-action@v4
           with:
-            context: ./playbooks/glance-ansible
-            dockerfile: ./playbooks/glance-ansible/Dockerfile.glance
+            context: playbooks/glance-ansible
+            dockerfile: playbooks/glance-ansible/Dockerfile.glance
             push: true
             tags: ghcr.io/${{ vars.REPOSITORY }}/glance:latest
     
         - name: Build and push keystone image
           uses: docker/build-push-action@v4
           with:
-            context: ./playbooks/glance-ansible
-            dockerfile: ./playbooks/glance-ansible/Dockerfile.keystone
+            context: playbooks/glance-ansible
+            dockerfile: playbooks/glance-ansible/Dockerfile.keystone
             push: true 
             tags: ghcr.io/${{ vars.REPOSITORY }}/keystone:latest
