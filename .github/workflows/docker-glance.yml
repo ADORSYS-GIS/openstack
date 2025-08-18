@@ -17,7 +17,7 @@
           uses: docker/login-action@v2
           with:
             registry: ghcr.io
-            username: ${{ github.repository_owner }}
+            username: ${{ github.REPOSITORY }}
             password: ${{ secrets.GITHUB_TOKEN }}
     
         - name: Build and push glance image
@@ -26,7 +26,7 @@
             context: ./playbooks/glance-ansible
             dockerfile: ./playbooks/glance-ansible/Dockerfile.glance
             push: true
-            tags: ghcr.io/${{ github.repository_owner }}/glance:latest
+            tags: ghcr.io/${{ github.REPOSITORY }}/glance:latest
     
         - name: Build and push keystone image
           uses: docker/build-push-action@v4
@@ -34,4 +34,4 @@
             context: ./playbooks/glance-ansible
             dockerfile: ./playbooks/glance-ansible/Dockerfile.keystone
             push: true
-            tags: ghcr.io/${{ github.repository_owner }}/keystone:latest
+            tags: ghcr.io/${{ github.REPOSITORY }}/keystone:latest
