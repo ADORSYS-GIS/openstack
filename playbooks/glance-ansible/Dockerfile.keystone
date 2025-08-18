@@ -14,9 +14,9 @@ RUN dpkg -s libapache2-mod-wsgi-py3 || apt-get install -y libapache2-mod-wsgi-py
 RUN dpkg -s crudini || apt-get install -y crudini
 RUN dpkg -s python3-openstackclient || apt-get install -y python3-openstackclient
 
-COPY roles/keystone/templates/wsgi-keystone.conf.j2 /etc/apache2/sites-available/wsgi-keystone.conf
+COPY playbooks/glance-ansible/roles/keystone/templates/wsgi-keystone.conf.j2 /etc/apache2/sites-available/wsgi-keystone.conf
 
-COPY init-scripts/keystone-init.sh /keystone-init.sh
+COPY playbooks/glance-ansible/init-scripts/keystone-init.sh /keystone-init.sh
 RUN chmod +x /keystone-init.sh
 
 ENTRYPOINT ["/keystone-init.sh"]
