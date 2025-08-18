@@ -23,7 +23,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: .
-        dockerfile: playbooks/glance-ansible/Dockerfile.glance
+        file: playbooks/glance-ansible/Dockerfile.glance
         push: true
         tags: ghcr.io/${{ vars.REPOSITORY }}/glance:latest
 
@@ -31,6 +31,6 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: .
-        dockerfile: playbooks/keystone-ansible/Dockerfile.keystone
+        file: playbooks/keystone-ansible/Dockerfile.keystone
         push: true
         tags: ghcr.io/${{ vars.REPOSITORY }}/keystone:latest
