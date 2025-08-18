@@ -18,6 +18,12 @@ jobs:
         registry: ghcr.io
         username: ${{ vars.REPOSITORY }}
         password: ${{ secrets.GITHUB_TOKEN }}
+    - uses: docker/build-push-action@v5
+      with:
+        build-args: |
+          DNS=8.8.8.8
+        # Use network host to inherit runner DNS settings
+        network: host
 
     - name: Build and push glance image
       uses: docker/build-push-action@v4
