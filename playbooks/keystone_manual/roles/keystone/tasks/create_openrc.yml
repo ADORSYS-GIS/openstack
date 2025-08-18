@@ -1,0 +1,14 @@
+- name: Create OpenStack OpenRC file
+  template:
+    src: openrc.j2
+    dest: "{{ openrc_path }}"
+    owner: "{{ openrc_owner }}"
+    group: "{{ openrc_owner }}"
+    mode: "0644"
+
+- name: Ensure openrc is sourced in user shell config
+  lineinfile:
+    path: "/home/{{ openrc_owner }}/.bashrc"
+    line: "source ~/openrc"
+    state: present
+    create: yes
