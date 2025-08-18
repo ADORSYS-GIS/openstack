@@ -16,8 +16,6 @@ RUN dpkg -s python3-openstackclient || apt-get install -y python3-openstackclien
 COPY roles/glance/templates/glance-api.conf.j2 /etc/glance/glance-api.conf
 COPY roles/glance/templates/glance-api-paste.ini.j2 /etc/glance/glance-api-paste.ini
 COPY roles/glance/templates/glance-init.sh /glance-init.sh
-
-COPY init-scripts/glance-init.sh /glance-init.sh
 RUN chmod +x /glance-init.sh
 
 ENTRYPOINT ["/glance-init.sh"]
