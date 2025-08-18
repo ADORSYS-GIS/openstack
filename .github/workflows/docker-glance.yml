@@ -33,5 +33,5 @@
           with:
             context: ./playbooks/glance-ansible
             dockerfile: ./playbooks/glance-ansible/Dockerfile.keystone
-            push: true
+            push: true 
             tags: ghcr.io/${{ github.REPOSITORY }}/keystone:latest
