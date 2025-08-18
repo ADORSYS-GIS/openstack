@@ -1,5 +1,4 @@
-    name: Docker Publish
-    
+    name: Docker Publish    
     on:
       push:
     
@@ -26,7 +25,7 @@
             context: ./playbooks/glance-ansible
             dockerfile: ./playbooks/glance-ansible/Dockerfile.glance
             push: true
-            tags: ghcr.io/${{ github.REPOSITORY }}/glance:latest
+            tags: ghcr.io/${{ vars.REPOSITORY }}/glance:latest
     
         - name: Build and push keystone image
           uses: docker/build-push-action@v4
@@ -34,4 +33,4 @@
             context: ./playbooks/glance-ansible
             dockerfile: ./playbooks/glance-ansible/Dockerfile.keystone
             push: true 
-            tags: ghcr.io/${{ github.REPOSITORY }}/keystone:latest
+            tags: ghcr.io/${{ vars.REPOSITORY }}/keystone:latest
