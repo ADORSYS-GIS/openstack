@@ -1,0 +1,8 @@
+<VirtualHost *:{{ keystone_port }}>
+    WSGIDaemonProcess keystone_wsgi processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
+    WSGIProcessGroup keystone_wsgi
+    WSGIScriptAlias / /usr/bin/keystone-wsgi-public
+    ErrorLogFormat "%{cu}t %M"
+    ErrorLog /var/log/apache2/keystone_error.log
+    CustomLog /var/log/apache2/keystone_access.log combined
+</VirtualHost>

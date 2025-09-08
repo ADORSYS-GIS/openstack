@@ -16,9 +16,9 @@ the same network switch.
 There are two types of VLANs:
 
 - **Port-Based VLAN**: A VLAN is assigned to a particular port, and any machine
-  connected to that port automatically joins that VLAN
+  connected to that port automatically joins that VLAN.
 - **User-Based or Dynamic VLAN**: VLANs are assigned based on user
-  authentication or other dynamic criteria
+  authentication or other dynamic criteria.
 
 ## Network Architecture
 
