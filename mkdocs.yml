@@ -15,6 +15,20 @@ theme:
 # Navbar settings (site structure)
 nav:
   - Home: README.md
+  - Documentation:
+    - Ansible: docs/ansible_docs.md
+    - NetPlan: docs/netplan_doc.md
+    - NTP: docs/ntp_docs.md
+    - VLAN: docs/VLAN.md
+  - NetBird:
+    - Troubleshooting: docs/netbird/netbird_troubleshooting.md
+    - Access Review: docs/netbird/netbird_access_review.md
+  - Tutorials:
+    - Ansible Tutorial: docs/tutorials/ansible_tuto.md
+    - Boot Documentation: docs/tutorials/boot_docs.md
+    - Minimal KVM Setup: docs/tutorials/minimal_kvm_setup.md
+    - NTP Setup Tutorial: docs/tutorials/ntp_setup_tuto.md
+    - Setup vSwitch: docs/tutorials/setupvswitch.md
 
 # Extra settings
 markdown_extensions:
