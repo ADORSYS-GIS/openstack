@@ -62,21 +62,29 @@ Validate NetBird configuration before proceeding with connectivity tests:
 # Check NetBird version
 netbird version
 
-# Verify configuration file exists and is readable
-cat /etc/netbird/config.json
+# Check detailed status including management server connection
+netbird status --detail
 
-# Check management server configuration
-netbird status | grep "Management:"
+# Look for configuration files in common locations
+# For standard installations:
+ls -la /etc/netbird/
+# For Snap installations:
+ls -la /var/snap/netbird/common/
 
-# Verify setup key is configured (if applicable)
-grep -i "setupkey" /etc/netbird/config.json
+# Verify management server connectivity from status
+netbird status --detail | grep -E "(Management|Signal):"
 ```
 
 **Configuration Checklist:**
 - [ ] NetBird client version is current
-- [ ] Management server URL is accessible
-- [ ] Setup key is valid (for new installations)
+- [ ] Management server shows "Connected" in status
+- [ ] Signal server shows "Connected" in status  
+- [ ] Configuration files exist in expected location
 - [ ] TLS certificates are valid (for self-hosted instances)
+
+**Note:** Configuration file paths vary by installation method:
+- Standard/self-hosted: `/etc/netbird/config.json`
+- Snap installations: `/var/snap/netbird/common/`
 
 ### 3. DNS Resolution Test
 
