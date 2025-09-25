@@ -284,14 +284,14 @@ The following criteria guided our technology selection:
 
 | Criteria | Charmed OpenStack | Kolla-Ansible | OpenStack Ansible |
 |----------|-------------------|---------------|-------------------|
-| **Operational Transparency** | Medium - Juju abstracts service details | Low - Container abstraction limits visibility | High - Direct service access |
-| **Customization Flexibility** | Low - Limited by charm capabilities | Medium - Container customization possible | High - Full Ansible role customization |
-| **Team Skill Alignment** | Low - Requires Juju/charm expertise | Medium - Docker and Ansible knowledge needed | High - Leverages existing Ansible expertise |
-| **Upgrade Complexity** | Medium - Charm dependencies and coordination | High - Container image management | Medium - Ansible playbook execution |
-| **Resource Overhead** | Medium - Juju controllers (~2GB RAM) and MAAS | High - Docker runtime overhead (~15-20% memory) | Low-Medium - LXC containers (~2-5% memory) |
-| **Community Support** | Medium - Canonical-focused community | Medium - Container-focused approach | High - Broad OpenStack community adoption |
-| **Integration Capabilities** | Low - Juju-specific integration patterns | Medium - Standard container interfaces | High - Native Ansible integration |
-| **Troubleshooting Complexity** | High - Multiple abstraction layers | High - Container networking complexity | Low - Direct service and log access |
+| **Operational Transparency** | Medium - Juju abstracts | Low - Container limits | High - Direct access |
+| **Customization Flexibility** | Low - Charm limited | Medium - Container custom | High - Full Ansible custom |
+| **Team Skill Alignment** | Low - Juju expertise | Medium - Docker/Ansible | High - Existing Ansible |
+| **Upgrade Complexity** | Medium - Charm deps | High - Container images | Medium - Ansible execution |
+| **Resource Overhead** | Medium - Juju/MAAS | High - Docker (~15-20%) | Low-Medium - LXC (~2-5%) |
+| **Community Support** | Medium - Canonical | Medium - Container focus | High - Broad OpenStack |
+| **Integration Capabilities** | Low - Juju patterns | Medium - Container APIs | High - Native Ansible |
+| **Troubleshooting Complexity** | High - Multi layers | High - Container network | Low - Direct access |
 
 ## Selected Approach and Rationale
 
