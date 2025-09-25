@@ -284,14 +284,14 @@ The following criteria guided our technology selection:
 
 | Criteria | Charmed OpenStack | Kolla-Ansible | OpenStack Ansible |
 |----------|-------------------|---------------|-------------------|
-| **Operational Transparency** | Medium - Juju abstracts service details | Low - Container abstraction limits visibility | High - Direct service access and configuration |
+| **Operational Transparency** | Medium - Juju abstracts service details | Low - Container abstraction limits visibility | High - Direct service access |
 | **Customization Flexibility** | Low - Limited by charm capabilities | Medium - Container customization possible | High - Full Ansible role customization |
 | **Team Skill Alignment** | Low - Requires Juju/charm expertise | Medium - Docker and Ansible knowledge needed | High - Leverages existing Ansible expertise |
-| **Upgrade Complexity** | Medium - Charm dependencies and Juju coordination | High - Container image management and coordination | Medium - Ansible playbook execution |
-| **Resource Overhead** | Medium - Juju controllers (~2GB RAM estimated) and MAAS overhead | High - Docker runtime overhead (estimated ~15-20% memory, ~5-10% CPU per node) | Low-Medium - LXC containers with minimal overhead (estimated ~2-5% memory per service, to be validated) |
+| **Upgrade Complexity** | Medium - Charm dependencies and coordination | High - Container image management | Medium - Ansible playbook execution |
+| **Resource Overhead** | Medium - Juju controllers (~2GB RAM) and MAAS | High - Docker runtime overhead (~15-20% memory) | Low-Medium - LXC containers (~2-5% memory) |
 | **Community Support** | Medium - Canonical-focused community | Medium - Container-focused approach | High - Broad OpenStack community adoption |
 | **Integration Capabilities** | Low - Juju-specific integration patterns | Medium - Standard container interfaces | High - Native Ansible integration |
-| **Troubleshooting Complexity** | High - Multiple abstraction layers | High - Container networking and storage complexity | Low - Direct service and log access |
+| **Troubleshooting Complexity** | High - Multiple abstraction layers | High - Container networking complexity | Low - Direct service and log access |
 
 ## Selected Approach and Rationale
 
@@ -526,7 +526,7 @@ hardening rather than framework-provided defaults.
 
 ## References and Documentation
 
-### OpenStack Ansible
+### OpenStack Ansible Documentation
 
 - [Official Documentation](https://docs.openstack.org/openstack-ansible/latest/)
 - [Deployment Guide](https://docs.openstack.org/openstack-ansible/latest/user/index.html)
@@ -539,7 +539,7 @@ hardening rather than framework-provided defaults.
 - [Juju Documentation](https://juju.is/docs)
 - [MAAS Documentation](https://maas.io/docs)
 
-### Kolla-Ansible
+### Kolla-Ansible Documentation
 
 - [Kolla-Ansible Documentation](https://docs.openstack.org/kolla-ansible/latest/)
 - [Kolla Documentation](https://docs.openstack.org/kolla/latest/)
