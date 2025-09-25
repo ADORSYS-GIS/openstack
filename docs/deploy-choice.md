@@ -282,16 +282,29 @@ The following criteria guided our technology selection:
 
 ## Technology Comparison Matrix
 
-| Criteria | Charmed OpenStack | Kolla-Ansible | OpenStack Ansible |
-|----------|-------------------|---------------|-------------------|
-| **Operational Transparency** | Medium - Juju abstracts | Low - Container limits | High - Direct access |
-| **Customization Flexibility** | Low - Charm limited | Medium - Container custom | High - Full Ansible custom |
-| **Team Skill Alignment** | Low - Juju expertise | Medium - Docker/Ansible | High - Existing Ansible |
-| **Upgrade Complexity** | Medium - Charm deps | High - Container images | Medium - Ansible execution |
-| **Resource Overhead** | Medium - Juju/MAAS | High - Docker (~15-20%) | Low-Medium - LXC (~2-5%) |
-| **Community Support** | Medium - Canonical | Medium - Container focus | High - Broad OpenStack |
-| **Integration Capabilities** | Low - Juju patterns | Medium - Container APIs | High - Native Ansible |
-| **Troubleshooting Complexity** | High - Multi layers | High - Container network | Low - Direct access |
+| Criteria | Charmed | Kolla | OpenStack Ansible |
+|----------|---------|-------|-------------------|
+| **Transparency** | Medium | Low | High |
+| **Customization** | Low | Medium | High |
+| **Team Skills** | Low | Medium | High |
+| **Upgrades** | Medium | High | Medium |
+| **Resources** | Medium | High | Low-Medium |
+| **Community** | Medium | Medium | High |
+| **Integration** | Low | Medium | High |
+| **Troubleshooting** | High | High | Low |
+
+**Table Legend:**
+
+- **Charmed**: Charmed OpenStack (MAAS + Juju)
+- **Kolla**: Kolla-Ansible (Docker containers)
+- **Transparency**: Operational visibility and debugging access
+- **Customization**: Configuration flexibility and adaptation capability
+- **Team Skills**: Alignment with existing team expertise
+- **Upgrades**: Complexity of version upgrades and maintenance
+- **Resources**: System resource consumption and overhead
+- **Community**: Documentation quality and community support
+- **Integration**: Compatibility with existing infrastructure
+- **Troubleshooting**: Complexity rating (High = more complex)
 
 ## Selected Approach and Rationale
 
