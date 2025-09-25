@@ -116,4 +116,17 @@
 (?i)NAT
 (?i)L2
 (?i)L3
+(?i)failover
+(?i)relocations
+(?i)Canonical's
+(?i)toolchain
+(?i)Docker's
+(?i)namespace
+(?i)Mitigations
+(?i)yaml
+(?i)interdependencies
+(?i)runbooks?
+(?i)syslog
+(?i)strace
+(?i)tcpdump
 
