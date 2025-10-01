@@ -234,7 +234,6 @@ sudo usermod -aG root wazuh
   </rule>
 
   <rule id="100002" level="7" overwrite="yes">
-    <if_sid>100001</if_sid>
     <field name="Message" type="pcre2">^setup key deleted</field>
     <description>NetBird setup key deleted by user.</description>
   </rule>
