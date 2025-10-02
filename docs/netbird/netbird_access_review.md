@@ -21,6 +21,17 @@ NetBird administrative functions are managed through:
 
 **Note**: User management, groups, ACLs, and routes are **not** managed via the NetBird client CLI.
 
+!!! warning "Self-Hosted Dashboard Port Conflicts"
+    If deploying a **self-hosted NetBird dashboard**, ensure no conflicts with existing web servers. The dashboard typically uses ports 80 (HTTP) and 443 (HTTPS). Before deployment:
+    
+    **Option 1**: Stop conflicting services (Apache2/Nginx):
+    ```bash
+    sudo systemctl stop apache2  # or nginx
+    sudo systemctl disable apache2  # or nginx
+    ```
+    
+    **Option 2**: Configure the dashboard to use alternative ports (e.g., 8080/8443) and access via `http://your-server:8080`.
+
 ## Review Categories
 
 ### 1. Group Membership Review
