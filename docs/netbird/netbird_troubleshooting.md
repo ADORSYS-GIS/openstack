@@ -126,6 +126,22 @@ nc -zv api.netbird.io 443
 - **Dashboard**: TCP/80, TCP/443 (HTTP & HTTPS)
 - **Coturn (STUN/TURN)**: UDP/3478 (listening), UDP/49152-65535 (dynamic relay range)
 
+!!! warning "Port Conflict Warning"
+    **Before starting the NetBird self-hosted dashboard**, check if Apache2, Nginx, or any other HTTP/HTTPS service is running on the same server — they may already occupy ports 80 and 443. To avoid conflicts:
+    
+    **Option 1**: Stop/disable the conflicting service:
+    ```bash
+    # For Apache2
+    sudo systemctl stop apache2
+    sudo systemctl disable apache2
+    
+    # For Nginx
+    sudo systemctl stop nginx
+    sudo systemctl disable nginx
+    ```
+    
+    **Option 2**: Change the NetBird dashboard listening ports (e.g., 8080 for HTTP, 8443 for HTTPS) in your NetBird configuration and access the dashboard via `http://your-server:8080` or `https://your-server:8443`.
+
 #### STUN Server Connectivity
 
 ```bash
