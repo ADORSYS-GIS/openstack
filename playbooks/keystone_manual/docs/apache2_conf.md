@@ -52,6 +52,9 @@ lineinfile:
 
 After this playbook runs, Apache2 will be configured and restarted. Keystone will be served via Apache2, and you can access the Keystone API through the configured endpoints.
 
+!!! note "Port Configuration Considerations"
+    **Keystone typically runs on port 5000** when served through Apache2. Ensure this port is not already occupied by other services (Flask development servers, UPnP, etc.). Check port availability with `sudo netstat -tlnp | grep :5000` before deployment. If conflicts exist, modify your Apache2 virtual host configuration to use an alternative port.
+
 ## Why This Step Is Needed
 
 Keystone uses Apache2 as its web server. Proper configuration and restarting of Apache2 are required for Keystone to function and be accessible.

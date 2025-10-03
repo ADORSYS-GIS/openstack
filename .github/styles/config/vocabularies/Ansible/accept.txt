@@ -74,3 +74,16 @@
 (?i)APIs
 (?i)cirros
 
+# NetBird-specific terms
+(?i)NetBird
+(?i)ACLs?
+(?i)Coturn
+(?i)WireGuard
+(?i)Wireguard
+(?i)ISPs?
+(?i)STUN
+(?i)TURN
+(?i)ICE
+(?i)P2P
+(?i)gRPC
+(?i)Nginx
