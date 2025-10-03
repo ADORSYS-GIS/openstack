@@ -74,3 +74,19 @@
 (?i)APIs
 (?i)cirros
 
+(?i)NetBird
+(?i)Wazuh
+(?i)WireGuard
+(?i)SIEM
+(?i)VPN
+(?i)Cloudflare
+(?i)Multipass
+(?i)trycloudflare
+(?i)cloudflared
+(?i)netbird
+(?i)wazuh
+(?i)wireguard
+(?i)siem
+(?i)vpn
+(?i)cloudflare
+(?i)multipass
