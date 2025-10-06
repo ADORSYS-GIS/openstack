@@ -29,6 +29,9 @@ also helps us to track who is making what request to who.
 It can help us to see who is making bruteforce request and any attempt to masqurate.
 I track all failed attempt to connect to different peers in the network.
 
+This is the log that is collected from netbird and monitored by wazuh
+![File_Logs](./images/netbird_activity_logs.png)
+
 ### This is a full list of events tracked by NetBird
 
 - **Peer Management:**
