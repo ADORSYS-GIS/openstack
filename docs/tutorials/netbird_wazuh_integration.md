@@ -26,11 +26,11 @@ the network, new setup-key created, updated policy or policy created** etc.
 
 This is used to monitor how traffic flows within the netbird network and it
 also helps us to track who is making what request to who.
-It can help us to see who is making bruteforce request and any attempt to masqurate.
+It can help us to see who is making brute force request and any attempt to masquerade.
 I track all failed attempt to connect to different peers in the network.
 
 This is the log that is collected from netbird and monitored by wazuh
-![File_Logs](./images/netbird_activity_logs.png)
+![File Logs](./images/netbird_activity_logs.png)
 
 ### This is a full list of events tracked by NetBird
 
@@ -88,10 +88,10 @@ This is the log that is collected from netbird and monitored by wazuh
   - Account peer login expiration disabled
   - Account peer approval enabled
   - Account peer approval disabled
-- **Nameserver Group Management:**
-  - Nameserver group created
-  - Nameserver group deleted
-  - Nameserver group updated
+- **nameserver Group Management:**
+  - nameserver group created
+  - nameserver group deleted
+  - nameserver group updated
 - **Token Management:**
   - Personal access token created
   - Personal access token deleted
@@ -111,7 +111,7 @@ This is the log that is collected from netbird and monitored by wazuh
   - Peer login expired
   - Dashboard login
 
-_This reference will take you to the integration of NetBird with SIEMs
+_This reference will take you to the integration of NetBird with SIEM systems
 [NetBird + SIEM](https://docs.netbird.io/how-to/activity-event-streaming)_
 
 - I installed Wazuh and wanted to make the NetBird cloud forward the logs to my
@@ -123,19 +123,19 @@ _This reference will take you to the integration of NetBird with SIEMs
 curl -sO https://packages.wazuh.com/4.13/wazuh-install.sh && sudo bash ./wazuh-install.sh -a
 ```
 
-After this command you will see the login credentails and the url to your netbird dashboard
-or just your localhost or machine ip on port 143.
+After this command you will see the login credentials and the URL to your NetBird dashboard
+or just your localhost or machine IP on port 143.
 
 - But I could not because I needed to give my VM a public IP or domain name before
   I could do that.
 
-- And also to self-host NetBird, you need to have a public domain name or public IP.
-But the self-hosted version of netbird does not allow for event streaming that is
-to monitor the traffic and activities of the netbird using a third party SIEM.
+- Also, to self-host NetBird, you need to have a public domain name or public IP.
+The self-hosted version of NetBird does not allow for event streaming to monitor
+the traffic and activities of NetBird using a third-party SIEM.
 
-So I thought of using a free domain name provider that will make me incure no cost.
+So I thought of using a free domain name provider that would incur no cost.
 
-- Now I found that most of these domain name providers actually have a free tier
+- I found that most of these domain name providers actually have a free tier
   that is limited and will only work for testing purposes.
 
 - But I found this:
@@ -144,7 +144,7 @@ So I thought of using a free domain name provider that will make me incure no co
   web server running inside your Multipass VM to the public internet. This approach
   is free and widely used for development and testing.`
 
-- And the best one that suits for this purpose is using a Cloudflare tunneling
+- The best one that suits this purpose is using a Cloudflare tunneling
   service that will actually give us a fake public IP that we can somehow use
 
 I use Cloudflare to create a public domain name that my NetBird cloud could use
@@ -190,7 +190,7 @@ to log in or create an account if you don't have one.
 - I wrote a Python script to receive incoming logs on that port 8080 and the
   servers was up when I ran it. So ensure that the server is up before you run
   `cloudflared tunnel --url` command.
-  ![python server](./images/Python_Server_log_reciever.png)
+  ![python server](./images/Python_Server_log_receiver.png)
 - I took this URL `https://sporting-goodtolook-thing-builder.trycloudflare.com`
   and added in the URL section in the Generic HTTP function on NetBird so my
   logs can be forwarded.
