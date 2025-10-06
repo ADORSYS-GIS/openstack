@@ -50,6 +50,13 @@ vars:
   keystone_region: RegionOne
 ```
 
+!!! note "Port 5000 Conflict Warning"
+    **Port 5000 is commonly used by other services** such as Flask development servers, UPnP services, or other applications. Before deploying Keystone:
+    
+    - Check if port 5000 is already in use: `sudo netstat -tlnp | grep :5000`
+    - If conflicts exist, consider changing Keystone to use an alternative port (e.g., 5001, 35357) by modifying the endpoint URLs in your configuration
+    - Ensure firewall rules allow access to the chosen port
+
 ## How to Use the Bootstrapped Service
 
 After this playbook runs, you can use the admin credentials and endpoints to authenticate with Keystone and perform administrative tasks. Make sure to store these credentials securely and update your OpenRC file to use them.
