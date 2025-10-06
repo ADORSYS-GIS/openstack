@@ -129,12 +129,24 @@
 (?i)syslog
 (?i)strace
 (?i)tcpdump
-
-# NetBird-specific terms
 (?i)NetBird
+(?i)Wazuh
+(?i)WireGuard
+(?i)SIEM
+(?i)VPN
+(?i)Cloudflare
+(?i)Multipass
+(?i)trycloudflare
+(?i)cloudflared
+(?i)netbird
+(?i)wazuh
+(?i)wireguard
+(?i)siem
+(?i)vpn
+(?i)cloudflare
+(?i)multipass
 (?i)ACLs?
 (?i)Coturn
-(?i)WireGuard
 (?i)Wireguard
 (?i)ISPs?
 (?i)STUN
@@ -143,3 +155,4 @@
 (?i)P2P
 (?i)gRPC
 (?i)Nginx
+

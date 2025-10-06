@@ -17,6 +17,7 @@ theme:
 
 # Navbar settings (site structure)
 nav:
+
   - Home: index.md
   - Documentation:
     - Ansible: ansible_docs.md
@@ -32,6 +33,7 @@ nav:
     - Minimal KVM Setup: tutorials/minimal_kvm_setup.md
     - NTP Setup Tutorial: tutorials/ntp_setup_tuto.md
     - Setup vSwitch: tutorials/setupvswitch.md
+    - Setting Up Monitoring Netbird With Wazuh: tutorials/netbird_wazuh_integration.md 
 
 # Extra settings
 markdown_extensions:
