@@ -1,0 +1,1368 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="OpenStack project backed by adorsys">
+      
+      
+      
+        <link rel="canonical" href="https://openstack.github.io/adorsys-gis/tutorials/netbird_wazuh_integration/">
+      
+      
+        <link rel="prev" href="../setupvswitch/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Setting Up Monitoring Netbird With Wazuh - Adorsys OpenStack</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="purple" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#integrating-netbird-with-wazuh" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Adorsys OpenStack" class="md-header__button md-logo" aria-label="Adorsys OpenStack" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Adorsys OpenStack
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Setting Up Monitoring Netbird With Wazuh
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/adorsys-gis/openstack" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    OpenStack
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Adorsys OpenStack" class="md-nav__button md-logo" aria-label="Adorsys OpenStack" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Adorsys OpenStack
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/adorsys-gis/openstack" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    OpenStack
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Documentation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ansible_docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ansible
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../netplan_doc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NetPlan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ntp_docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NTP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../VLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VLAN
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NetBird
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    NetBird
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../netbird/netbird_troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../netbird/netbird_access_review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Access Review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ansible_tuto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ansible Tutorial
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../boot_docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Boot Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../minimal_kvm_setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Minimal KVM Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ntp_setup_tuto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NTP Setup Tutorial
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../setupvswitch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setup vSwitch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setting Up Monitoring Netbird With Wazuh
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setting Up Monitoring Netbird With Wazuh
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-audit-event" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Audit Event
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-traffic-event" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Traffic Event
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Traffic Event">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#this-is-a-full-list-of-events-tracked-by-netbird" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        This is a full list of events tracked by NetBird
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="This is a full list of events tracked by NetBird">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#this-is-the-setup-of-using-cloudflare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        This is the setup of using Cloudflare
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integrating-with-wazuh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integrating with Wazuh
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-audit-event" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Audit Event
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-traffic-event" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Traffic Event
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Traffic Event">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#this-is-a-full-list-of-events-tracked-by-netbird" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        This is a full list of events tracked by NetBird
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="This is a full list of events tracked by NetBird">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#this-is-the-setup-of-using-cloudflare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        This is the setup of using Cloudflare
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integrating-with-wazuh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integrating with Wazuh
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="integrating-netbird-with-wazuh">Integrating NetBird With Wazuh<a class="headerlink" href="#integrating-netbird-with-wazuh" title="Permanent link">&para;</a></h1>
+<p>Wazuh is a SIEM and event logger system that is used to monitor systems for
+networks vulnerabilities, file integrity and also monitor logs for suspicious
+events on a system.</p>
+<p>NetBird is a zero trust VPN that is built on top of WireGuard which is used to
+create secure and encrypted tunnel for peer-to-peer connection and communication
+over a network.</p>
+<ul>
+<li>NetBird is an easy to use interface that help you to use the WireGuard
+  protocol directly without all the complexities of configuring them.</li>
+<li>WireGuard protocol is also lightweight and more secured as compared to other
+  VPN technologies like OpenVPN.</li>
+</ul>
+<p>NetBird has two monitoring functions that helps it to keep track of all what is
+going on in the network.</p>
+<h2 id="1-audit-event">1. Audit Event<a class="headerlink" href="#1-audit-event" title="Permanent link">&para;</a></h2>
+<p>This is used to monitor the activities and events that are occurring in the
+NetBird network, like a <strong>new user being added, a new instance or peer joining
+the network, new setup-key created, updated policy or policy created</strong> etc.</p>
+<h2 id="2-traffic-event">2. Traffic Event<a class="headerlink" href="#2-traffic-event" title="Permanent link">&para;</a></h2>
+<p>This is used to monitor how traffic flows within the netbird network and it
+also helps us to track who is making what request to who.
+It can help us to see who is making brute force request and any attempt to masquerade.
+I track all failed attempt to connect to different peers in the network.</p>
+<p>This is the log that is collected from netbird and monitored by wazuh
+<img alt="File Logs" src="../images/netbird_activity_logs.png" /></p>
+<h3 id="this-is-a-full-list-of-events-tracked-by-netbird">This is a full list of events tracked by NetBird<a class="headerlink" href="#this-is-a-full-list-of-events-tracked-by-netbird" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Peer Management:</strong></li>
+<li>Peer added by user</li>
+<li>Peer added with setup key</li>
+<li>Peer removed by user</li>
+<li>Peer renamed</li>
+<li>Peer SSH server enabled</li>
+<li>Peer SSH server disabled</li>
+<li>Peer login expiration enabled</li>
+<li>
+<p>Peer login expiration disabled</p>
+</li>
+<li>
+<p><strong>User Management:</strong></p>
+</li>
+<li>User joined</li>
+<li>User invited</li>
+<li>User role updated</li>
+<li>User blocked</li>
+<li>User unblocked</li>
+<li>
+<p>User deleted</p>
+</li>
+<li>
+<p><strong>Group Management:</strong></p>
+</li>
+<li>Group created</li>
+<li>Group updated</li>
+<li>Group deleted</li>
+<li>Group added to peer</li>
+<li>Group removed from peer</li>
+<li>Group added to user</li>
+<li>Group removed from user</li>
+<li>Group added to setup key</li>
+<li>Group removed from setup key</li>
+<li>Group added to disabled management DNS setting</li>
+<li>Group removed from disabled management DNS setting</li>
+<li><strong>Policy Management:</strong></li>
+<li>Policy added</li>
+<li>Policy updated</li>
+<li>Policy removed</li>
+<li><strong>Rule Management:</strong></li>
+<li>Rule added</li>
+<li>Rule updated</li>
+<li>Rule removed</li>
+<li><strong>Setup Key Management:</strong></li>
+<li>Setup key created</li>
+<li>Setup key updated</li>
+<li>Setup key revoked</li>
+<li>Setup key overused</li>
+<li><strong>Route Management:</strong></li>
+<li>Route created</li>
+<li>Route removed</li>
+<li>Route updated</li>
+<li><strong>Account Management:</strong></li>
+<li>Account created</li>
+<li>Account peer login expiration duration updated</li>
+<li>Account peer login expiration enabled</li>
+<li>Account peer login expiration disabled</li>
+<li>Account peer approval enabled</li>
+<li>Account peer approval disabled</li>
+<li><strong>nameserver Group Management:</strong></li>
+<li>nameserver group created</li>
+<li>nameserver group deleted</li>
+<li>nameserver group updated</li>
+<li><strong>Token Management:</strong></li>
+<li>Personal access token created</li>
+<li>Personal access token deleted</li>
+<li><strong>Service User Management:</strong></li>
+<li>Service user created</li>
+<li>Service user deleted</li>
+<li><strong>Integration Management:</strong></li>
+<li>Integration created</li>
+<li>Integration updated</li>
+<li>Integration deleted</li>
+<li><strong>Other Events:</strong></li>
+<li>Transferred owner role</li>
+<li>Posture check created</li>
+<li>Posture check updated</li>
+<li>Posture check deleted</li>
+<li>User logged in peer</li>
+<li>Peer login expired</li>
+<li>Dashboard login</li>
+</ul>
+<p><em>This reference will take you to the integration of NetBird with SIEM systems
+<a href="https://docs.netbird.io/how-to/activity-event-streaming">NetBird + SIEM</a></em></p>
+<ul>
+<li>I installed Wazuh and wanted to make the NetBird cloud forward the logs to my
+  Python server so that it can write it in a file that Wazuh can monitor.</li>
+<li>This is the script to monitor.</li>
+</ul>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># this is the command to install wazuh</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>curl<span class="w"> </span>-sO<span class="w"> </span>https://packages.wazuh.com/4.13/wazuh-install.sh<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>bash<span class="w"> </span>./wazuh-install.sh<span class="w"> </span>-a
+</span></code></pre></div>
+<p>After this command you will see the login credentials and the URL to your NetBird dashboard
+or just your localhost or machine IP on port 143.</p>
+<ul>
+<li>
+<p>But I could not because I needed to give my VM a public IP or domain name before
+  I could do that.</p>
+</li>
+<li>
+<p>Also, to self-host NetBird, you need to have a public domain name or public IP.
+The self-hosted version of NetBird does not allow for event streaming to monitor
+the traffic and activities of NetBird using a third-party SIEM.</p>
+</li>
+</ul>
+<p>So I thought of using a free domain name provider that would incur no cost.</p>
+<ul>
+<li>
+<p>I found that most of these domain name providers actually have a free tier
+  that is limited and will only work for testing purposes.</p>
+</li>
+<li>
+<p>But I found this:</p>
+</li>
+</ul>
+<p><code>Instead of a true public IP, you can use a tunneling service to expose a local
+  web server running inside your Multipass VM to the public internet. This approach
+  is free and widely used for development and testing.</code></p>
+<ul>
+<li>The best one that suits this purpose is using a Cloudflare tunneling
+  service that will actually give us a fake public IP that we can somehow use</li>
+</ul>
+<p>I use Cloudflare to create a public domain name that my NetBird cloud could use
+to forward messages to my Python server listening on port 8080.</p>
+<h4 id="this-is-the-setup-of-using-cloudflare">This is the setup of using Cloudflare<a class="headerlink" href="#this-is-the-setup-of-using-cloudflare" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Start by installing Cloudflare</li>
+</ul>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="w"> </span>curl<span class="w"> </span>-L<span class="w"> </span>https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb<span class="w"> </span>-o<span class="w"> </span>cloudflared.deb
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w"> </span>sudo<span class="w"> </span>dpkg<span class="w"> </span>-i<span class="w"> </span>cloudflared.deb
+</span></code></pre></div>
+<ul>
+<li>Then log in and you will be redirected or else you will see a redirection URL
+to log in or create an account if you don't have one.</li>
+</ul>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="w"> </span><span class="c1">#this is the command to login</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w"> </span>cloudflared<span class="w"> </span>tunnel<span class="w"> </span>login
+</span></code></pre></div>
+<ul>
+<li>Then after that you need to create a temporary trycloudflare-endpoint or
+   domain name with the port you want to listen to and only that port will be
+   exposed when it is up.</li>
+</ul>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>cloudflared<span class="w"> </span>tunnel<span class="w"> </span>--url<span class="w"> </span>http://localhost:8080
+</span></code></pre></div>
+<ul>
+<li>Next you will see it at the top of the logs that will be displayed.</li>
+</ul>
+<p><img alt="cloudflared domain name" src="../images/cloudflared_tunnel_domain.png" /></p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="m">2025</span>-09-24T08:18:05Z<span class="w"> </span>INF<span class="w"> </span>Requesting<span class="w"> </span>new<span class="w"> </span>quick<span class="w"> </span>Tunnel<span class="w"> </span>on<span class="w"> </span>trycloudflare.com...
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="m">2025</span>-09-24T08:18:12Z<span class="w"> </span>INF<span class="w"> </span>+--------------------------------------------------------------------------------------------+
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="m">2025</span>-09-24T08:18:12Z<span class="w"> </span>INF<span class="w"> </span><span class="p">|</span><span class="w">  </span>Your<span class="w"> </span>quick<span class="w"> </span>Tunnel<span class="w"> </span>has<span class="w"> </span>been<span class="w"> </span>created!<span class="w"> </span>Visit<span class="w"> </span>it<span class="w"> </span>at<span class="w"> </span><span class="o">(</span>it<span class="w"> </span>may<span class="w"> </span>take<span class="w"> </span>some<span class="w"> </span><span class="nb">time</span><span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>reachable<span class="o">)</span>:<span class="w">  </span><span class="p">|</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="m">2025</span>-09-24T08:18:12Z<span class="w"> </span>INF<span class="w"> </span><span class="p">|</span><span class="w">  </span>https://sporting-goodtolook-thing-builder.trycloudflare.com<span class="w">                                 </span><span class="p">|</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="m">2025</span>-09-24T08:18:12Z<span class="w"> </span>INF<span class="w"> </span>+------------------------------------------------------+
+</span></code></pre></div>
+<ul>
+<li>I wrote a Python script to receive incoming logs on that port 8080 and the
+  servers was up when I ran it. So ensure that the server is up before you run
+  <code>cloudflared tunnel --url</code> command.
+  <img alt="python server" src="../images/Python_Server_log_receiver.png" /></li>
+<li>I took this URL <code>https://sporting-goodtolook-thing-builder.trycloudflare.com</code>
+  and added in the URL section in the Generic HTTP function on NetBird so my
+  logs can be forwarded.</li>
+<li>Allow all the servers to be running until you are done</li>
+</ul>
+<h4 id="integrating-with-wazuh">Integrating with Wazuh<a class="headerlink" href="#integrating-with-wazuh" title="Permanent link">&para;</a></h4>
+<p>Now Wazuh that you deployed just needs to monitor the file where you are
+forwarding the logs to.</p>
+<ul>
+<li>I edited a few files and added some extra content to include my logs to be
+  monitored.</li>
+</ul>
+<div class="language-xml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="cm">&lt;!-- </span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="cm">sudo nano /var/ossec/etc/ossec.conf</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="cm">add the following content in the &lt;ossec_config&gt; section.</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="cm"> --&gt;</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nt">&lt;localfile&gt;</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="nt">&lt;log_format&gt;</span>json<span class="nt">&lt;/log_format&gt;</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span><span class="nt">&lt;location&gt;</span>/var/log/netbird/activity.json<span class="nt">&lt;/location&gt;</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="nt">&lt;/localfile&gt;</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="cm">&lt;!-- this one is for other files that needs to be monitored --&gt;</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="nt">&lt;localfile&gt;</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">  </span><span class="nt">&lt;log_format&gt;</span>syslog<span class="nt">&lt;/log_format&gt;</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">  </span><span class="nt">&lt;location&gt;</span>/var/log/netbird/client.log<span class="nt">&lt;/location&gt;</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="nt">&lt;/localfile&gt;</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="nt">&lt;localfile&gt;</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">  </span><span class="nt">&lt;log_format&gt;</span>syslog<span class="nt">&lt;/log_format&gt;</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="w">  </span><span class="nt">&lt;location&gt;</span>/var/log/netbird/netbird.err<span class="nt">&lt;/location&gt;</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="nt">&lt;/localfile&gt;</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="nt">&lt;localfile&gt;</span>
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="w">  </span><span class="nt">&lt;log_format&gt;</span>syslog<span class="nt">&lt;/log_format&gt;</span>
+</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="w">  </span><span class="nt">&lt;location&gt;</span>/var/log/netbird/netbird.out<span class="nt">&lt;/location&gt;</span>
+</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="nt">&lt;/localfile&gt;</span>
+</span></code></pre></div>
+<ul>
+<li>Now I check the permission of those files and make sure that Wazuh has the
+  right to read them</li>
+</ul>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>ls<span class="w"> </span>-l<span class="w"> </span>/var/log/netbird/
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>sudo<span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>root<span class="w"> </span>wazuh
+</span></code></pre></div>
+<ul>
+<li>I used default decoders and configured rules  so that they can be able
+to throw alert messages for some events that will happen like changing
+or adding new policy, setup key deleted or created. When these rules are met,
+an alert is being fired to my email.</li>
+</ul>
+<div class="language-xml highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">&lt;group</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;netbird,&quot;</span><span class="nt">&gt;</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">&lt;rule</span><span class="w"> </span><span class="na">id=</span><span class="s">&quot;100000&quot;</span><span class="w"> </span><span class="na">level=</span><span class="s">&quot;5&quot;</span><span class="nt">&gt;</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="nt">&lt;decoded_as&gt;</span>json<span class="nt">&lt;/decoded_as&gt;</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="nt">&lt;field</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;Message&quot;</span><span class="nt">&gt;</span>peer<span class="w"> </span>ssh<span class="w"> </span>server<span class="w"> </span>disabled<span class="nt">&lt;/field&gt;</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="nt">&lt;description&gt;</span>NetBird<span class="w"> </span>SSH<span class="w"> </span>access<span class="w"> </span>for<span class="w"> </span>a<span class="w"> </span>peer<span class="w"> </span>has<span class="w"> </span>been<span class="w"> </span>disabled.<span class="nt">&lt;/description&gt;</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="nt">&lt;/rule&gt;</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">  </span><span class="nt">&lt;rule</span><span class="w"> </span><span class="na">id=</span><span class="s">&quot;100002&quot;</span><span class="w"> </span><span class="na">level=</span><span class="s">&quot;7&quot;</span><span class="w"> </span><span class="na">overwrite=</span><span class="s">&quot;yes&quot;</span><span class="nt">&gt;</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">    </span><span class="nt">&lt;field</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;Message&quot;</span><span class="w"> </span><span class="na">type=</span><span class="s">&quot;pcre2&quot;</span><span class="nt">&gt;</span>^setup<span class="w"> </span>key<span class="w"> </span>deleted<span class="nt">&lt;/field&gt;</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">    </span><span class="nt">&lt;description&gt;</span>NetBird<span class="w"> </span>setup<span class="w"> </span>key<span class="w"> </span>deleted<span class="w"> </span>by<span class="w"> </span>user.<span class="nt">&lt;/description&gt;</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">  </span><span class="nt">&lt;/rule&gt;</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="nt">&lt;/group&gt;</span>
+</span></code></pre></div>
+<ul>
+<li>After which I restarted the Wazuh manager and that was it</li>
+</ul>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>wazuh-manager
+</span></code></pre></div>
+<p><img alt="wazuh_dashboard" src="../images/wazuh_archieve_logs.png" />
+I then went to the Wazuh dashboard under the discover section and I found the
+logs from Wazuh and my local machine where the server is running.</p>
+<p>Wazuh Security Events only display messages on the dashboard that are triggered
+by rules.</p>
+<p><img alt="wazuh_alerts" src="../images/wazuh_alert_display.png" /></p>
+<p>Without a rule, the NetBird logs exist in the raw archives but will not be
+considered "security events." and so will be discarded after some time to save
+space for events that need to be displayed on the Wazuh dashboard since this
+Wazuh is for monitoring critical events.</p>
+<p>This thing is becoming serious I have done some little modifications in the
+<code>/var/ossec/etc/rules/local_rules.xml</code> file and it worked.
+Now I have configured my email according to the documentation of Wazuh to act
+as a relay host so that it can be used to forward emails to users that I specify
+in the <code>&lt;email_to&gt;</code> tag under the <code>&lt;global&gt;</code> section of the <code>&lt;ossec_config&gt;</code>.
+<img alt="Notification by email" src="../images/email_notification_about_netbird_activity.png" />
+<a href="https://documentation.wazuh.com/current/user-manual/manager/alert-management.html">Alerting on Wazuh</a></p>
+<p>This is the config file used to configure relayhost for wazuh to use to forward email.</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1">##filename  /etc/postfix/main.cf</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="c1"># See /usr/share/postfix/main.cf.dist for a commented, more complete version</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="c1"># Debian specific:  Specifying a file name will cause the first</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="c1"># line of that file to be used as the name.  The Debian default</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="c1"># is /etc/mailname.</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="c1">#myorigin = /etc/mailname</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="nv">smtpd_banner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$myhostname</span><span class="w"> </span>ESMTP<span class="w"> </span><span class="nv">$mail_name</span><span class="w"> </span><span class="o">(</span>Ubuntu<span class="o">)</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="nv">biff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>no
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="c1"># appending .domain is the MUA&#39;s job.</span>
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="nv">append_dot_mydomain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>no
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a>
+</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="c1"># Uncomment the next line to generate &quot;delayed mail&quot; warnings</span>
+</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a><span class="c1">#delay_warning_time = 4h</span>
+</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a>
+</span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="nv">readme_directory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>no
+</span><span id="__span-9-21"><a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a>
+</span><span id="__span-9-22"><a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a><span class="c1"># See http://www.postfix.org/COMPATIBILITY_README.html -- default to 3.6 on</span>
+</span><span id="__span-9-23"><a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a><span class="c1"># fresh installs.</span>
+</span><span id="__span-9-24"><a id="__codelineno-9-24" name="__codelineno-9-24" href="#__codelineno-9-24"></a><span class="nv">compatibility_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">3</span>.6
+</span><span id="__span-9-25"><a id="__codelineno-9-25" name="__codelineno-9-25" href="#__codelineno-9-25"></a>
+</span><span id="__span-9-26"><a id="__codelineno-9-26" name="__codelineno-9-26" href="#__codelineno-9-26"></a>
+</span><span id="__span-9-27"><a id="__codelineno-9-27" name="__codelineno-9-27" href="#__codelineno-9-27"></a>
+</span><span id="__span-9-28"><a id="__codelineno-9-28" name="__codelineno-9-28" href="#__codelineno-9-28"></a><span class="c1"># TLS parameters</span>
+</span><span id="__span-9-29"><a id="__codelineno-9-29" name="__codelineno-9-29" href="#__codelineno-9-29"></a><span class="nv">smtpd_tls_cert_file</span><span class="o">=</span>/etc/ssl/certs/ssl-cert-snakeoil.pem
+</span><span id="__span-9-30"><a id="__codelineno-9-30" name="__codelineno-9-30" href="#__codelineno-9-30"></a><span class="nv">smtpd_tls_key_file</span><span class="o">=</span>/etc/ssl/private/ssl-cert-snakeoil.key
+</span><span id="__span-9-31"><a id="__codelineno-9-31" name="__codelineno-9-31" href="#__codelineno-9-31"></a><span class="nv">smtpd_tls_security_level</span><span class="o">=</span>may
+</span><span id="__span-9-32"><a id="__codelineno-9-32" name="__codelineno-9-32" href="#__codelineno-9-32"></a>
+</span><span id="__span-9-33"><a id="__codelineno-9-33" name="__codelineno-9-33" href="#__codelineno-9-33"></a><span class="nv">smtp_tls_CApath</span><span class="o">=</span>/etc/ssl/certs
+</span><span id="__span-9-34"><a id="__codelineno-9-34" name="__codelineno-9-34" href="#__codelineno-9-34"></a><span class="nv">smtp_tls_security_level</span><span class="o">=</span>may
+</span><span id="__span-9-35"><a id="__codelineno-9-35" name="__codelineno-9-35" href="#__codelineno-9-35"></a><span class="nv">smtp_tls_session_cache_database</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>btree:<span class="si">${</span><span class="nv">data_directory</span><span class="si">}</span>/smtp_scache
+</span><span id="__span-9-36"><a id="__codelineno-9-36" name="__codelineno-9-36" href="#__codelineno-9-36"></a>
+</span><span id="__span-9-37"><a id="__codelineno-9-37" name="__codelineno-9-37" href="#__codelineno-9-37"></a>
+</span><span id="__span-9-38"><a id="__codelineno-9-38" name="__codelineno-9-38" href="#__codelineno-9-38"></a><span class="nv">smtpd_relay_restrictions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>permit_mynetworks<span class="w"> </span>permit_sasl_authenticated<span class="w"> </span>defer_unauth_destination
+</span><span id="__span-9-39"><a id="__codelineno-9-39" name="__codelineno-9-39" href="#__codelineno-9-39"></a><span class="nv">myhostname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>network-vm.tail431420.ts.net
+</span><span id="__span-9-40"><a id="__codelineno-9-40" name="__codelineno-9-40" href="#__codelineno-9-40"></a><span class="nv">alias_maps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>hash:/etc/aliases
+</span><span id="__span-9-41"><a id="__codelineno-9-41" name="__codelineno-9-41" href="#__codelineno-9-41"></a><span class="nv">alias_database</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>hash:/etc/aliases
+</span><span id="__span-9-42"><a id="__codelineno-9-42" name="__codelineno-9-42" href="#__codelineno-9-42"></a><span class="nv">myorigin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>/etc/mailname
+</span><span id="__span-9-43"><a id="__codelineno-9-43" name="__codelineno-9-43" href="#__codelineno-9-43"></a><span class="nv">mydestination</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$myhostname</span>,<span class="w"> </span>netbird-noreply@wazuh.com,<span class="w"> </span>network-vm,<span class="w"> </span>localhost.localdomain,<span class="w"> </span>localhost
+</span><span id="__span-9-44"><a id="__codelineno-9-44" name="__codelineno-9-44" href="#__codelineno-9-44"></a><span class="c1">#relayhost =</span>
+</span><span id="__span-9-45"><a id="__codelineno-9-45" name="__codelineno-9-45" href="#__codelineno-9-45"></a><span class="nv">mynetworks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">127</span>.0.0.0/8<span class="w"> </span><span class="o">[</span>::ffff:127.0.0.0<span class="o">]</span>/104<span class="w"> </span><span class="o">[</span>::1<span class="o">]</span>/128
+</span><span id="__span-9-46"><a id="__codelineno-9-46" name="__codelineno-9-46" href="#__codelineno-9-46"></a><span class="nv">mailbox_size_limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>
+</span><span id="__span-9-47"><a id="__codelineno-9-47" name="__codelineno-9-47" href="#__codelineno-9-47"></a><span class="nv">recipient_delimiter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>+
+</span><span id="__span-9-48"><a id="__codelineno-9-48" name="__codelineno-9-48" href="#__codelineno-9-48"></a><span class="nv">inet_interfaces</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>all
+</span><span id="__span-9-49"><a id="__codelineno-9-49" name="__codelineno-9-49" href="#__codelineno-9-49"></a><span class="nv">inet_protocols</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>all
+</span><span id="__span-9-50"><a id="__codelineno-9-50" name="__codelineno-9-50" href="#__codelineno-9-50"></a>
+</span><span id="__span-9-51"><a id="__codelineno-9-51" name="__codelineno-9-51" href="#__codelineno-9-51"></a><span class="c1"># Relay settings</span>
+</span><span id="__span-9-52"><a id="__codelineno-9-52" name="__codelineno-9-52" href="#__codelineno-9-52"></a><span class="nv">relayhost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span>smtp.gmail.com<span class="o">]</span>:587
+</span><span id="__span-9-53"><a id="__codelineno-9-53" name="__codelineno-9-53" href="#__codelineno-9-53"></a><span class="nv">smtp_sasl_auth_enable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>yes
+</span><span id="__span-9-54"><a id="__codelineno-9-54" name="__codelineno-9-54" href="#__codelineno-9-54"></a><span class="nv">smtp_sasl_password_maps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>hash:/etc/postfix/sasl_passwd
+</span><span id="__span-9-55"><a id="__codelineno-9-55" name="__codelineno-9-55" href="#__codelineno-9-55"></a><span class="nv">smtp_sasl_security_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>noanonymous
+</span><span id="__span-9-56"><a id="__codelineno-9-56" name="__codelineno-9-56" href="#__codelineno-9-56"></a><span class="nv">smtp_use_tls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>yes
+</span></code></pre></div>
+<p>Also you will need to create an password with google
+if you want to use gmail as your relay server.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>

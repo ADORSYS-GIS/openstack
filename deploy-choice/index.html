@@ -1,0 +1,1897 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="OpenStack project backed by adorsys">
+      
+      
+      
+        <link rel="canonical" href="https://openstack.github.io/adorsys-gis/deploy-choice/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>OpenStack Deployment Technology Decision - Adorsys OpenStack</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="purple" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#openstack-deployment-technology-decision" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Adorsys OpenStack" class="md-header__button md-logo" aria-label="Adorsys OpenStack" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Adorsys OpenStack
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              OpenStack Deployment Technology Decision
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/adorsys-gis/openstack" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    OpenStack
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Adorsys OpenStack" class="md-nav__button md-logo" aria-label="Adorsys OpenStack" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Adorsys OpenStack
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/adorsys-gis/openstack" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    OpenStack
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Documentation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ansible_docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ansible
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../netplan_doc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NetPlan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ntp_docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NTP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../VLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VLAN
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NetBird
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    NetBird
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../netbird/netbird_troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../netbird/netbird_access_review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Access Review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/ansible_tuto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ansible Tutorial
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/boot_docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Boot Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/minimal_kvm_setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Minimal KVM Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/ntp_setup_tuto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NTP Setup Tutorial
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/setupvswitch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setup vSwitch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/netbird_wazuh_integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setting Up Monitoring Netbird With Wazuh
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction-and-purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Introduction and Purpose
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Introduction and Purpose">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-comparison-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Comparison Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deployment-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deployment Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deployment Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#architecture-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Overview
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#control-plane-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Control Plane Components
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-plane-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Plane Components
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#storage-plane-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Storage Plane Components
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-plane-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network Plane Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#traffic-flow-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Traffic Flow Patterns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#high-availability-and-redundancy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        High Availability and Redundancy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#document-maintenance-note" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Document Maintenance Note
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#candidate-technology-overviews" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Candidate Technology Overviews
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Candidate Technology Overviews">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#charmed-openstack-maas-juju" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Charmed OpenStack (MAAS + Juju)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kolla-ansible" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kolla-Ansible
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#openstack-ansible" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenStack Ansible
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evaluation-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evaluation Criteria
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#technology-comparison-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Technology Comparison Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#selected-approach-and-rationale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selected Approach and Rationale
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Selected Approach and Rationale">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#primary-rationale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Primary Rationale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specific-advantages-over-alternatives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specific Advantages Over Alternatives
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risks-trade-offs-and-mitigations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risks, Trade-offs, and Mitigations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Risks, Trade-offs, and Mitigations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#identified-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Identified Risks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#accepted-trade-offs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Accepted Trade-offs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#operational-implications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operational Implications
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Operational Implications">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#day-1-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day-1 Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#day-2-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day-2 Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upgrade-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Upgrade Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#troubleshooting-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting Workflows
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation-and-acceptance-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation and Acceptance Criteria
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Validation and Acceptance Criteria">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#technical-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Technical Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operational-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operational Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#long-term-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Long-term Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#failure-mode-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failure Mode Testing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references-and-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References and Documentation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="References and Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#openstack-ansible-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenStack Ansible Documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#charmed-openstack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Charmed OpenStack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kolla-ansible-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kolla-Ansible Documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#supporting-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supporting Documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="openstack-deployment-technology-decision">OpenStack Deployment Technology Decision<a class="headerlink" href="#openstack-deployment-technology-decision" title="Permanent link">&para;</a></h1>
+<h2 id="introduction-and-purpose">Introduction and Purpose<a class="headerlink" href="#introduction-and-purpose" title="Permanent link">&para;</a></h2>
+<p>This document provides the technical rationale for selecting OpenStack
+Ansible as our OpenStack deployment and lifecycle management solution. The
+evaluation compares three primary deployment approaches: Charmed OpenStack
+(MAAS + Juju), Kolla-Ansible, and OpenStack Ansible.</p>
+<h3 id="scope">Scope<a class="headerlink" href="#scope" title="Permanent link">&para;</a></h3>
+<p>This decision covers the deployment, configuration management, and
+operational lifecycle of OpenStack infrastructure services. The scope includes
+initial deployment, day-2 operations, upgrades, scaling, and troubleshooting
+workflows.</p>
+<p><strong>Target Scale</strong>: This evaluation assumes a multi-node deployment with 3
+controller nodes, 3-20 compute nodes, and 3 storage nodes, supporting
+100-500 virtual machines in production.</p>
+<p><strong>Deployment Mode</strong>: OpenStack Ansible supports flexible deployment modes
+configurable via inventory settings. Services can be deployed in LXC
+containers (default) or directly on metal using the <code>is_metal: true</code>
+property. This document assumes the default LXC container mode unless
+otherwise specified. See <a href="https://docs.openstack.org/openstack-ansible/latest/reference/inventory/configure-inventory.html">OpenStack Ansible Configuration Reference</a>
+for deployment options.</p>
+<h2 id="architecture-comparison-overview">Architecture Comparison Overview<a class="headerlink" href="#architecture-comparison-overview" title="Permanent link">&para;</a></h2>
+<p>The following diagram illustrates the abstraction layers and deployment
+approaches for each technology:</p>
+<pre class="mermaid"><code>graph TB
+    subgraph "Charmed OpenStack"
+        JC[Juju Controller]
+        MAAS[MAAS Server]
+        CH1[Charm: Nova]
+        CH2[Charm: Neutron]
+        CH3[Charm: Keystone]
+        JC --&gt; CH1
+        JC --&gt; CH2
+        JC --&gt; CH3
+        MAAS --&gt; JC
+    end
+
+    subgraph "Kolla-Ansible"
+        AP1[Ansible Playbooks]
+        DC1[Docker: Nova]
+        DC2[Docker: Neutron]
+        DC3[Docker: Keystone]
+        DR[Docker Runtime]
+        AP1 --&gt; DR
+        DR --&gt; DC1
+        DR --&gt; DC2
+        DR --&gt; DC3
+    end
+
+    subgraph "OpenStack Ansible"
+        AP2[Ansible Playbooks]
+        LXC1[LXC: Nova]
+        LXC2[LXC: Neutron]
+        LXC3[LXC: Keystone]
+        OS[Operating System]
+        AP2 --&gt; OS
+        OS --&gt; LXC1
+        OS --&gt; LXC2
+        OS --&gt; LXC3
+    end</code></pre>
+<h2 id="deployment-architecture">Deployment Architecture<a class="headerlink" href="#deployment-architecture" title="Permanent link">&para;</a></h2>
+<p><img alt="OpenStack Deployment Architecture" src="../diagrams/openstack-deployment-architecture.png" /></p>
+<h3 id="architecture-overview">Architecture Overview<a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h3>
+<p>The deployment architecture implements a multi-tier OpenStack cloud with
+clear separation of control plane, data plane, and storage services across
+dedicated network planes. This design ensures optimal performance, security
+isolation, and operational maintainability.</p>
+<h3 id="control-plane-components">Control Plane Components<a class="headerlink" href="#control-plane-components" title="Permanent link">&para;</a></h3>
+<p><strong>Controller Nodes (3x HA Cluster)</strong>:</p>
+<ul>
+<li>Host all OpenStack API services (Nova, Neutron, Cinder, Glance,
+  Keystone, Horizon)</li>
+<li>Run clustered database services (MariaDB Galera cluster)</li>
+<li>Operate message queue services (RabbitMQ cluster)</li>
+<li>Provide load balancing and API endpoint management</li>
+<li>Handle authentication, authorization, and service orchestration</li>
+</ul>
+<p><strong>Load Balancer</strong>:</p>
+<ul>
+<li>Distributes external API traffic across controller nodes</li>
+<li>Provides SSL termination and health checking</li>
+<li>Ensures high availability for all OpenStack APIs</li>
+<li>Routes dashboard (Horizon) traffic to active controllers</li>
+</ul>
+<h3 id="data-plane-components">Data Plane Components<a class="headerlink" href="#data-plane-components" title="Permanent link">&para;</a></h3>
+<p><strong>Compute Nodes (3-20x)</strong>:</p>
+<ul>
+<li>Run Nova compute service for VM lifecycle management</li>
+<li>Host Neutron L2/L3 agents for tenant networking</li>
+<li>Execute hypervisor operations (KVM/QEMU)</li>
+<li>Provide local storage for ephemeral disks</li>
+<li>Connect to all network planes for VM traffic isolation</li>
+</ul>
+<p><strong>Network Nodes (Optional/Integrated)</strong>:</p>
+<ul>
+<li>Handle Neutron L3 routing and NAT services</li>
+<li>Provide DHCP services for tenant networks</li>
+<li>Manage floating IP assignment and external connectivity</li>
+<li>Can be integrated into controller or compute nodes</li>
+</ul>
+<h3 id="storage-plane-components">Storage Plane Components<a class="headerlink" href="#storage-plane-components" title="Permanent link">&para;</a></h3>
+<p><strong>Storage Nodes (3x)</strong>:</p>
+<ul>
+<li>Provide Cinder block storage services</li>
+<li>Host Swift object storage services</li>
+<li>Manage persistent volume attachments to VMs</li>
+<li>Implement storage replication and backup services</li>
+</ul>
+<h3 id="network-plane-architecture">Network Plane Architecture<a class="headerlink" href="#network-plane-architecture" title="Permanent link">&para;</a></h3>
+<p><strong>Management Network</strong>:</p>
+<ul>
+<li>Carries OpenStack API traffic between services</li>
+<li>Handles Ansible deployment and configuration management</li>
+<li>Provides SSH access and monitoring traffic</li>
+<li>Isolated from tenant and external networks</li>
+</ul>
+<p><strong>Tenant Network (Overlay)</strong>:</p>
+<ul>
+<li>Carries east-west VM-to-VM traffic within projects</li>
+<li>Implements VXLAN/GRE tunneling for network isolation</li>
+<li>Provides L2/L3 services through Neutron agents</li>
+<li>Scales to support thousands of tenant networks</li>
+</ul>
+<p><strong>Storage Network</strong>:</p>
+<ul>
+<li>Dedicated to Cinder and Swift storage traffic</li>
+<li>Carries iSCSI, NFS, or Ceph storage protocols</li>
+<li>Optimized for high throughput and low latency</li>
+<li>Isolated from other traffic types for performance</li>
+</ul>
+<p><strong>External Network</strong>:</p>
+<ul>
+<li>Provides north-south connectivity to internet/WAN</li>
+<li>Handles floating IP traffic and external API access</li>
+<li>Routes traffic through provider networks</li>
+<li>Connects to organizational network infrastructure</li>
+</ul>
+<h3 id="traffic-flow-patterns">Traffic Flow Patterns<a class="headerlink" href="#traffic-flow-patterns" title="Permanent link">&para;</a></h3>
+<p><strong>API Request Flow</strong>:</p>
+<ol>
+<li>External client → Load balancer → Controller node APIs</li>
+<li>API service → Database cluster (MariaDB Galera)</li>
+<li>API service → Message queue (RabbitMQ) → Target service</li>
+<li>Response flows back through same path with load balancer distribution</li>
+</ol>
+<p><strong>VM East-West Traffic</strong>:</p>
+<ol>
+<li>VM → Compute node Neutron agent → Tenant network overlay</li>
+<li>VXLAN/GRE encapsulation across compute nodes</li>
+<li>Neutron L2/L3 agents handle routing and switching</li>
+<li>Traffic remains on tenant network plane throughout</li>
+</ol>
+<p><strong>Storage I/O Flow</strong>:</p>
+<ol>
+<li>VM → Compute node → Storage network plane</li>
+<li>Cinder volume attachment via iSCSI/NFS protocols</li>
+<li>Storage nodes handle replication and backup</li>
+<li>Swift object access through dedicated storage APIs</li>
+</ol>
+<h3 id="high-availability-and-redundancy">High Availability and Redundancy<a class="headerlink" href="#high-availability-and-redundancy" title="Permanent link">&para;</a></h3>
+<p><strong>Controller HA</strong>:</p>
+<ul>
+<li>Active-active clustering for all API services</li>
+<li>MariaDB Galera 3-node cluster with automatic failover</li>
+<li>RabbitMQ cluster with message replication</li>
+<li>Load balancer health checks and automatic node removal</li>
+</ul>
+<p><strong>Network Redundancy</strong>:</p>
+<ul>
+<li>Multiple network paths for each plane</li>
+<li>Neutron agent failover for L3 services</li>
+<li>VRRP for gateway redundancy</li>
+<li>Bond interfaces for physical network resilience</li>
+</ul>
+<p><strong>Storage Resilience</strong>:</p>
+<ul>
+<li>Cinder volume replication across storage nodes</li>
+<li>Swift multi-replica object storage</li>
+<li>Backup and snapshot capabilities</li>
+<li>Cross-AZ storage distribution</li>
+</ul>
+<h3 id="document-maintenance-note">Document Maintenance Note<a class="headerlink" href="#document-maintenance-note" title="Permanent link">&para;</a></h3>
+<p><strong>Architecture Updates</strong>: When the deployment architecture changes (new node
+types, additional network planes, scale modifications, or service
+relocations), update both this diagram and the corresponding explanation
+sections. Version the diagram files and reference the commit hash in
+deployment documentation.</p>
+<p><strong>Deployment Mode Changes</strong>: If the deployment mode changes from the default
+LXC containers to bare-metal deployment (or vice versa), update both the
+diagram annotations and all explanatory text sections to reflect the new
+service deployment method. Update troubleshooting procedures and operational
+workflows accordingly.</p>
+<p><strong>Review Schedule</strong>: Review architecture documentation quarterly and after
+major OpenStack releases to ensure accuracy and alignment with operational
+reality.</p>
+<h2 id="candidate-technology-overviews">Candidate Technology Overviews<a class="headerlink" href="#candidate-technology-overviews" title="Permanent link">&para;</a></h2>
+<h3 id="charmed-openstack-maas-juju">Charmed OpenStack (MAAS + Juju)<a class="headerlink" href="#charmed-openstack-maas-juju" title="Permanent link">&para;</a></h3>
+<p>Canonical's Charmed OpenStack combines Metal-as-a-Service (MAAS) for bare
+metal provisioning with Juju for application modeling and orchestration.
+This approach uses charms (application packages) to deploy and manage
+OpenStack services.</p>
+<p><strong>Architecture</strong>: Model-driven deployment using Juju controllers, charms for
+service definitions, and MAAS for hardware lifecycle management. Services
+are deployed as applications with defined relationships and configurations.</p>
+<h3 id="kolla-ansible">Kolla-Ansible<a class="headerlink" href="#kolla-ansible" title="Permanent link">&para;</a></h3>
+<p>Kolla-Ansible deploys OpenStack services using Docker containers
+orchestrated through Ansible playbooks. It provides containerized OpenStack
+services with standardized deployment patterns.</p>
+<p><strong>Architecture</strong>: Container-based deployment where each OpenStack service
+runs in Docker containers. Ansible manages container orchestration,
+configuration, and lifecycle operations.</p>
+<h3 id="openstack-ansible">OpenStack Ansible<a class="headerlink" href="#openstack-ansible" title="Permanent link">&para;</a></h3>
+<p>OpenStack Ansible deploys OpenStack services using Ansible playbooks and
+roles with configurable deployment modes. Services can be deployed in LXC
+containers (default) or directly on metal hosts using the <code>is_metal: true</code>
+inventory property.</p>
+<p><strong>Architecture</strong>: Flexible deployment supporting both LXC containers and
+bare-metal installation. In container mode (default), services run within
+LXC containers managed by systemd. In metal mode (<code>is_metal: true</code>),
+services run directly on the host using systemd. Configuration is managed
+through comprehensive Ansible roles and inventory settings. See
+<a href="https://docs.openstack.org/project-deploy-guide/openstack-ansible/latest/">OpenStack Ansible Deployment Guide</a>
+and <a href="https://docs.openstack.org/openstack-ansible/latest/reference/inventory/configure-inventory.html">Inventory Configuration Reference</a>
+for deployment options.</p>
+<h2 id="evaluation-criteria">Evaluation Criteria<a class="headerlink" href="#evaluation-criteria" title="Permanent link">&para;</a></h2>
+<p>The following criteria guided our technology selection:</p>
+<ul>
+<li><strong>Operational Transparency</strong>: Visibility into service configuration,
+  troubleshooting capabilities, and debugging workflows</li>
+<li><strong>Customization Flexibility</strong>: Ability to modify configurations, integrate
+  custom components, and adapt to specific requirements</li>
+<li><strong>Team Skill Alignment</strong>: Match with existing team expertise in
+  configuration management and infrastructure automation</li>
+<li><strong>Upgrade Path Complexity</strong>: Simplicity and reliability of version upgrades
+  and maintenance operations</li>
+<li><strong>Resource Overhead</strong>: System resource consumption and performance impact</li>
+<li><strong>Community Support</strong>: Documentation quality, community activity, and
+  long-term viability</li>
+<li><strong>Integration Capabilities</strong>: Compatibility with existing infrastructure
+  automation and monitoring systems</li>
+<li><strong>Troubleshooting Complexity</strong>: Ease of diagnosing and resolving
+  operational issues</li>
+</ul>
+<h2 id="technology-comparison-matrix">Technology Comparison Matrix<a class="headerlink" href="#technology-comparison-matrix" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Criteria</th>
+<th>Charmed</th>
+<th>Kolla</th>
+<th>OpenStack Ansible</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Transparency</strong></td>
+<td>Medium</td>
+<td>Low</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>Customization</strong></td>
+<td>Low</td>
+<td>Medium</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>Team Skills</strong></td>
+<td>Low</td>
+<td>Medium</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>Upgrades</strong></td>
+<td>Medium</td>
+<td>High</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><strong>Resources</strong></td>
+<td>Medium</td>
+<td>High</td>
+<td>Low-Medium</td>
+</tr>
+<tr>
+<td><strong>Community</strong></td>
+<td>Medium</td>
+<td>Medium</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>Integration</strong></td>
+<td>Low</td>
+<td>Medium</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>Troubleshooting</strong></td>
+<td>High</td>
+<td>High</td>
+<td>Low</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table Legend:</strong></p>
+<ul>
+<li><strong>Charmed</strong>: Charmed OpenStack (MAAS + Juju)</li>
+<li><strong>Kolla</strong>: Kolla-Ansible (Docker containers)</li>
+<li><strong>Transparency</strong>: Operational visibility and debugging access</li>
+<li><strong>Customization</strong>: Configuration flexibility and adaptation capability</li>
+<li><strong>Team Skills</strong>: Alignment with existing team expertise</li>
+<li><strong>Upgrades</strong>: Complexity of version upgrades and maintenance</li>
+<li><strong>Resources</strong>: System resource consumption and overhead</li>
+<li><strong>Community</strong>: Documentation quality and community support</li>
+<li><strong>Integration</strong>: Compatibility with existing infrastructure</li>
+<li><strong>Troubleshooting</strong>: Complexity rating (High = more complex)</li>
+</ul>
+<h2 id="selected-approach-and-rationale">Selected Approach and Rationale<a class="headerlink" href="#selected-approach-and-rationale" title="Permanent link">&para;</a></h2>
+<p><strong>OpenStack Ansible is selected as our deployment technology.</strong></p>
+<h3 id="primary-rationale">Primary Rationale<a class="headerlink" href="#primary-rationale" title="Permanent link">&para;</a></h3>
+<p><strong>Operational Transparency</strong>: OpenStack Ansible provides direct access to
+service configurations, logs, and system state through lightweight LXC
+containers. Services remain easily accessible via standard Linux tools
+(systemctl, journalctl, ps) while maintaining isolation. This transparency
+is critical for troubleshooting complex distributed systems and
+understanding service behavior during incidents.</p>
+<p><strong>Team Skill Leverage</strong>: Our team has extensive Ansible expertise from
+existing infrastructure automation. OpenStack Ansible builds on this
+foundation rather than requiring new toolchain adoption (Juju/charms or
+Docker orchestration patterns).</p>
+<p><strong>Customization Requirements</strong>: Our environment requires specific network
+configurations, security hardening, and integration with existing monitoring
+systems. OpenStack Ansible's role-based architecture allows granular
+customization without fighting framework constraints.</p>
+<p><strong>Debugging Simplicity</strong>: When issues occur, OpenStack Ansible allows
+direct investigation of service configurations, LXC containers, and
+application logs without navigating complex container abstractions or Juju
+model complexities. Services can be accessed directly via <code>lxc-attach</code> or
+standard systemd commands.</p>
+<h3 id="specific-advantages-over-alternatives">Specific Advantages Over Alternatives<a class="headerlink" href="#specific-advantages-over-alternatives" title="Permanent link">&para;</a></h3>
+<p><strong>vs Charmed OpenStack</strong>:</p>
+<ul>
+<li>Eliminates Juju learning curve and operational complexity</li>
+<li>Removes dependency on MAAS for environments with existing provisioning</li>
+<li>Provides direct configuration control without charm limitations</li>
+<li>Simplifies troubleshooting by removing model abstraction layers</li>
+</ul>
+<p><strong>vs Kolla-Ansible</strong>:</p>
+<ul>
+<li>Reduces resource overhead compared to Docker containers (LXC estimated
+  ~2-5% memory per service vs Docker's estimated ~15-20% per node, to be
+  validated in environment)</li>
+<li>Simplifies networking by avoiding Docker bridge networking complexity
+  (LXC uses host networking with namespace isolation)</li>
+<li>Enables direct service debugging through lightweight containers (access
+  via <code>lxc-attach</code> or host-level systemctl commands)</li>
+<li>Provides clearer upgrade paths without container image coordination (no
+  image registry dependencies or Docker version conflicts)</li>
+</ul>
+<h2 id="risks-trade-offs-and-mitigations">Risks, Trade-offs, and Mitigations<a class="headerlink" href="#risks-trade-offs-and-mitigations" title="Permanent link">&para;</a></h2>
+<h3 id="identified-risks">Identified Risks<a class="headerlink" href="#identified-risks" title="Permanent link">&para;</a></h3>
+<p><strong>Configuration Complexity</strong>: OpenStack Ansible requires more detailed
+configuration management compared to higher-level abstractions, with ~200+
+configuration parameters across core services.</p>
+<ul>
+<li><strong>Mitigation</strong>: Invest in comprehensive configuration templates, automated
+  validation (ansible-lint, yaml validation), and configuration drift
+  detection</li>
+</ul>
+<p><strong>Service Dependency Management</strong>: Manual coordination of service
+dependencies during deployments and upgrades, requiring explicit ordering
+of 15+ interconnected services.</p>
+<ul>
+<li><strong>Mitigation</strong>: Implement thorough testing procedures, staged deployment
+  processes with health checks, and automated rollback triggers</li>
+</ul>
+<p><strong>Security Hardening Responsibility</strong>: Direct responsibility for service
+security configuration rather than framework defaults, including TLS
+certificates, firewall rules, and service authentication.</p>
+<ul>
+<li><strong>Mitigation</strong>: Develop security baseline configurations, automated
+  compliance checking (OpenSCAP, custom Ansible security roles), and
+  regular security audits</li>
+</ul>
+<p><strong>Operational Learning Curve</strong>: Team requires deep understanding of
+OpenStack service internals and interdependencies.</p>
+<ul>
+<li><strong>Mitigation</strong>: Invest in comprehensive training, detailed runbook
+  development, and mentorship from OpenStack subject matter experts</li>
+</ul>
+<h3 id="accepted-trade-offs">Accepted Trade-offs<a class="headerlink" href="#accepted-trade-offs" title="Permanent link">&para;</a></h3>
+<p><strong>Higher Initial Configuration Effort</strong>: More upfront investment in
+playbook customization and testing compared to turnkey solutions.</p>
+<p><strong>Manual Dependency Coordination</strong>: Requires explicit service dependency
+management rather than framework automation.</p>
+<p><strong>Security Configuration Ownership</strong>: Full responsibility for security
+hardening rather than framework-provided defaults.</p>
+<h2 id="operational-implications">Operational Implications<a class="headerlink" href="#operational-implications" title="Permanent link">&para;</a></h2>
+<h3 id="day-1-operations">Day-1 Operations<a class="headerlink" href="#day-1-operations" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Environment-specific configuration development using OpenStack Ansible's
+  provided playbooks, roles, and helper scripts (estimated 2-4 weeks for
+  customization)</li>
+<li>CI/CD pipeline integration leveraging OpenStack Ansible's
+  <code>bootstrap-ansible.sh</code> and <code>run-playbooks.sh</code> automation</li>
+<li>Custom variable files and inventory configuration for organizational
+  requirements</li>
+<li>Security baseline implementation and validation (CIS benchmarks,
+  organizational security policies)</li>
+<li>Network topology validation and service endpoint testing</li>
+<li>Performance baseline establishment and capacity planning</li>
+</ul>
+<h3 id="day-2-operations">Day-2 Operations<a class="headerlink" href="#day-2-operations" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Direct service management: LXC container mode uses <code>lxc-attach</code> and
+  systemctl within containers; metal mode uses direct systemctl on host</li>
+<li>Log aggregation and monitoring integration with minimal container
+  complexity (direct syslog integration, native metric collection)</li>
+<li>Configuration drift detection and remediation through Ansible (scheduled
+  compliance runs, automated remediation)</li>
+<li>Capacity monitoring and scaling operations (horizontal compute scaling,
+  storage expansion)</li>
+<li>Backup and disaster recovery procedures (database backups, configuration
+  snapshots)</li>
+</ul>
+<h3 id="upgrade-operations">Upgrade Operations<a class="headerlink" href="#upgrade-operations" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Ansible playbook-driven upgrade processes with automated pre-flight checks</li>
+<li>Service-by-service upgrade coordination and validation (rolling upgrades
+  with health checks)</li>
+<li>Rollback procedures using configuration management state (automated
+  rollback triggers, configuration versioning)</li>
+<li>Database migration coordination and validation</li>
+<li>Post-upgrade testing and validation procedures</li>
+</ul>
+<h3 id="troubleshooting-workflows">Troubleshooting Workflows<a class="headerlink" href="#troubleshooting-workflows" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Direct access to service logs and configurations: LXC mode via
+  <code>lxc-attach</code> and container logs; metal mode via direct host access</li>
+<li>Native debugging tools and processes (strace, tcpdump, service-specific
+  debugging)</li>
+<li>Clear service dependency and communication patterns (host networking with
+  namespace isolation in LXC mode)</li>
+<li>Performance profiling and bottleneck identification</li>
+<li>Root cause analysis procedures with direct system access</li>
+</ul>
+<h2 id="validation-and-acceptance-criteria">Validation and Acceptance Criteria<a class="headerlink" href="#validation-and-acceptance-criteria" title="Permanent link">&para;</a></h2>
+<h3 id="technical-validation">Technical Validation<a class="headerlink" href="#technical-validation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Successful deployment of core OpenStack services across controller
+      nodes with all services reporting healthy status</li>
+<li>[ ] Controller HA cluster operational: MariaDB Galera 3-node cluster,
+      RabbitMQ cluster, load balancer health checks</li>
+<li>[ ] VM boot time &lt; 60 seconds for standard instances (target to be
+      validated in environment)</li>
+<li>[ ] API response times &lt; 2 seconds for standard operations through load
+      balancer (target to be validated)</li>
+<li>[ ] Network plane isolation verified: management, tenant, storage, and
+      external networks properly segregated</li>
+<li>[ ] East-west VM traffic flows correctly through tenant network overlay
+      (VXLAN/GRE) with &lt; 1ms latency (target)</li>
+<li>[ ] North-south traffic routing functional through external network and
+      floating IPs</li>
+<li>[ ] Storage I/O flows on dedicated storage network: Cinder IOPS &gt; 1000
+      (target), Swift throughput &gt; 100MB/s (target)</li>
+<li>[ ] Integration with existing monitoring and logging infrastructure
+      (Prometheus/Grafana, ELK stack)</li>
+<li>[ ] Security baseline implementation achieving 95% compliance with
+      organizational security policies</li>
+</ul>
+<h3 id="operational-validation">Operational Validation<a class="headerlink" href="#operational-validation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Team proficiency demonstrated: 100% of team members can execute
+      standard deployment procedures independently</li>
+<li>[ ] Documented runbooks covering 15+ common operational scenarios
+      (service restart, node replacement, capacity expansion)</li>
+<li>[ ] Successful execution of upgrade procedures in test environment with
+      &lt; 5 minutes downtime per service</li>
+<li>[ ] Integration with existing change management: automated deployment
+      pipeline with approval gates</li>
+<li>[ ] Incident response time: P1 incidents acknowledged within 15 minutes,
+      initial response within 30 minutes</li>
+<li>[ ] Configuration drift detection: automated scanning every 4 hours,
+      remediation within 1 hour</li>
+</ul>
+<h3 id="performance-validation">Performance Validation<a class="headerlink" href="#performance-validation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Controller node CPU utilization &lt; 70% during normal operations
+      (target baseline)</li>
+<li>[ ] Controller node memory utilization &lt; 80% during normal operations
+      (target baseline)</li>
+<li>[ ] Compute node overhead &lt; 10% of total resources including LXC
+      containers (target to be measured)</li>
+<li>[ ] Database response times &lt; 100ms for 95th percentile queries (target
+      to be validated)</li>
+<li>[ ] Message queue latency &lt; 50ms for 95th percentile operations (target
+      to be validated)</li>
+<li>[ ] Successful horizontal scaling: add compute node with &lt; 10 minutes
+      integration time (target)</li>
+<li>[ ] Network performance: tenant network throughput &gt; 80% of physical
+      network capacity (target)</li>
+</ul>
+<h3 id="long-term-validation">Long-term Validation<a class="headerlink" href="#long-term-validation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Successful completion of first major version upgrade (OpenStack
+      release) with &lt; 30 minutes total downtime</li>
+<li>[ ] Effective incident response: 90% of incidents resolved using
+      documented procedures and direct system access</li>
+<li>[ ] Team satisfaction survey: &gt; 80% satisfaction with operational
+      workflows and debugging capabilities</li>
+<li>[ ] Capacity planning accuracy: actual resource consumption within 15%
+      of projections</li>
+<li>[ ] Security compliance: pass quarterly security audits with zero
+      critical findings</li>
+</ul>
+<h3 id="failure-mode-testing">Failure Mode Testing<a class="headerlink" href="#failure-mode-testing" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Controller node failure: automatic failover within 2 minutes, load
+      balancer removes failed node</li>
+<li>[ ] Database cluster failure: MariaDB Galera automatic failover within
+      60 seconds, zero data loss</li>
+<li>[ ] Message queue failure: RabbitMQ cluster maintains service continuity</li>
+<li>[ ] Compute node failure: VM evacuation and restart within 5 minutes</li>
+<li>[ ] Network plane failure: traffic isolation maintained, no cross-plane
+      contamination</li>
+<li>[ ] Storage node failure: Cinder/Swift replication maintains data
+      availability, performance degradation &lt; 20%</li>
+<li>[ ] Network partition: services continue operating in degraded mode,
+      automatic recovery upon reconnection</li>
+<li>[ ] Load balancer failure: API services remain accessible through backup
+      load balancer</li>
+</ul>
+<h2 id="references-and-documentation">References and Documentation<a class="headerlink" href="#references-and-documentation" title="Permanent link">&para;</a></h2>
+<h3 id="openstack-ansible-documentation">OpenStack Ansible Documentation<a class="headerlink" href="#openstack-ansible-documentation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="https://docs.openstack.org/openstack-ansible/latest/">Official Documentation</a></li>
+<li><a href="https://docs.openstack.org/openstack-ansible/latest/user/index.html">Deployment Guide</a></li>
+<li><a href="https://docs.openstack.org/openstack-ansible/latest/admin/index.html">Operations Guide</a></li>
+<li><a href="https://docs.openstack.org/openstack-ansible/latest/reference/architecture/index.html">Architecture Guide</a></li>
+</ul>
+<h3 id="charmed-openstack">Charmed OpenStack<a class="headerlink" href="#charmed-openstack" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="https://docs.openstack.org/charm-guide/latest/">Charmed OpenStack Documentation</a></li>
+<li><a href="https://juju.is/docs">Juju Documentation</a></li>
+<li><a href="https://maas.io/docs">MAAS Documentation</a></li>
+</ul>
+<h3 id="kolla-ansible-documentation">Kolla-Ansible Documentation<a class="headerlink" href="#kolla-ansible-documentation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="https://docs.openstack.org/kolla-ansible/latest/">Kolla-Ansible Documentation</a></li>
+<li><a href="https://docs.openstack.org/kolla/latest/">Kolla Documentation</a></li>
+<li><a href="https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html">Container Deployment Guide</a></li>
+</ul>
+<h3 id="supporting-documentation">Supporting Documentation<a class="headerlink" href="#supporting-documentation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="https://docs.openstack.org/install-guide/">OpenStack Installation Guide</a></li>
+<li><a href="https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html">Ansible Best Practices</a></li>
+<li><a href="https://docs.openstack.org/operations-guide/">OpenStack Operations Guide</a></li>
+<li><a href="https://docs.openstack.org/security-guide/">OpenStack Security Guide</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>
